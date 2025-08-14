@@ -1,3 +1,4 @@
+
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory';
 export type DocumentStatus = 'Not Generated' | 'Generated' | 'Generating...';
 
@@ -5,6 +6,7 @@ export type ExpeditionStatus =
   | 'New'                       // Initial state
   | 'Documents Generated'       // All preparatory documents are created
   | 'AWB Generated'             // AWB number is assigned
+  | 'Sent to Logistics'         // Email with documents sent to logistics partner
   | 'In Transit'                // On its way
   | 'Delivered'                 // Reached destination, awaiting final confirmation
   | 'Completed'                 // Proces verbal signed and uploaded
@@ -30,3 +32,5 @@ export interface Expedition {
     'parcel inventory': Document;
   };
 }
+
+    

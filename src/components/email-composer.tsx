@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -16,17 +17,20 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Expedition } from "@/types";
 import { Badge } from "./ui/badge";
 import { Paperclip, Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmailComposerProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   expedition: Expedition;
+  onEmailSent: (expeditionId: string) => void;
 }
 
 export const EmailComposer: React.FC<EmailComposerProps> = ({
   isOpen,
   setIsOpen,
   expedition,
+  onEmailSent
 }) => {
   const logisticsCompanyEmail = "logistics@example.com";
   const subject = `Expedition Documents for AWB: ${expedition.awb || expedition.id}`;
@@ -40,7 +44,7 @@ Details:
 - Destination: ${expedition.destination}
 
 Thank you,
-ExpeditionFlow System
+Expedition Manager System
   `.trim();
 
   const attachments = Object.entries(expedition.documents)
@@ -53,6 +57,20 @@ ExpeditionFlow System
   if (expedition.awb) {
     attachments.push({ name: `AWB_${expedition.awb}.pdf`, type: "AWB" });
   }
+
+  const { toast } = useToast();
+
+  const handleSend = () => {
+    // In a real app, this would trigger an API call to send the email.
+    // Here, we just simulate success and update the state.
+    onEmailSent(expedition.id);
+    setIsOpen(false);
+    toast({
+      title: "Email Marked as Sent",
+      description: `The expedition ${expedition.id} has been moved to 'Sent to Logistics'.`
+    });
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -104,12 +122,14 @@ ExpeditionFlow System
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button type="button" onClick={() => setIsOpen(false)}>
+          <Button type="button" onClick={handleSend} disabled={attachments.length === 0}>
             <Send className="mr-2 h-4 w-4" />
-            Mark as Ready
+            Mark as Sent
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+
+    

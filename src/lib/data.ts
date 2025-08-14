@@ -1,3 +1,4 @@
+
 import type { Expedition } from "@/types";
 
 export const mockExpeditions: Expedition[] = [
@@ -22,7 +23,7 @@ export const mockExpeditions: Expedition[] = [
     awb: "AWB123456789",
     documents: {
         "proces verbal de receptie": { status: "Generated", content: "..." },
-        "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated" },
+        "instructiuni pentru confirmarea primirii coletului": { status: "Generated", content: "..." },
         "parcel inventory": { status: "Generated", content: "..." },
     },
   },
@@ -39,16 +40,16 @@ export const mockExpeditions: Expedition[] = [
         "parcel inventory": { status: "Generated", content: "..." },
     },
   },
-  {
+    {
     id: "EXP-004",
     origin: "Craiova, RO",
     destination: "Brasov, RO",
     items: ["Mechanical Keyboard", "Monitor Stand"],
-    status: "New",
+    status: "Documents Generated",
     documents: {
-      "proces verbal de receptie": { status: "Not Generated" },
-      "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated" },
-      "parcel inventory": { status: "Not Generated" },
+      "proces verbal de receptie": { status: "Generated", content: "Content for proces verbal..." },
+      "instructiuni pentru confirmarea primirii coletului": { status: "Generated", content: "Content for instructions..." },
+      "parcel inventory": { status: "Generated", content: "Content for inventory..." },
     },
   },
   {
@@ -64,4 +65,44 @@ export const mockExpeditions: Expedition[] = [
         "parcel inventory": { status: "Generated", content: "..." },
     },
   },
+  {
+    id: "EXP-006",
+    origin: "Galati, RO",
+    destination: "Ploiesti, RO",
+    items: ["Smartphone", "Case"],
+    status: "Completed",
+    awb: "AWB666666666",
+    documents: {
+        "proces verbal de receptie": { status: "Generated", content: "..." },
+        "instructiuni pentru confirmarea primirii coletului": { status: "Generated", content: "..." },
+        "parcel inventory": { status: "Generated", content: "..." },
+    },
+  },
+  {
+    id: "EXP-007",
+    origin: "Arad, RO",
+    destination: "Pitesti, RO",
+    items: ["Graphics Card"],
+    status: "Canceled",
+    documents: {
+      "proces verbal de receptie": { status: "Not Generated" },
+      "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated" },
+      "parcel inventory": { status: "Not Generated" },
+    },
+  },
+   {
+    id: "EXP-008",
+    origin: "Baia Mare, RO",
+    destination: "Buzau, RO",
+    items: ["T-shirts (Pack of 10)"],
+    status: "Sent to Logistics",
+    awb: "AWB888888888",
+    documents: {
+        "proces verbal de receptie": { status: "Generated", content: "..." },
+        "instructiuni pentru confirmarea primirii coletului": { status: "Generated", content: "..." },
+        "parcel inventory": { status: "Generated", content: "..." },
+    },
+  },
 ];
+
+    

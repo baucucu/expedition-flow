@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -23,7 +24,7 @@ import {
   Mail,
   MoreHorizontal,
   PlusCircle,
-  Truck,
+  Send,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -45,8 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { mockExpeditions } from "@/lib/data";
-import type { Expedition, ExpeditionStatus } from "@/types";
+import type { Expedition, ExpeditionStatus, DocumentType } from "@/types";
 import { DocumentAssistant } from "./document-assistant";
 import { EmailComposer } from "./email-composer";
 import { useToast } from "@/hooks/use-toast";
@@ -55,28 +55,35 @@ const statusVariant: { [key in ExpeditionStatus]: "default" | "secondary" | "out
   New: "outline",
   "Documents Generated": "secondary",
   "AWB Generated": "secondary",
-  "Pending Pickup": "secondary",
+  "Sent to Logistics": "secondary",
   "In Transit": "default",
   Delivered: "default",
-  "Proces Verbal Signed": "default",
   Completed: "default",
   Canceled: "destructive",
   "Lost or Damaged": "destructive",
   Returned: "destructive",
 };
 
-export const ExpeditionDashboard: React.FC = () => {
+interface ExpeditionDashboardProps {
+    initialData: Expedition[];
+}
+
+export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initialData }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [data, setData] = React.useState<Expedition[]>(mockExpeditions);
+  const [data, setData] = React.useState<Expedition[]>(initialData);
 
   const [isDocumentAssistantOpen, setDocumentAssistantOpen] = React.useState(false);
   const [isEmailComposerOpen, setEmailComposerOpen] = React.useState(false);
   const [selectedExpedition, setSelectedExpedition] = React.useState<Expedition | null>(null);
 
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
 
   const handleGenerateAWB = (expeditionId: string) => {
     setData((prevData) =>
@@ -106,7 +113,21 @@ export const ExpeditionDashboard: React.FC = () => {
     setEmailComposerOpen(true);
   };
 
-  const updateExpeditionDocument = (expeditionId: string, documentType: keyof Expedition['documents'], content: string) => {
+  const handleSendToLogistics = (expeditionId: string) => {
+     setData((prevData) =>
+      prevData.map((exp) =>
+        exp.id === expeditionId
+          ? { ...exp, status: "Sent to Logistics" }
+          : exp
+      )
+    );
+    toast({
+      title: "Expedition Sent",
+      description: `Expedition ${expeditionId} has been marked as sent to logistics.`,
+    });
+  }
+
+  const updateExpeditionDocument = (expeditionId: string, documentType: DocumentType, content: string) => {
     setData(prevData => prevData.map(exp => {
       if (exp.id === expeditionId) {
         const newDocuments = { ...exp.documents };
@@ -170,6 +191,9 @@ export const ExpeditionDashboard: React.FC = () => {
         enableHiding: false,
         cell: ({ row }) => {
           const expedition = row.original;
+          const allDocsGenerated = Object.values(expedition.documents).every(d => d.status === 'Generated');
+          const awbGenerated = !!expedition.awb;
+
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -180,18 +204,22 @@ export const ExpeditionDashboard: React.FC = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleGenerateAWB(expedition.id)} disabled={!!expedition.awb}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Generate AWB
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleManageDocuments(expedition)}>
                   <FileText className="mr-2 h-4 w-4" />
                   Manage Documents
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGenerateAWB(expedition.id)} disabled={!allDocsGenerated || awbGenerated}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Generate AWB
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handlePrepareEmail(expedition)}>
                   <Mail className="mr-2 h-4 w-4" />
                   Prepare Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSendToLogistics(expedition.id)} disabled={!awbGenerated}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Send to Logistics
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -323,3 +351,5 @@ export const ExpeditionDashboard: React.FC = () => {
     </div>
   );
 };
+
+    
