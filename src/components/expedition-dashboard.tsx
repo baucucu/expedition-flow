@@ -16,6 +16,7 @@ import {
 } from "@tanstack/react-table";
 import {
   Mail,
+  X as XIcon,
 } from "lucide-react";
 import {
   Sheet,
@@ -86,10 +87,32 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [rowSelection, setRowSelection] = React.useState({});
   const [data, setData] = React.useState<RecipientRow[]>(initialData);
   const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
+  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [keywords, setKeywords] = React.useState<string[]>([]);
+  const [inputValue, setInputValue] = React.useState('');
 
   React.useEffect(() => {
     setData(initialData);
   }, [initialData]);
+
+  React.useEffect(() => {
+    setGlobalFilter(keywords.join(' '));
+  }, [keywords]);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && inputValue.trim() !== '') {
+        if (!keywords.includes(inputValue.trim())) {
+            setKeywords([...keywords, inputValue.trim()]);
+        }
+        setInputValue('');
+        event.preventDefault();
+    }
+  };
+
+  const removeKeyword = (keywordToRemove: string) => {
+    setKeywords(keywords.filter(keyword => keyword !== keywordToRemove));
+  };
+
 
   const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email') => {
     setSelectedDocument({ recipient, docType });
@@ -214,25 +237,36 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
   });
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex flex-col gap-4 py-4">
         <Input
-          placeholder="Filter by recipient name..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
+          placeholder="Search by any text and press Enter..."
+          value={inputValue}
+          onChange={(event) => setInputValue(event.target.value)}
+          onKeyDown={handleKeyDown}
+          className="w-full"
         />
+        <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword, index) => (
+                <Badge key={index} variant="secondary" className="pl-2 pr-1">
+                    {keyword}
+                    <button onClick={() => removeKeyword(keyword)} className="ml-1 rounded-full p-0.5 hover:bg-background/50">
+                        <XIcon className="h-3 w-3" />
+                    </button>
+                </Badge>
+            ))}
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
