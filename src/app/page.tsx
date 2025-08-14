@@ -41,6 +41,7 @@ export default function Home() {
         awbGenerated: mockExpeditions.filter(e => e.status === 'AWB Generated').length,
         awbFailed: mockExpeditions.filter(e => e.status === 'AWB Generation Failed').length,
         sentToLogistics: mockExpeditions.filter(e => e.status === 'Sent to Logistics').length,
+        emailSendFailed: mockExpeditions.filter(e => e.status === 'Email Send Failed').length,
         inTransit: mockExpeditions.filter(e => e.status === 'In Transit').length,
         delivered: allRecipients.filter(r => r.status === 'Delivered').length,
         issues: mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status)).length 
@@ -250,7 +251,12 @@ export default function Home() {
                 <CardContent className="h-16">
                     <div className="text-3xl font-bold">{scorecardCounts.sentToLogistics}</div>
                 </CardContent>
-                 <CardFooter className="h-8 pb-4" />
+                <CardFooter className="h-8 pb-4">
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {scorecardCounts.emailSendFailed} errors
+                    </p>
+                </CardFooter>
             </Card>
 
             <Card
@@ -346,3 +352,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
