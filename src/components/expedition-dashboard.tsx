@@ -3,10 +3,6 @@
 
 import * as React from "react";
 import {
-  CaretSortIcon,
-  ChevronDownIcon,
-} from "@radix-ui/react-icons";
-import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
@@ -21,21 +17,15 @@ import {
 import {
   ArrowUpDown,
   FileText,
-  Mail,
-  MoreHorizontal,
-  PlusCircle,
-  Send,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -47,9 +37,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Expedition, ExpeditionStatus, DocumentType } from "@/types";
-import { DocumentAssistant } from "./document-assistant";
-import { EmailComposer } from "./email-composer";
-import { useToast } from "@/hooks/use-toast";
 
 const statusVariant: { [key in ExpeditionStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -68,6 +55,45 @@ interface ExpeditionDashboardProps {
     initialData: Expedition[];
 }
 
+const docShortNames: Record<DocumentType, string> = {
+    'proces verbal de receptie': 'PV',
+    'instructiuni pentru confirmarea primirii coletului': 'Instr.',
+    'parcel inventory': 'Inv.'
+}
+
+const DocumentLinkBadge: React.FC<{docType: DocumentType, expedition: Expedition}> = ({ docType, expedition }) => {
+    const doc = expedition.documents[docType];
+    if (doc.status !== 'Generated' || !doc.url) {
+        return <Badge variant="outline" className="font-normal">{docShortNames[docType]}</Badge>
+    }
+
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <Badge 
+                    variant="secondary" 
+                    className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
+                >
+                    {docShortNames[docType]}
+                </Badge>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>{docType}</SheetTitle>
+                    <SheetDescription>
+                       Document for expedition {expedition.id}.
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="py-4">
+                    {/* In a real app, this would be an iframe or a more robust viewer */}
+                    <p>Displaying content for: {docType}</p>
+                    <iframe src={doc.url} className="w-full h-96 mt-4 border rounded-md" title={docType} />
+                </div>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initialData }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -75,75 +101,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
   const [rowSelection, setRowSelection] = React.useState({});
   const [data, setData] = React.useState<Expedition[]>(initialData);
 
-  const [isDocumentAssistantOpen, setDocumentAssistantOpen] = React.useState(false);
-  const [isEmailComposerOpen, setEmailComposerOpen] = React.useState(false);
-  const [selectedExpedition, setSelectedExpedition] = React.useState<Expedition | null>(null);
-
-  const { toast } = useToast();
-
   React.useEffect(() => {
     setData(initialData);
   }, [initialData]);
-
-  const handleGenerateAWB = (expeditionId: string) => {
-    setData((prevData) =>
-      prevData.map((exp) =>
-        exp.id === expeditionId
-          ? {
-              ...exp,
-              awb: `AWB${Math.floor(100000 + Math.random() * 900000)}`,
-              status: "AWB Generated",
-            }
-          : exp
-      )
-    );
-    toast({
-      title: "AWB Generated",
-      description: `A new AWB has been generated for expedition ${expeditionId}.`,
-    });
-  };
-
-  const handleManageDocuments = (expedition: Expedition) => {
-    setSelectedExpedition(expedition);
-    setDocumentAssistantOpen(true);
-  };
-  
-  const handlePrepareEmail = (expedition: Expedition) => {
-    setSelectedExpedition(expedition);
-    setEmailComposerOpen(true);
-  };
-
-  const handleSendToLogistics = (expeditionId: string) => {
-     setData((prevData) =>
-      prevData.map((exp) =>
-        exp.id === expeditionId
-          ? { ...exp, status: "Sent to Logistics" }
-          : exp
-      )
-    );
-    toast({
-      title: "Expedition Sent",
-      description: `Expedition ${expeditionId} has been marked as sent to logistics.`,
-    });
-  }
-
-  const updateExpeditionDocument = (expeditionId: string, documentType: DocumentType, content: string) => {
-    setData(prevData => prevData.map(exp => {
-      if (exp.id === expeditionId) {
-        const newDocuments = { ...exp.documents };
-        newDocuments[documentType] = { ...newDocuments[documentType], status: 'Generated' as const, content };
-        
-        const allDocsGenerated = Object.values(newDocuments).every(doc => doc.status === 'Generated');
-
-        return { 
-          ...exp, 
-          documents: newDocuments,
-          status: allDocsGenerated ? 'Documents Generated' : exp.status,
-        };
-      }
-      return exp;
-    }));
-  };
 
   const columns: ColumnDef<Expedition>[] = [
     {
@@ -160,14 +120,14 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
       cell: ({ row }) => <div className="lowercase">{row.getValue("id")}</div>,
     },
     {
-      accessorKey: "origin",
-      header: "Origin",
-      cell: ({ row }) => <div>{row.getValue("origin")}</div>,
+        accessorKey: "recipientName",
+        header: "Recipient Name",
+        cell: ({ row }) => <div>{row.getValue("recipientName")}</div>,
     },
     {
-      accessorKey: "destination",
-      header: "Destination",
-      cell: ({ row }) => <div>{row.getValue("destination")}</div>,
+        accessorKey: "recipientAddress",
+        header: "Recipient Address",
+        cell: ({ row }) => <div>{row.getValue("recipientAddress")}</div>,
     },
     {
       accessorKey: "status",
@@ -187,43 +147,17 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
         cell: ({ row }) => row.getValue("awb") ? <div>{row.getValue("awb")}</div> : <span className="text-muted-foreground">N/A</span>,
     },
     {
-        id: "actions",
-        enableHiding: false,
+        id: "documents",
+        header: "Documents",
         cell: ({ row }) => {
           const expedition = row.original;
-          const allDocsGenerated = Object.values(expedition.documents).every(d => d.status === 'Generated');
-          const awbGenerated = !!expedition.awb;
-
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => handleManageDocuments(expedition)}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Manage Documents
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleGenerateAWB(expedition.id)} disabled={!allDocsGenerated || awbGenerated}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Generate AWB
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handlePrepareEmail(expedition)}>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Prepare Email
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleSendToLogistics(expedition.id)} disabled={!awbGenerated}>
-                    <Send className="mr-2 h-4 w-4" />
-                    Send to Logistics
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
+            <div className="flex gap-2">
+                <DocumentLinkBadge docType="proces verbal de receptie" expedition={expedition} />
+                <DocumentLinkBadge docType="instructiuni pentru confirmarea primirii coletului" expedition={expedition} />
+                <DocumentLinkBadge docType="parcel inventory" expedition={expedition} />
+            </div>
+          )
         },
       },
   ];
@@ -251,10 +185,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter by destination..."
-          value={(table.getColumn("destination")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter by recipient..."
+          value={(table.getColumn("recipientName")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("destination")?.setFilterValue(event.target.value)
+            table.getColumn("recipientName")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -311,8 +245,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {table.getFilteredRowModel().rows.length} row(s) displayed.
         </div>
         <div className="space-x-2">
           <Button
@@ -333,23 +266,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
           </Button>
         </div>
       </div>
-      {selectedExpedition && (
-        <>
-          <DocumentAssistant
-            isOpen={isDocumentAssistantOpen}
-            setIsOpen={setDocumentAssistantOpen}
-            expedition={selectedExpedition}
-            onDocumentGenerated={updateExpeditionDocument}
-          />
-          <EmailComposer
-            isOpen={isEmailComposerOpen}
-            setIsOpen={setEmailComposerOpen}
-            expedition={selectedExpedition}
-          />
-        </>
-      )}
     </div>
   );
 };
-
-    

@@ -17,12 +17,14 @@ export type ExpeditionStatus =
 export interface Document {
     status: DocumentStatus;
     content?: string;
+    url?: string;
 }
 
 export interface Expedition {
   id: string;
   origin: string;
-  destination: string;
+  recipientName: string;
+  recipientAddress: string;
   items: string[];
   status: ExpeditionStatus;
   awb?: string;
