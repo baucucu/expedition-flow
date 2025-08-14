@@ -10,6 +10,7 @@ import { UploadCloud, LogOut } from "lucide-react";
 import { AppLogo } from "@/components/icons";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 export default function ExpeditionsPage() {
   const { user, loading } = useAuth();
@@ -61,8 +62,8 @@ export default function ExpeditionsPage() {
           <h1 className="text-xl font-bold tracking-tight">ExpeditionFlow</h1>
         </div>
         <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-            <a href="/" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</a>
-            <a href="/expeditions" className="text-primary">Expeditions</a>
+            <Link href="/" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</Link>
+            <Link href="/expeditions" className="text-primary">Expeditions</Link>
         </nav>
         <div className="ml-auto flex items-center gap-4">
           <Button variant="outline">

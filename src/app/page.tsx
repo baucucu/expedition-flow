@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -9,6 +10,7 @@ import { AppLogo } from "@/components/icons";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -60,8 +62,8 @@ export default function Home() {
           <h1 className="text-xl font-bold tracking-tight">ExpeditionFlow</h1>
         </div>
         <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-          <a href="/" className="text-primary">Dashboard</a>
-          <a href="/expeditions" className="text-muted-foreground transition-colors hover:text-foreground">Expeditions</a>
+          <Link href="/" className="text-primary">Dashboard</Link>
+          <Link href="/expeditions" className="text-muted-foreground transition-colors hover:text-foreground">Expeditions</Link>
         </nav>
         <div className="ml-auto flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={handleSignOut}>
