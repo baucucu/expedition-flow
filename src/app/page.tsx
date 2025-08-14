@@ -39,6 +39,7 @@ export default function Home() {
         docsGenerated: allDocs.filter(d => d.status === 'Generated').length,
         docsFailed: allDocs.filter(d => d.status === 'Failed').length,
         awbGenerated: mockExpeditions.filter(e => e.status === 'AWB Generated').length,
+        awbFailed: mockExpeditions.filter(e => e.status === 'AWB Generation Failed').length,
         sentToLogistics: mockExpeditions.filter(e => e.status === 'Sent to Logistics').length,
         inTransit: mockExpeditions.filter(e => e.status === 'In Transit').length,
         delivered: allRecipients.filter(r => r.status === 'Delivered').length,
@@ -227,7 +228,12 @@ export default function Home() {
                 <CardContent className="h-16">
                     <div className="text-3xl font-bold">{scorecardCounts.awbGenerated}</div>
                 </CardContent>
-                 <CardFooter className="h-8 pb-4" />
+                <CardFooter className="h-8 pb-4">
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {scorecardCounts.awbFailed} errors
+                    </p>
+                </CardFooter>
             </Card>
 
             <Card
