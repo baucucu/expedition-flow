@@ -90,22 +90,6 @@ export default function Home() {
     router.push('/login');
   };
 
-  const handleGenerateAWB = (expeditionId: string) => {
-    setMockExpeditions(prev => prev.map(exp => 
-      exp.id === expeditionId ? { ...exp, status: 'AWB Generated', awb: `AWB-${Date.now()}` } : exp
-    ));
-  };
-  
-  const handleManageDocuments = (expedition: Expedition) => {
-    setSelectedExpedition(expedition);
-    setIsDocAssistantOpen(true);
-  };
-
-  const handlePrepareEmail = (expedition: Expedition) => {
-    setSelectedExpedition(expedition);
-    setIsEmailComposerOpen(true);
-  };
-  
   const handleSendToLogistics = (expeditionId: string) => {
     setMockExpeditions(prev => prev.map(exp => 
       exp.id === expeditionId ? { ...exp, status: 'Sent to Logistics' } : exp
@@ -233,9 +217,6 @@ export default function Home() {
         <ExpeditionDashboard 
             initialData={filteredRecipients} 
             expeditions={mockExpeditions}
-            onGenerateAWB={handleGenerateAWB}
-            onManageDocuments={handleManageDocuments}
-            onPrepareEmail={handlePrepareEmail}
             onSendToLogistics={handleSendToLogistics}
         />
       </main>

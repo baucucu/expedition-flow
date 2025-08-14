@@ -26,7 +26,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ExpeditionActions } from "@/components/expedition-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,9 +52,6 @@ type RecipientRow = Recipient & { expeditionId: string; awb?: string, expedition
 interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
     expeditions: Expedition[];
-    onGenerateAWB: (id: string) => void;
-    onManageDocuments: (expedition: Expedition) => void;
-    onPrepareEmail: (expedition: Expedition) => void;
     onSendToLogistics: (id: string) => void;
 }
 
@@ -85,9 +81,6 @@ const DocumentPlaceholder = ({ title }: { title: string }) => (
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
     expeditions,
-    onGenerateAWB,
-    onManageDocuments,
-    onPrepareEmail,
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -192,23 +185,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     )}
                 </div>
             );
-        },
-      },
-      {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-          const expedition = expeditions.find(e => e.id === row.original.expeditionId);
-          if (!expedition) return null;
-          
-          return (
-            <ExpeditionActions 
-                expedition={expedition}
-                onGenerateAWB={onGenerateAWB}
-                onManageDocuments={onManageDocuments}
-                onPrepareEmail={onPrepareEmail}
-            />
-          )
         },
       },
   ];
