@@ -40,6 +40,10 @@ interface ScorecardGridProps {
 }
 
 export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilter, setActiveFilter }) => {
+  const isFilterActive = (mainFilter: FilterStatus, errorFilter?: FilterStatus) => {
+    return activeFilter === mainFilter || activeFilter === errorFilter;
+  }
+  
   return (
     <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
       <Scorecard
@@ -60,7 +64,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         errorCount={counts.docsGenerated.errorCount}
         onClick={() => setActiveFilter('Documents Generated')}
         onFooterClick={() => setActiveFilter('DocsFailed')}
-        isActive={activeFilter === 'Documents Generated'}
+        isActive={isFilterActive('Documents Generated', 'DocsFailed')}
       />
       <Scorecard
         title="AWB Generated"
@@ -71,7 +75,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         errorCount={counts.awbGenerated.errorCount}
         onClick={() => setActiveFilter('AWB Generated')}
         onFooterClick={() => setActiveFilter('AwbFailed')}
-        isActive={activeFilter === 'AWB Generated'}
+        isActive={isFilterActive('AWB Generated', 'AwbFailed')}
       />
       <Scorecard
         title="Sent to Logistics"
@@ -82,7 +86,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         errorCount={counts.sentToLogistics.errorCount}
         onClick={() => setActiveFilter('Sent to Logistics')}
         onFooterClick={() => setActiveFilter('EmailFailed')}
-        isActive={activeFilter === 'Sent to Logistics'}
+        isActive={isFilterActive('Sent to Logistics', 'EmailFailed')}
       />
       <Scorecard
         title="In Transit"

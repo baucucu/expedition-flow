@@ -14,7 +14,7 @@ import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
 import { Box } from "lucide-react";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'Documents Generated' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'Documents Generated' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | null;
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -113,8 +113,17 @@ export default function Home() {
         return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId) || issueRecipientIds.includes(r.id));
     }
 
-    if (activeFilter === 'CompletedRecipients') return allRecipients.filter(r => r.status === 'Completed');
-    if (activeFilter === 'Delivered') return allRecipients.filter(r => r.status === 'Delivered');
+    if (['NewRecipient', 'CompletedRecipients', 'Delivered', 'Returned'].includes(activeFilter)) {
+        const statusMap = {
+            'NewRecipient': 'New',
+            'CompletedRecipients': 'Completed',
+            'Delivered': 'Delivered',
+            'Returned': 'Returned'
+        };
+        const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
+        return allRecipients.filter(r => r.status === recipientStatus);
+    }
+
     if (activeFilter === 'Documents Generated') {
         const recipientIds = allRecipients
             .filter(r => Object.values(r.documents).every(d => d.status === 'Generated'))
