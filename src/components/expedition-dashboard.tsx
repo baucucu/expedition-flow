@@ -69,6 +69,15 @@ type SelectedDocument = {
   docType: DocumentType | 'AWB';
 }
 
+const DocumentPlaceholder = ({ title }: { title: string }) => (
+    <div className="w-full h-[80vh] mt-4 border rounded-md bg-slate-50 flex items-center justify-center">
+        <div className="text-center text-muted-foreground">
+            <p className="text-lg font-semibold">Document Placeholder</p>
+            <p className="text-sm">{title}</p>
+        </div>
+    </div>
+)
+
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initialData }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -287,16 +296,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                         <TabsTrigger value="AWB" disabled={!selectedDocument.expedition.awb}>AWB</TabsTrigger>
                     </TabsList>
                     <TabsContent value="proces verbal de receptie">
-                        <iframe src={selectedDocument.expedition.documents['proces verbal de receptie'].url} className="w-full h-[80vh] mt-4 border rounded-md" title="Proces verbal de receptie" />
+                        <DocumentPlaceholder title="Proces verbal de receptie" />
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
-                        <iframe src={selectedDocument.expedition.documents['instructiuni pentru confirmarea primirii coletului'].url} className="w-full h-[80vh] mt-4 border rounded-md" title="Instructiuni" />
+                        <DocumentPlaceholder title="Instructiuni pentru confirmarea primirii coletului" />
                     </TabsContent>
                     <TabsContent value="parcel inventory">
-                        <iframe src={selectedDocument.expedition.documents['parcel inventory'].url} className="w-full h-[80vh] mt-4 border rounded-md" title="Parcel Inventory" />
+                        <DocumentPlaceholder title="Parcel Inventory" />
                     </TabsContent>
                     <TabsContent value="AWB">
-                        <iframe src={`https://www.courier-tracking-placeholder.com/track?id=${selectedDocument.expedition.awb}`} className="w-full h-[80vh] mt-4 border rounded-md" title="AWB Tracking" />
+                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.expedition.awb}`} />
                     </TabsContent>
                 </Tabs>
             </>
