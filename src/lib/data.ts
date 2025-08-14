@@ -19,11 +19,11 @@ const recipient1B: Recipient = {
   name: "Ion Creanga",
   address: "Timisoara, RO",
   items: ["Books (Box of 20)", "Reading light"],
-  status: "Documents Generated",
+  status: "New",
   documents: {
       "proces verbal de receptie": { status: "Generated", url: "#", content: "..." },
       "instructiuni pentru confirmarea primirii coletului": { status: "Generated", url: "#", content: "..." },
-      "parcel inventory": { status: "Failed", url: "#", content: "..." },
+      "parcel inventory": { status: "Failed" },
   },
 };
 
@@ -47,9 +47,9 @@ const recipient3A: Recipient = {
   items: ["Mechanical Keyboard", "Monitor Stand"],
   status: "New",
   documents: {
-      "proces verbal de receptie": { status: "Not Generated", url: "#" },
-      "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated", url: "#" },
-      "parcel inventory": { status: "Not Generated", url: "#" },
+      "proces verbal de receptie": { status: "Not Generated" },
+      "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated" },
+      "parcel inventory": { status: "Not Generated" },
   },
 };
 
@@ -58,11 +58,11 @@ const recipient4A: Recipient = {
     name: "Vasile Alecsandri",
     address: "Iasi, RO",
     items: ["Monitor", "Webcam"],
-    status: "New",
+    status: "Completed",
     documents: {
-        "proces verbal de receptie": { status: "Not Generated", url: "#" },
-        "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated", url: "#" },
-        "parcel inventory": { status: "Not Generated", url: "#" },
+        "proces verbal de receptie": { status: "Generated", url: "#", content: "..." },
+        "instructiuni pentru confirmarea primirii coletului": { status: "Generated", url: "#", content: "..." },
+        "parcel inventory": { status: "Generated", url: "#", content: "..." },
     },
 };
 
@@ -73,7 +73,7 @@ export const mockExpeditions: Expedition[] = [
     origin: "Bucharest, RO",
     destination: "Domestic",
     status: "Ready for Logistics",
-    awb: undefined,
+    awb: "AWB-MULTI-123",
     recipients: [recipient1A, recipient1B]
   },
   {
