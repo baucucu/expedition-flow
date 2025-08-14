@@ -1,16 +1,17 @@
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ExpeditionDashboard } from "@/components/expedition-dashboard";
 import { Button } from "@/components/ui/button";
-import { LogOut, Truck } from "lucide-react";
+import { UploadCloud, LogOut } from "lucide-react";
 import { AppLogo } from "@/components/icons";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function Home() {
+export default function ExpeditionsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -60,10 +61,14 @@ export default function Home() {
           <h1 className="text-xl font-bold tracking-tight">ExpeditionFlow</h1>
         </div>
         <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-          <a href="/" className="text-primary">Dashboard</a>
-          <a href="/expeditions" className="text-muted-foreground transition-colors hover:text-foreground">Expeditions</a>
+            <a href="/" className="text-muted-foreground transition-colors hover:text-foreground">Dashboard</a>
+            <a href="/expeditions" className="text-primary">Expeditions</a>
         </nav>
         <div className="ml-auto flex items-center gap-4">
+          <Button variant="outline">
+            <UploadCloud className="mr-2 h-4 w-4" />
+            Import Expeditions
+          </Button>
           <Button variant="ghost" size="icon" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" />
             <span className="sr-only">Sign Out</span>
@@ -71,20 +76,7 @@ export default function Home() {
         </div>
       </header>
       <main className="flex flex-1 flex-col p-4 md:p-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Expeditions</CardTitle>
-                    <Truck className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">5</div>
-                    <p className="text-xs text-muted-foreground">
-                        All expeditions currently in the system
-                    </p>
-                </CardContent>
-            </Card>
-        </div>
+        <ExpeditionDashboard />
       </main>
     </div>
   );
