@@ -32,12 +32,20 @@ export default function Home() {
   ), [mockExpeditions]);
 
   const scorecardCounts = useMemo(() => {
+    const recipientsWithGeneratedDocs = allRecipients.filter(r => 
+        Object.values(r.documents).every(d => d.status === 'Generated')
+    ).length;
+
+    const recipientsWithFailedDocs = allRecipients.filter(r => 
+        Object.values(r.documents).some(d => d.status === 'Failed')
+    ).length;
+
     const allDocs = allRecipients.flatMap(r => Object.values(r.documents));
     return {
         totalExpeditions: mockExpeditions.length,
         totalRecipients: allRecipients.length,
-        docsGenerated: allDocs.filter(d => d.status === 'Generated').length,
-        docsFailed: allDocs.filter(d => d.status === 'Failed').length,
+        docsGenerated: recipientsWithGeneratedDocs,
+        docsFailed: recipientsWithFailedDocs,
         awbGenerated: mockExpeditions.filter(e => e.status === 'AWB Generated').length,
         awbFailed: mockExpeditions.filter(e => e.status === 'AWB Generation Failed').length,
         sentToLogistics: mockExpeditions.filter(e => e.status === 'Sent to Logistics').length,
@@ -45,7 +53,7 @@ export default function Home() {
         inTransit: mockExpeditions.filter(e => e.status === 'In Transit').length,
         delivered: allRecipients.filter(r => r.status === 'Delivered').length,
         issues: mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status)).length 
-                + allDocs.filter(d => d.status === 'Failed').length,
+                + recipientsWithFailedDocs,
         completed: allRecipients.filter(r => r.status === 'Completed').length,
     }
   }, [allRecipients, mockExpeditions]);
