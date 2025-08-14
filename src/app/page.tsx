@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Box, FilePlus2, Hourglass, CheckCircle2, AlertTriangle, Send, Truck, PackageCheck, Users } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { mockExpeditions as initialMockExpeditions } from "@/lib/data";
 import type { Expedition, ExpeditionStatus, DocumentType, Recipient } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard";
@@ -194,23 +194,25 @@ export default function Home() {
                         key={key} 
                         onClick={() => filter && setActiveFilter(filter as FilterStatus)}
                         className={cn(
-                            "cursor-pointer transition-all hover:shadow-md hover:-translate-y-1",
-                             filter && activeFilter === filter && "ring-2 ring-primary shadow-lg"
+                            "cursor-pointer transition-all hover:shadow-md",
+                            filter && activeFilter === filter && "ring-2 ring-primary shadow-lg"
                         )}
                     >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
                             <CardTitle className="text-sm font-medium">{label}</CardTitle>
                             <Icon className={cn("h-4 w-4 text-muted-foreground", key === 'issues' && 'text-destructive')} />
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{count}</div>
-                             {key === 'totalExpeditions' && (
+                        <CardContent className="h-16">
+                            <div className="text-3xl font-bold">{count}</div>
+                        </CardContent>
+                         <CardFooter className="h-8 pb-4">
+                            {key === 'totalExpeditions' && (
                                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                                     <Users className="w-3 h-3" />
                                     {scorecardCounts.totalRecipients} recipients
                                 </p>
                             )}
-                        </CardContent>
+                        </CardFooter>
                     </Card>
                 )
             })}
@@ -240,3 +242,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
