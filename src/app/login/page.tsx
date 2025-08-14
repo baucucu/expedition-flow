@@ -1,4 +1,4 @@
-// src/app/login/page.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { AppLogo } from "@/components/icons";
+import { Box } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -39,7 +39,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="flex w-full max-w-sm flex-col items-center justify-center gap-4">
         <div className="mb-4 flex items-center gap-2">
-          <AppLogo />
+          <Box className="h-8 w-8" />
           <h1 className="text-3xl font-bold tracking-tight">ExpeditionFlow</h1>
         </div>
 
