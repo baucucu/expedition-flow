@@ -16,6 +16,7 @@ import {
 } from "@tanstack/react-table";
 import {
   ArrowUpDown,
+  Mail,
 } from "lucide-react";
 import {
   Sheet,
@@ -54,16 +55,17 @@ interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
 }
 
-const docShortNames: Record<DocumentType | 'AWB', string> = {
+const docShortNames: Record<DocumentType | 'AWB' | 'Email', string> = {
     'proces verbal de receptie': 'PV',
     'instructiuni pentru confirmarea primirii coletului': 'Instr.',
     'parcel inventory': 'Inv.',
-    'AWB': 'AWB'
+    'AWB': 'AWB',
+    'Email': 'Email'
 }
 
 type SelectedDocument = {
   recipient: RecipientRow;
-  docType: DocumentType | 'AWB';
+  docType: DocumentType | 'AWB' | 'Email';
 }
 
 const DocumentPlaceholder = ({ title }: { title: string }) => (
@@ -88,7 +90,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
     setData(initialData);
   }, [initialData]);
 
-  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB') => {
+  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email') => {
     setSelectedDocument({ recipient, docType });
   }
 
@@ -144,6 +146,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
         cell: ({ row }) => {
             const recipient = row.original;
             const docTypes: DocumentType[] = ['proces verbal de receptie', 'instructiuni pentru confirmarea primirii coletului', 'parcel inventory'];
+            const emailSent = ['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(recipient.expeditionStatus);
+
             return (
                 <div className="flex gap-2">
                     {docTypes.map(docType => {
@@ -168,6 +172,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                             onClick={() => handleOpenDocument(recipient, 'AWB')}
                         >
                             {docShortNames['AWB']}
+                        </Badge>
+                    )}
+                    {emailSent && (
+                        <Badge
+                            variant={"secondary"}
+                            className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                            onClick={() => handleOpenDocument(recipient, 'Email')}
+                        >
+                            <Mail className="w-3 h-3" />
+                            {docShortNames['Email']}
                         </Badge>
                     )}
                 </div>
@@ -297,6 +311,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                         <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
                         <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb}>AWB</TabsTrigger>
+                        <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="proces verbal de receptie">
                         <DocumentPlaceholder title="Proces verbal de receptie" />
@@ -309,6 +324,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                     </TabsContent>
                     <TabsContent value="AWB">
                         <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb}`} />
+                    </TabsContent>
+                    <TabsContent value="Email">
+                        <DocumentPlaceholder title={`Email to Logistics for AWB: ${selectedDocument.recipient.awb}`} />
                     </TabsContent>
                 </Tabs>
             </>
