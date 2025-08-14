@@ -97,6 +97,38 @@ const DocumentLinkBadge: React.FC<{docType: DocumentType, expedition: Expedition
     )
 }
 
+const AWBLinkBadge: React.FC<{expedition: Expedition}> = ({ expedition }) => {
+    if (!expedition.awb) {
+        return <Badge variant="outline" className="font-normal">AWB</Badge>
+    }
+
+    const trackingUrl = `https://www.courier-tracking-placeholder.com/track?id=${expedition.awb}`;
+
+    return (
+        <Sheet>
+            <SheetTrigger asChild>
+                <Badge
+                    variant="secondary"
+                    className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
+                >
+                    AWB
+                </Badge>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>AWB Tracking: {expedition.awb}</SheetTitle>
+                    <SheetDescription>
+                       Live tracking information for expedition {expedition.id}.
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="py-4">
+                     <iframe src={trackingUrl} className="w-full h-96 mt-4 border rounded-md" title={`AWB Tracking for ${expedition.awb}`} />
+                </div>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initialData }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -159,6 +191,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                 <DocumentLinkBadge docType="proces verbal de receptie" expedition={expedition} />
                 <DocumentLinkBadge docType="instructiuni pentru confirmarea primirii coletului" expedition={expedition} />
                 <DocumentLinkBadge docType="parcel inventory" expedition={expedition} />
+                <AWBLinkBadge expedition={expedition} />
             </div>
           )
         },
