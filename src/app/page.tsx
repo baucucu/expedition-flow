@@ -9,60 +9,79 @@ import { LogOut, Box, FilePlus2, Hourglass, ThumbsUp, AlertTriangle, PackageChec
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 import { mockExpeditions } from "@/lib/data";
 import type { ExpeditionStatus } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard";
 import { cn } from "@/lib/utils";
 
-const statusConfig: { [key in ExpeditionStatus | 'Total' | 'Issues']: { icon: React.FC<any>, label: string } } = {
+const statusConfig: { [key in ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients']: { icon: React.FC<any>, label: string } } = {
   Total: { icon: Box, label: "Total Expeditions" },
-  "Documents Generated": { icon: FilePlus2, label: "Docs Generated" },
-  "AWB Generated": { icon: Hourglass, label: "AWB Generated" },
-  "Sent to Logistics": { icon: Send, label: "Sent to Logistics" },
+  "Documents Generated": { icon: FilePlus2, label: "Docs Ready" },
+  "AWB Generated": { icon: Hourglass, label: "AWB Ready" },
+  "Sent to Logistics": { icon: Send, label: "In Logistics" },
   "In Transit": { icon: Truck, label: "In Transit" },
-  Delivered: { icon: PackageCheck, label: "Delivered" },
   Issues: { icon: AlertTriangle, label: "Issues" },
-  Completed: { icon: ThumbsUp, label: "Completed" },
+  CompletedRecipients: { icon: ThumbsUp, label: "Recipients Done" },
   // These are not primary scorecards but needed for counting
   New: { icon: FilePlus2, label: "New" },
+  "Ready for Logistics": { icon: PackageSearch, label: "Ready" },
   Canceled: { icon: PackageX, label: "Canceled" },
-  "Lost or Damaged": { icon: AlertTriangle, label: "Lost or Damaged" },
-  Returned: { icon: RotateCcw, label: "Returned" },
+  "Lost or Damaged": { icon: PackageX, label: "Lost/Damaged" },
 };
 
-type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | null;
-
+type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | null;
 
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('Total');
 
-  const expeditionCounts = useMemo(() => {
-    const counts: { [key: string]: number } = {
-      Total: mockExpeditions.length,
-      Issues: 0,
-    };
-    
-    for (const exp of mockExpeditions) {
-      counts[exp.status] = (counts[exp.status] || 0) + 1;
-      if (['Canceled', 'Lost or Damaged', 'Returned'].includes(exp.status)) {
-        counts['Issues'] = (counts['Issues'] || 0) + 1;
-      }
-    }
-    return counts;
-  }, []);
+  const allRecipients = useMemo(() => mockExpeditions.flatMap(exp => 
+    exp.recipients.map(rec => ({ ...rec, expeditionId: exp.id, expeditionStatus: exp.status, awb: exp.awb }))
+  ), []);
 
-  const filteredExpeditions = useMemo(() => {
+  const expeditionCounts = useMemo(() => {
+    const recipientDocsGenerated = allRecipients.filter(r => r.status === 'Documents Generated').length;
+    const awbGenerated = mockExpeditions.filter(e => e.status === 'AWB Generated').length;
+    const sentToLogistics = mockExpeditions.filter(e => e.status === 'Sent to Logistics').length;
+    const inTransit = mockExpeditions.filter(e => e.status === 'In Transit').length;
+    const delivered = allRecipients.filter(r => r.status === 'Delivered').length;
+    const issues = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length;
+    const completedRecipients = allRecipients.filter(r => r.status === 'Completed').length;
+
+    return {
+      Total: mockExpeditions.length,
+      "Documents Generated": recipientDocsGenerated,
+      "AWB Generated": awbGenerated,
+      "Sent to Logistics": sentToLogistics,
+      "In Transit": inTransit,
+      "Delivered": delivered, // Note: This is recipient based
+      "Issues": issues,
+      "CompletedRecipients": completedRecipients,
+    };
+  }, [allRecipients]);
+
+  const filteredRecipients = useMemo(() => {
     if (!activeFilter || activeFilter === 'Total') {
-        return mockExpeditions;
+        return allRecipients;
     }
     if (activeFilter === 'Issues') {
-        return mockExpeditions.filter(exp => ['Canceled', 'Lost or Damaged', 'Returned'].includes(exp.status));
+        const issueExpeditionIds = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
+        return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId));
     }
-    return mockExpeditions.filter(exp => exp.status === activeFilter);
-  }, [activeFilter]);
+    if (activeFilter === 'CompletedRecipients') {
+      return allRecipients.filter(r => r.status === 'Completed');
+    }
+    if(activeFilter === 'Documents Generated') {
+      return allRecipients.filter(r => r.status === 'Documents Generated');
+    }
+    
+    // Expedition-level statuses
+    const expeditionFilteredIds = mockExpeditions.filter(e => e.status === activeFilter).map(e => e.id);
+    return allRecipients.filter(r => expeditionFilteredIds.includes(r.expeditionId));
+
+  }, [activeFilter, allRecipients]);
+
 
   useEffect(() => {
     if (!loading && !user) {
@@ -102,7 +121,7 @@ export default function Home() {
     );
   }
 
-  const scorecardOrder: (keyof typeof statusConfig)[] = [
+  const scorecardOrder: (keyof typeof expeditionCounts)[] = [
     'Total',
     'Documents Generated',
     'AWB Generated',
@@ -110,7 +129,7 @@ export default function Home() {
     'In Transit',
     'Delivered',
     'Issues',
-    'Completed',
+    'CompletedRecipients',
   ];
 
   return (
@@ -130,8 +149,8 @@ export default function Home() {
       <main className="flex flex-1 flex-col p-4 md:p-6 gap-6">
         <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
             {scorecardOrder.map(key => {
-                const Icon = statusConfig[key].icon;
-                const label = statusConfig[key].label;
+                const Icon = statusConfig[key as keyof typeof statusConfig]?.icon || Box;
+                const label = statusConfig[key as keyof typeof statusConfig]?.label || key;
                 const count = expeditionCounts[key] || 0;
                 const filterKey = key === 'Total' ? 'Total' : key;
                 return (
@@ -155,7 +174,7 @@ export default function Home() {
             })}
         </div>
 
-        <ExpeditionDashboard initialData={filteredExpeditions} />
+        <ExpeditionDashboard initialData={filteredRecipients} />
       </main>
     </div>
   );

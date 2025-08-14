@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,23 +37,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Expedition, ExpeditionStatus, DocumentType } from "@/types";
+import type { Recipient, DocumentType, RecipientStatus } from "@/types";
 
-const statusVariant: { [key in ExpeditionStatus]: "default" | "secondary" | "outline" | "destructive" } = {
+const statusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
   "Documents Generated": "secondary",
-  "AWB Generated": "secondary",
-  "Sent to Logistics": "secondary",
-  "In Transit": "default",
   Delivered: "default",
   Completed: "default",
-  Canceled: "destructive",
-  "Lost or Damaged": "destructive",
   Returned: "destructive",
 };
 
+// Add expeditionId and awb to the recipient for table display
+type RecipientRow = Recipient & { expeditionId: string; awb?: string, expeditionStatus: string };
+
 interface ExpeditionDashboardProps {
-    initialData: Expedition[];
+    initialData: RecipientRow[];
 }
 
 const docShortNames: Record<DocumentType | 'AWB', string> = {
@@ -65,7 +62,7 @@ const docShortNames: Record<DocumentType | 'AWB', string> = {
 }
 
 type SelectedDocument = {
-  expedition: Expedition;
+  recipient: RecipientRow;
   docType: DocumentType | 'AWB';
 }
 
@@ -84,46 +81,51 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [data, setData] = React.useState<Expedition[]>(initialData);
+  const [data, setData] = React.useState<RecipientRow[]>(initialData);
   const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
 
   React.useEffect(() => {
     setData(initialData);
   }, [initialData]);
 
-  const handleOpenDocument = (expedition: Expedition, docType: DocumentType | 'AWB') => {
-    setSelectedDocument({ expedition, docType });
+  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB') => {
+    setSelectedDocument({ recipient, docType });
   }
 
-  const columns: ColumnDef<Expedition>[] = [
+  const columns: ColumnDef<RecipientRow>[] = [
     {
-      accessorKey: "id",
+      accessorKey: "expeditionId",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          ID
+          Exp. ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div className="lowercase">{row.getValue("id")}</div>,
+      cell: ({ row }) => <div className="lowercase">{row.getValue("expeditionId")}</div>,
     },
     {
-        accessorKey: "recipientName",
+      accessorKey: "id",
+      header: "Recipient ID",
+      cell: ({ row }) => <div>{row.getValue("id")}</div>,
+    },
+    {
+        accessorKey: "name",
         header: "Recipient Name",
-        cell: ({ row }) => <div>{row.getValue("recipientName")}</div>,
+        cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
     {
-        accessorKey: "recipientAddress",
+        accessorKey: "address",
         header: "Recipient Address",
-        cell: ({ row }) => <div>{row.getValue("recipientAddress")}</div>,
+        cell: ({ row }) => <div>{row.getValue("address")}</div>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: "Recipient Status",
       cell: ({ row }) => {
-        const status: ExpeditionStatus = row.getValue("status");
+        const status: RecipientStatus = row.getValue("status");
         return (
           <Badge variant={statusVariant[status] || "default"} className="capitalize">
             {status}
@@ -140,12 +142,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
         id: "documents",
         header: "Documents",
         cell: ({ row }) => {
-            const expedition = row.original;
+            const recipient = row.original;
             const docTypes: DocumentType[] = ['proces verbal de receptie', 'instructiuni pentru confirmarea primirii coletului', 'parcel inventory'];
             return (
                 <div className="flex gap-2">
                     {docTypes.map(docType => {
-                        const doc = expedition.documents[docType];
+                        const doc = recipient.documents[docType];
                         const isGenerated = doc.status === 'Generated' && doc.url;
                         if (!isGenerated) return null;
                         return (
@@ -153,17 +155,17 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                                 key={docType}
                                 variant={"secondary"}
                                 className={"cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"}
-                                onClick={() => handleOpenDocument(expedition, docType)}
+                                onClick={() => handleOpenDocument(recipient, docType)}
                             >
                                 {docShortNames[docType]}
                             </Badge>
                         );
                     })}
-                    {expedition.awb && (
+                    {recipient.awb && (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                            onClick={() => handleOpenDocument(expedition, 'AWB')}
+                            onClick={() => handleOpenDocument(recipient, 'AWB')}
                         >
                             {docShortNames['AWB']}
                         </Badge>
@@ -197,10 +199,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter by recipient..."
-          value={(table.getColumn("recipientName")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter by recipient name..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("recipientName")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -284,17 +286,17 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
           {selectedDocument && (
             <>
                 <SheetHeader>
-                    <SheetTitle>Expedition Documents: {selectedDocument.expedition.id}</SheetTitle>
+                    <SheetTitle>Documents for Recipient: {selectedDocument.recipient.name} ({selectedDocument.recipient.id})</SheetTitle>
                     <SheetDescription>
-                        Review documents for the expedition to {selectedDocument.expedition.recipientName}.
+                        Part of expedition {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb || 'N/A'}.
                     </SheetDescription>
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="proces verbal de receptie" disabled={selectedDocument.expedition.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
-                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.expedition.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
-                        <TabsTrigger value="parcel inventory" disabled={selectedDocument.expedition.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
-                        <TabsTrigger value="AWB" disabled={!selectedDocument.expedition.awb}>AWB</TabsTrigger>
+                        <TabsTrigger value="proces verbal de receptie" disabled={selectedDocument.recipient.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
+                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
+                        <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
+                        <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb}>AWB</TabsTrigger>
                     </TabsList>
                     <TabsContent value="proces verbal de receptie">
                         <DocumentPlaceholder title="Proces verbal de receptie" />
@@ -306,7 +308,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                         <DocumentPlaceholder title="Parcel Inventory" />
                     </TabsContent>
                     <TabsContent value="AWB">
-                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.expedition.awb}`} />
+                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb}`} />
                     </TabsContent>
                 </Tabs>
             </>
