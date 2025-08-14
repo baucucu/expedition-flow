@@ -16,17 +16,6 @@ import { cn } from "@/lib/utils";
 import { DocumentAssistant } from "@/components/document-assistant";
 import { EmailComposer } from "@/components/email-composer";
 
-const statusConfig: { [key: string]: { icon: React.FC<any>, label: string, filter?: ExpeditionStatus | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'Total' } } = {
-  totalExpeditions: { icon: Box, label: "Total Expeditions", filter: 'Total' },
-  docsGenerated: { icon: FilePlus2, label: "Docs Generated", filter: 'Documents Generated' },
-  awbGenerated: { icon: Hourglass, label: "AWB Generated", filter: 'AWB Generated' },
-  sentToLogistics: { icon: Send, label: "Sent to Logistics", filter: 'Sent to Logistics' },
-  inTransit: { icon: Truck, label: "In Transit", filter: 'In Transit' },
-  delivered: { icon: PackageCheck, label: "Delivered", filter: 'Delivered' },
-  issues: { icon: AlertTriangle, label: "Issues", filter: 'Issues' },
-  completed: { icon: CheckCircle2, label: "Completed", filter: 'CompletedRecipients' },
-};
-
 type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | null;
 
 export default function Home() {
@@ -48,6 +37,7 @@ export default function Home() {
         totalExpeditions: mockExpeditions.length,
         totalRecipients: allRecipients.length,
         docsGenerated: allDocs.filter(d => d.status === 'Generated').length,
+        docsFailed: allDocs.filter(d => d.status === 'Failed').length,
         awbGenerated: mockExpeditions.filter(e => e.status === 'AWB Generated').length,
         sentToLogistics: mockExpeditions.filter(e => e.status === 'Sent to Logistics').length,
         inTransit: mockExpeditions.filter(e => e.status === 'In Transit').length,
@@ -162,10 +152,6 @@ export default function Home() {
       </div>
     );
   }
-  
-  const scorecardOrder: (keyof typeof scorecardCounts)[] = [
-    'totalExpeditions', 'docsGenerated', 'awbGenerated', 'sentToLogistics', 'inTransit', 'delivered', 'issues', 'completed'
-  ];
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -183,39 +169,151 @@ export default function Home() {
       </header>
       <main className="flex flex-1 flex-col p-4 md:p-6 gap-6">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
-            {scorecardOrder.map(key => {
-                const config = statusConfig[key];
-                if (!config) return null;
-                const { icon: Icon, label, filter } = config;
-                const count = scorecardCounts[key as keyof typeof scorecardCounts] || 0;
+            <Card
+                onClick={() => setActiveFilter('Total')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'Total' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">Total Expeditions</CardTitle>
+                    <Box className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.totalExpeditions}</div>
+                </CardContent>
+                <CardFooter className="h-8 pb-4">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {scorecardCounts.totalRecipients} recipients
+                    </p>
+                </CardFooter>
+            </Card>
 
-                return (
-                    <Card 
-                        key={key} 
-                        onClick={() => filter && setActiveFilter(filter as FilterStatus)}
-                        className={cn(
-                            "cursor-pointer transition-all hover:shadow-md",
-                            filter && activeFilter === filter && "ring-2 ring-primary shadow-lg"
-                        )}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
-                            <CardTitle className="text-sm font-medium">{label}</CardTitle>
-                            <Icon className={cn("h-4 w-4 text-muted-foreground", key === 'issues' && 'text-destructive')} />
-                        </CardHeader>
-                        <CardContent className="h-16">
-                            <div className="text-3xl font-bold">{count}</div>
-                        </CardContent>
-                         <CardFooter className="h-8 pb-4">
-                            {key === 'totalExpeditions' && (
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                    <Users className="w-3 h-3" />
-                                    {scorecardCounts.totalRecipients} recipients
-                                </p>
-                            )}
-                        </CardFooter>
-                    </Card>
-                )
-            })}
+            <Card
+                onClick={() => setActiveFilter('Documents Generated')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'Documents Generated' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">Docs Generated</CardTitle>
+                    <FilePlus2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.docsGenerated}</div>
+                </CardContent>
+                <CardFooter className="h-8 pb-4">
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {scorecardCounts.docsFailed} errors
+                    </p>
+                </CardFooter>
+            </Card>
+
+            <Card
+                onClick={() => setActiveFilter('AWB Generated')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'AWB Generated' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">AWB Generated</CardTitle>
+                    <Hourglass className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.awbGenerated}</div>
+                </CardContent>
+                 <CardFooter className="h-8 pb-4" />
+            </Card>
+
+            <Card
+                onClick={() => setActiveFilter('Sent to Logistics')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'Sent to Logistics' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">Sent to Logistics</CardTitle>
+                    <Send className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.sentToLogistics}</div>
+                </CardContent>
+                 <CardFooter className="h-8 pb-4" />
+            </Card>
+
+            <Card
+                onClick={() => setActiveFilter('In Transit')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'In Transit' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">In Transit</CardTitle>
+                    <Truck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.inTransit}</div>
+                </CardContent>
+                 <CardFooter className="h-8 pb-4" />
+            </Card>
+
+             <Card
+                onClick={() => setActiveFilter('Delivered')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'Delivered' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">Delivered</CardTitle>
+                    <PackageCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.delivered}</div>
+                </CardContent>
+                 <CardFooter className="h-8 pb-4" />
+            </Card>
+
+            <Card
+                onClick={() => setActiveFilter('Issues')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'Issues' && "ring-2 ring-destructive shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">Issues</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.issues}</div>
+                </CardContent>
+                 <CardFooter className="h-8 pb-4" />
+            </Card>
+
+            <Card
+                onClick={() => setActiveFilter('CompletedRecipients')}
+                className={cn(
+                    "cursor-pointer transition-all hover:shadow-md",
+                    activeFilter === 'CompletedRecipients' && "ring-2 ring-primary shadow-lg"
+                )}
+            >
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+                    <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent className="h-16">
+                    <div className="text-3xl font-bold">{scorecardCounts.completed}</div>
+                </CardContent>
+                 <CardFooter className="h-8 pb-4" />
+            </Card>
         </div>
 
         <ExpeditionDashboard 
@@ -242,5 +340,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
