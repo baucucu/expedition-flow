@@ -12,25 +12,23 @@ import {
 import { Button } from "./ui/button";
 import { FileText, Mail, MoreHorizontal, PlusCircle, Send } from "lucide-react";
 import type { Expedition } from "@/types";
-import { useToast } from "@/hooks/use-toast";
 
 interface ExpeditionActionsProps {
     expedition: Expedition;
     onGenerateAWB: (id: string) => void;
     onManageDocuments: (expedition: Expedition) => void;
     onPrepareEmail: (expedition: Expedition) => void;
-    onSendToLogistics: (id: string) => void;
 }
 
 export const ExpeditionActions: React.FC<ExpeditionActionsProps> = ({ 
     expedition, 
     onGenerateAWB,
     onManageDocuments,
-    onPrepareEmail,
-    onSendToLogistics 
+    onPrepareEmail
 }) => {
-    const allDocsGenerated = Object.values(expedition.documents).every(d => d.status === 'Generated');
+    const allDocsGenerated = expedition.status === 'Ready for Logistics';
     const awbGenerated = !!expedition.awb;
+    const canSendEmail = awbGenerated;
 
     return (
         <DropdownMenu>
@@ -51,13 +49,9 @@ export const ExpeditionActions: React.FC<ExpeditionActionsProps> = ({
                 Generate AWB
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onPrepareEmail(expedition)}>
+            <DropdownMenuItem onClick={() => onPrepareEmail(expedition)} disabled={!canSendEmail}>
                 <Mail className="mr-2 h-4 w-4" />
-                Prepare Email
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onSendToLogistics(expedition.id)} disabled={!awbGenerated}>
-                <Send className="mr-2 h-4 w-4" />
-                Send to Logistics
+                Prepare Email to Logistics
             </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

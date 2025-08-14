@@ -26,7 +26,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
+import { ExpeditionActions } from "@/components/expedition-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,9 +38,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Recipient, DocumentType, RecipientStatus } from "@/types";
+import type { Recipient, DocumentType, RecipientStatus, Expedition } from "@/types";
 
-const statusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
+const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
   "Documents Generated": "secondary",
   Delivered: "default",
@@ -48,11 +48,15 @@ const statusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outl
   Returned: "destructive",
 };
 
-// Add expeditionId and awb to the recipient for table display
 type RecipientRow = Recipient & { expeditionId: string; awb?: string, expeditionStatus: string };
 
 interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
+    expeditions: Expedition[];
+    onGenerateAWB: (id: string) => void;
+    onManageDocuments: (expedition: Expedition) => void;
+    onPrepareEmail: (expedition: Expedition) => void;
+    onSendToLogistics: (id: string) => void;
 }
 
 const docShortNames: Record<DocumentType | 'AWB' | 'Email', string> = {
@@ -78,7 +82,13 @@ const DocumentPlaceholder = ({ title }: { title: string }) => (
 )
 
 
-export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initialData }) => {
+export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
+    initialData, 
+    expeditions,
+    onGenerateAWB,
+    onManageDocuments,
+    onPrepareEmail,
+}) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -96,32 +106,28 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
 
   const columns: ColumnDef<RecipientRow>[] = [
     {
-      accessorKey: "expeditionId",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Exp. ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div className="lowercase">{row.getValue("expeditionId")}</div>,
+        id: "expedition",
+        header: "Expedition",
+        cell: ({ row }) => {
+            const expedition = expeditions.find(e => e.id === row.original.expeditionId);
+            if (!expedition) return null;
+            return (
+                <div className="flex flex-col">
+                    <span className="font-medium">{expedition.id}</span>
+                    <span className="text-xs text-muted-foreground">{expedition.status}</span>
+                </div>
+            )
+        }
     },
     {
-      accessorKey: "id",
-      header: "Recipient ID",
-      cell: ({ row }) => <div>{row.getValue("id")}</div>,
+      accessorKey: "name",
+      header: "Recipient Name",
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
     {
-        accessorKey: "name",
-        header: "Recipient Name",
-        cell: ({ row }) => <div>{row.getValue("name")}</div>,
-    },
-    {
-        accessorKey: "address",
-        header: "Recipient Address",
-        cell: ({ row }) => <div>{row.getValue("address")}</div>,
+      accessorKey: "address",
+      header: "Recipient Address",
+      cell: ({ row }) => <div>{row.getValue("address")}</div>,
     },
     {
       accessorKey: "status",
@@ -129,7 +135,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
       cell: ({ row }) => {
         const status: RecipientStatus = row.getValue("status");
         return (
-          <Badge variant={statusVariant[status] || "default"} className="capitalize">
+          <Badge variant={recipientStatusVariant[status] || "default"} className="capitalize">
             {status}
           </Badge>
         );
@@ -186,6 +192,23 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                     )}
                 </div>
             );
+        },
+      },
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const expedition = expeditions.find(e => e.id === row.original.expeditionId);
+          if (!expedition) return null;
+          
+          return (
+            <ExpeditionActions 
+                expedition={expedition}
+                onGenerateAWB={onGenerateAWB}
+                onManageDocuments={onManageDocuments}
+                onPrepareEmail={onPrepareEmail}
+            />
+          )
         },
       },
   ];

@@ -3,20 +3,22 @@ export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru co
 export type DocumentStatus = 'Not Generated' | 'Generated' | 'Generating...';
 
 export type RecipientStatus = 
-  | 'New'                       // Recipient added, no documents yet
-  | 'Documents Generated'       // All documents for this recipient are created
-  | 'Delivered'                 // Confirmed delivery to this recipient
-  | 'Completed'                 // Proces verbal for this recipient is signed and uploaded
-  | 'Returned';                 // This part of the shipment was returned
+  | 'New'
+  | 'Documents Generated'
+  | 'Delivered'
+  | 'Completed'
+  | 'Returned';
 
 export type ExpeditionStatus = 
-  | 'New'                       // Expedition created, recipients being added
-  | 'Ready for Logistics'       // All recipients have documents generated
-  | 'AWB Generated'             // AWB number is assigned
-  | 'Sent to Logistics'         // Email with documents sent to logistics partner
-  | 'In Transit'                // On its way
-  | 'Canceled'                  // Canceled by user
-  | 'Lost or Damaged';          // Failed in transit
+  | 'New'
+  | 'Ready for Logistics'
+  | 'AWB Generated'
+  | 'Sent to Logistics'
+  | 'In Transit'
+  | 'Delivered' // Note: This could be an aggregate status. A recipient-level status might be more accurate.
+  | 'Canceled'
+  | 'Lost or Damaged'
+  | 'Completed'; // Final state for the whole expedition
 
 
 export interface Document {
@@ -41,6 +43,7 @@ export interface Recipient {
 export interface Expedition {
   id: string;
   origin: string;
+  destination: string;
   status: ExpeditionStatus;
   recipients: Recipient[];
   awb?: string;

@@ -9,36 +9,42 @@ import { LogOut, Box, FilePlus2, Hourglass, ThumbsUp, AlertTriangle, PackageChec
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockExpeditions } from "@/lib/data";
-import type { ExpeditionStatus } from "@/types";
+import { mockExpeditions as initialMockExpeditions } from "@/lib/data";
+import type { Expedition, ExpeditionStatus, DocumentType, Recipient } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard";
 import { cn } from "@/lib/utils";
+import { DocumentAssistant } from "@/components/document-assistant";
+import { EmailComposer } from "@/components/email-composer";
 
-const statusConfig: { [key in ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients']: { icon: React.FC<any>, label: string } } = {
+const statusConfig: { [key in ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered']: { icon: React.FC<any>, label: string } } = {
   Total: { icon: Box, label: "Total Expeditions" },
   "Documents Generated": { icon: FilePlus2, label: "Docs Ready" },
   "AWB Generated": { icon: Hourglass, label: "AWB Ready" },
   "Sent to Logistics": { icon: Send, label: "In Logistics" },
   "In Transit": { icon: Truck, label: "In Transit" },
+  "Delivered": { icon: PackageCheck, label: "Delivered" },
   Issues: { icon: AlertTriangle, label: "Issues" },
   CompletedRecipients: { icon: ThumbsUp, label: "Recipients Done" },
-  // These are not primary scorecards but needed for counting
   New: { icon: FilePlus2, label: "New" },
   "Ready for Logistics": { icon: PackageSearch, label: "Ready" },
   Canceled: { icon: PackageX, label: "Canceled" },
   "Lost or Damaged": { icon: PackageX, label: "Lost/Damaged" },
 };
 
-type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | null;
+type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | null;
 
 export default function Home() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('Total');
+  const [mockExpeditions, setMockExpeditions] = useState(initialMockExpeditions);
+  const [isDocAssistantOpen, setIsDocAssistantOpen] = useState(false);
+  const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
+  const [selectedExpedition, setSelectedExpedition] = useState<Expedition | null>(null);
 
   const allRecipients = useMemo(() => mockExpeditions.flatMap(exp => 
     exp.recipients.map(rec => ({ ...rec, expeditionId: exp.id, expeditionStatus: exp.status, awb: exp.awb }))
-  ), []);
+  ), [mockExpeditions]);
 
   const expeditionCounts = useMemo(() => {
     const recipientDocsGenerated = allRecipients.filter(r => r.status === 'Documents Generated').length;
@@ -55,43 +61,93 @@ export default function Home() {
       "AWB Generated": awbGenerated,
       "Sent to Logistics": sentToLogistics,
       "In Transit": inTransit,
-      "Delivered": delivered, // Note: This is recipient based
+      "Delivered": delivered,
       "Issues": issues,
       "CompletedRecipients": completedRecipients,
     };
-  }, [allRecipients]);
+  }, [allRecipients, mockExpeditions]);
 
   const filteredRecipients = useMemo(() => {
-    if (!activeFilter || activeFilter === 'Total') {
-        return allRecipients;
-    }
+    if (!activeFilter || activeFilter === 'Total') return allRecipients;
     if (activeFilter === 'Issues') {
-        const issueExpeditionIds = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
-        return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId));
+      const issueExpeditionIds = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
+      return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId));
     }
-    if (activeFilter === 'CompletedRecipients') {
-      return allRecipients.filter(r => r.status === 'Completed');
-    }
-    if(activeFilter === 'Documents Generated') {
-      return allRecipients.filter(r => r.status === 'Documents Generated');
-    }
-    
-    // Expedition-level statuses
+    if (activeFilter === 'CompletedRecipients') return allRecipients.filter(r => r.status === 'Completed');
+    if (activeFilter === 'Delivered') return allRecipients.filter(r => r.status === 'Delivered');
+    if (activeFilter === 'Documents Generated') return allRecipients.filter(r => r.status === 'Documents Generated');
+
     const expeditionFilteredIds = mockExpeditions.filter(e => e.status === activeFilter).map(e => e.id);
     return allRecipients.filter(r => expeditionFilteredIds.includes(r.expeditionId));
-
-  }, [activeFilter, allRecipients]);
-
+  }, [activeFilter, allRecipients, mockExpeditions]);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
+    if (!loading && !user) router.push('/login');
   }, [user, loading, router]);
 
   const handleSignOut = async () => {
     await auth.signOut();
     router.push('/login');
+  };
+
+  const handleGenerateAWB = (expeditionId: string) => {
+    setMockExpeditions(prev => prev.map(exp => 
+      exp.id === expeditionId ? { ...exp, status: 'AWB Generated', awb: `AWB-${Date.now()}` } : exp
+    ));
+  };
+  
+  const handleManageDocuments = (expedition: Expedition) => {
+    setSelectedExpedition(expedition);
+    setIsDocAssistantOpen(true);
+  };
+
+  const handlePrepareEmail = (expedition: Expedition) => {
+    setSelectedExpedition(expedition);
+    setIsEmailComposerOpen(true);
+  };
+  
+  const handleSendToLogistics = (expeditionId: string) => {
+    setMockExpeditions(prev => prev.map(exp => 
+      exp.id === expeditionId ? { ...exp, status: 'Sent to Logistics' } : exp
+    ));
+  };
+
+  const handleDocumentGenerated = (expeditionId: string, recipientId: string, documentType: DocumentType, content: string) => {
+    setMockExpeditions(prevExpeditions => {
+        return prevExpeditions.map(exp => {
+            if (exp.id !== expeditionId) return exp;
+
+            let allRecipientsDocsGenerated = true;
+
+            const updatedRecipients = exp.recipients.map(rec => {
+                if (rec.id !== recipientId) {
+                    const allDocsForThisRecipient = Object.values(rec.documents).every(d => d.status === 'Generated');
+                    if (!allDocsForThisRecipient) allRecipientsDocsGenerated = false;
+                    return rec;
+                }
+
+                const updatedDocuments = {
+                    ...rec.documents,
+                    [documentType]: { status: 'Generated' as const, content, url: '#' }
+                };
+
+                const allDocsForThisRecipient = Object.values(updatedDocuments).every(d => d.status === 'Generated');
+                if (!allDocsForThisRecipient) allRecipientsDocsGenerated = false;
+
+                return {
+                    ...rec,
+                    documents: updatedDocuments,
+                    status: allDocsForThisRecipient ? 'Documents Generated' as const : rec.status,
+                };
+            });
+
+            return {
+                ...exp,
+                recipients: updatedRecipients,
+                status: allRecipientsDocsGenerated ? 'Ready for Logistics' as const : exp.status,
+            };
+        });
+    });
   };
 
   if (loading || !user) {
@@ -152,11 +208,11 @@ export default function Home() {
                 const Icon = statusConfig[key as keyof typeof statusConfig]?.icon || Box;
                 const label = statusConfig[key as keyof typeof statusConfig]?.label || key;
                 const count = expeditionCounts[key] || 0;
-                const filterKey = key === 'Total' ? 'Total' : key;
+                const filterKey = key as FilterStatus;
                 return (
                     <Card 
                         key={key} 
-                        onClick={() => setActiveFilter(filterKey as FilterStatus)}
+                        onClick={() => setActiveFilter(filterKey)}
                         className={cn(
                             "cursor-pointer transition-all hover:shadow-md hover:-translate-y-1",
                             activeFilter === filterKey && "ring-2 ring-primary shadow-lg"
@@ -174,8 +230,31 @@ export default function Home() {
             })}
         </div>
 
-        <ExpeditionDashboard initialData={filteredRecipients} />
+        <ExpeditionDashboard 
+            initialData={filteredRecipients} 
+            expeditions={mockExpeditions}
+            onGenerateAWB={handleGenerateAWB}
+            onManageDocuments={handleManageDocuments}
+            onPrepareEmail={handlePrepareEmail}
+            onSendToLogistics={handleSendToLogistics}
+        />
       </main>
+      {selectedExpedition && (
+        <>
+          <DocumentAssistant 
+            isOpen={isDocAssistantOpen}
+            setIsOpen={setIsDocAssistantOpen}
+            expedition={selectedExpedition}
+            onDocumentGenerated={handleDocumentGenerated}
+          />
+          <EmailComposer 
+            isOpen={isEmailComposerOpen}
+            setIsOpen={setIsEmailComposerOpen}
+            expedition={selectedExpedition}
+            onEmailSent={handleSendToLogistics}
+          />
+        </>
+      )}
     </div>
   );
 }

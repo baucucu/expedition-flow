@@ -39,20 +39,21 @@ Dear Logistics Team,
 
 Please find attached the necessary documents for the expedition with AWB ${expedition.awb || expedition.id}.
 
-Details:
-- Origin: ${expedition.origin}
-- Destination: ${expedition.destination}
+This expedition includes packages for the following recipients:
+${expedition.recipients.map(r => `- ${r.name} at ${r.address}`).join('\\n')}
 
 Thank you,
 Expedition Manager System
   `.trim();
 
-  const attachments = Object.entries(expedition.documents)
-    .filter(([, doc]) => doc.status === "Generated")
-    .map(([docType]) => {
-      const fileName = `${docType.replace(/ /g, "_")}_${expedition.id}.pdf`;
-      return { name: fileName, type: docType };
-    });
+  const attachments = Object.values(expedition.recipients).flatMap(recipient => 
+    Object.entries(recipient.documents)
+      .filter(([, doc]) => doc.status === "Generated")
+      .map(([docType]) => {
+        const fileName = `${docType.replace(/ /g, "_")}_${recipient.id}.pdf`;
+        return { name: fileName, type: docType };
+      })
+  );
   
   if (expedition.awb) {
     attachments.push({ name: `AWB_${expedition.awb}.pdf`, type: "AWB" });
@@ -131,5 +132,3 @@ Expedition Manager System
     </Dialog>
   );
 };
-
-    

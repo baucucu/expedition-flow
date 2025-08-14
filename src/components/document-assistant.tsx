@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -20,21 +21,22 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Expedition, DocumentType } from "@/types";
+import type { Expedition, DocumentType, Recipient } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { generateDocumentContentAction } from "@/app/actions/expedition-actions";
-import { QrCode, Sparkles } from "lucide-react";
+import { QrCode, Sparkles, User } from "lucide-react";
 import Image from "next/image";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
 interface DocumentAssistantProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   expedition: Expedition;
-  onDocumentGenerated: (expeditionId: string, documentType: DocumentType, content: string) => void;
+  onDocumentGenerated: (expeditionId: string, recipientId: string, documentType: DocumentType, content: string) => void;
 }
 
-const QRGenerator: React.FC<{ expeditionId: string }> = ({ expeditionId }) => {
-  const uploadUrl = `https://example.com/upload/${expeditionId}`;
+const QRGenerator: React.FC<{ recipientId: string }> = ({ recipientId }) => {
+  const uploadUrl = `https://example.com/upload/${recipientId}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(uploadUrl)}`;
 
   return (
@@ -59,17 +61,20 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({
   expedition,
   onDocumentGenerated,
 }) => {
+  const [selectedRecipientId, setSelectedRecipientId] = React.useState<string>(expedition.recipients[0]?.id || "");
   const [selectedDocType, setSelectedDocType] = React.useState<DocumentType | "">("");
   const [generatedContent, setGeneratedContent] = React.useState("");
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { toast } = useToast();
 
+  const selectedRecipient = expedition.recipients.find(r => r.id === selectedRecipientId);
+
   const handleGenerate = async () => {
-    if (!selectedDocType) {
+    if (!selectedDocType || !selectedRecipient) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please select a document type.",
+        description: "Please select a recipient and a document type.",
       });
       return;
     }
@@ -78,23 +83,24 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({
     setGeneratedContent("");
 
     const expeditionDetails = `
+      Expedition ID: ${expedition.id}
       Origin: ${expedition.origin}
-      Destination: ${expedition.destination}
-      Items: ${expedition.items.join(", ")}
+      Recipient: ${selectedRecipient.name}, ${selectedRecipient.address}
+      Items: ${selectedRecipient.items.join(", ")}
       AWB: ${expedition.awb || 'Not yet generated'}
     `;
 
     const result = await generateDocumentContentAction({
       documentType: selectedDocType,
       expeditionDetails: expeditionDetails,
-      existingContent: expedition.documents[selectedDocType].content || ""
+      existingContent: selectedRecipient.documents[selectedDocType]?.content || ""
     });
 
     setIsGenerating(false);
 
     if (result.success && result.data) {
       setGeneratedContent(result.data.content);
-      onDocumentGenerated(expedition.id, selectedDocType, result.data.content);
+      onDocumentGenerated(expedition.id, selectedRecipient.id, selectedDocType, result.data.content);
       toast({
         title: "Content Generated",
         description: `AI has successfully generated the content for ${selectedDocType}.`,
@@ -110,12 +116,12 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({
 
   React.useEffect(() => {
     if (isOpen) {
-        // Reset state on open
+        setSelectedRecipientId(expedition.recipients[0]?.id || "");
         setSelectedDocType("");
         setGeneratedContent("");
         setIsGenerating(false);
     }
-  }, [isOpen]);
+  }, [isOpen, expedition]);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -123,10 +129,32 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({
         <DialogHeader>
           <DialogTitle>Document Assistant</DialogTitle>
           <DialogDescription>
-            Generate content for expedition documents using AI for ID: {expedition.id}.
+            Generate content for expedition documents for ID: {expedition.id}.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-6 py-4">
+          
+          {expedition.recipients.length > 1 && (
+             <div className="grid grid-cols-4 items-start gap-4">
+                <Label className="text-right pt-2 flex items-center gap-1.5 justify-end">
+                    <User className="h-4 w-4" /> Recipient
+                </Label>
+                 <RadioGroup 
+                    value={selectedRecipientId} 
+                    onValueChange={setSelectedRecipientId}
+                    className="col-span-3"
+                    disabled={isGenerating}
+                >
+                    {expedition.recipients.map(recipient => (
+                        <div key={recipient.id} className="flex items-center space-x-2">
+                            <RadioGroupItem value={recipient.id} id={recipient.id} />
+                            <Label htmlFor={recipient.id} className="font-normal">{recipient.name} - {recipient.address}</Label>
+                        </div>
+                    ))}
+                </RadioGroup>
+             </div>
+          )}
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="doc-type" className="text-right">
               Document Type
@@ -159,15 +187,15 @@ export const DocumentAssistant: React.FC<DocumentAssistantProps> = ({
               ) : (
                 <Textarea id="content" value={generatedContent} readOnly className="min-h-[150px]" placeholder="AI-generated content will appear here."/>
               )}
-               {selectedDocType === 'instructiuni pentru confirmarea primirii coletului' && generatedContent && (
-                <QRGenerator expeditionId={expedition.id} />
+               {selectedDocType === 'instructiuni pentru confirmarea primirii coletului' && generatedContent && selectedRecipient && (
+                <QRGenerator recipientId={selectedRecipient.id} />
                )}
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => setIsOpen(false)} disabled={isGenerating}>Cancel</Button>
-          <Button type="button" onClick={handleGenerate} disabled={!selectedDocType || isGenerating}>
+          <Button type="button" onClick={handleGenerate} disabled={!selectedDocType || !selectedRecipientId || isGenerating}>
             <Sparkles className="mr-2 h-4 w-4" />
             {isGenerating ? "Generating..." : "Generate Content"}
           </Button>
