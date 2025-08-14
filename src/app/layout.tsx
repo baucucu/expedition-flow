@@ -8,7 +8,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "ExpeditionFlow",
+  title: "Expedition Manager",
   description: "Manage courier parcel expeditions",
 };
 

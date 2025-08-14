@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="flex w-full max-w-sm flex-col items-center justify-center gap-4">
         <div className="mb-4 flex items-center gap-2">
           <Box className="h-8 w-8" />
-          <h1 className="text-3xl font-bold tracking-tight">ExpeditionFlow</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Expedition Manager</h1>
         </div>
 
         <Card className="w-full">

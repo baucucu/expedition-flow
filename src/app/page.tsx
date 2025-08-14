@@ -32,7 +32,7 @@ export default function Home() {
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
           <div className="flex items-center gap-2">
             <Box className="h-6 w-6" />
-            <h1 className="text-xl font-bold tracking-tight">ExpeditionFlow</h1>
+            <h1 className="text-xl font-bold tracking-tight">Expedition Manager</h1>
           </div>
         </header>
         <main className="flex flex-1 flex-col p-4 md:p-6">
@@ -58,7 +58,7 @@ export default function Home() {
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
         <div className="flex items-center gap-2">
           <Box className="h-6 w-6" />
-          <h1 className="text-xl font-bold tracking-tight">ExpeditionFlow</h1>
+          <h1 className="text-xl font-bold tracking-tight">Expedition Manager</h1>
         </div>
         <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
           <Link href="/" className="text-primary">Dashboard</Link>
