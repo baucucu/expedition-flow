@@ -19,6 +19,7 @@ import type { FilterStatus } from '@/app/page';
 interface ScorecardInfo {
     value: number;
     footerText?: string;
+    errorCount?: number;
 }
 
 export interface ScorecardData {
@@ -56,8 +57,9 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         icon={FilePlus2}
         footerText={counts.docsGenerated.footerText}
         footerIcon={AlertTriangle}
-        variant={counts.docsGenerated.footerText !== '0 errors' ? 'destructive' : 'default'}
+        errorCount={counts.docsGenerated.errorCount}
         onClick={() => setActiveFilter('Documents Generated')}
+        onFooterClick={() => setActiveFilter('DocsFailed')}
         isActive={activeFilter === 'Documents Generated'}
       />
       <Scorecard
@@ -66,8 +68,9 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         icon={Hourglass}
         footerText={counts.awbGenerated.footerText}
         footerIcon={AlertTriangle}
-        variant={counts.awbGenerated.footerText !== '0 errors' ? 'destructive' : 'default'}
+        errorCount={counts.awbGenerated.errorCount}
         onClick={() => setActiveFilter('AWB Generated')}
+        onFooterClick={() => setActiveFilter('AwbFailed')}
         isActive={activeFilter === 'AWB Generated'}
       />
       <Scorecard
@@ -76,8 +79,9 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         icon={Send}
         footerText={counts.sentToLogistics.footerText}
         footerIcon={AlertTriangle}
-        variant={counts.sentToLogistics.footerText !== '0 errors' ? 'destructive' : 'default'}
+        errorCount={counts.sentToLogistics.errorCount}
         onClick={() => setActiveFilter('Sent to Logistics')}
+        onFooterClick={() => setActiveFilter('EmailFailed')}
         isActive={activeFilter === 'Sent to Logistics'}
       />
       <Scorecard

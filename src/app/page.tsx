@@ -14,7 +14,7 @@ import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
 import { Box } from "lucide-react";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'Documents Generated' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'Documents Generated' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | null;
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -38,8 +38,13 @@ export default function Home() {
         Object.values(r.documents).some(d => d.status === 'Failed')
     );
 
-    const issuesCount = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status)).length 
-                + recipientsWithFailedDocs.length;
+    const awbGenerationFailedCount = mockExpeditions.filter(e => e.status === 'AWB Generation Failed').length;
+    const emailSendFailedCount = mockExpeditions.filter(e => e.status === 'Email Send Failed').length;
+
+    const issuesCount = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length 
+                + recipientsWithFailedDocs.length
+                + awbGenerationFailedCount
+                + emailSendFailedCount;
     
     return {
         totalExpeditions: {
@@ -48,15 +53,18 @@ export default function Home() {
         },
         docsGenerated: {
             value: recipientsWithAllDocsGenerated.length,
-            footerText: `${recipientsWithFailedDocs.length} errors`
+            footerText: `${recipientsWithFailedDocs.length} errors`,
+            errorCount: recipientsWithFailedDocs.length
         },
         awbGenerated: {
             value: mockExpeditions.filter(e => e.status === 'AWB Generated').length,
-            footerText: `${mockExpeditions.filter(e => e.status === 'AWB Generation Failed').length} errors`
+            footerText: `${awbGenerationFailedCount} errors`,
+            errorCount: awbGenerationFailedCount
         },
         sentToLogistics: {
             value: mockExpeditions.filter(e => e.status === 'Sent to Logistics').length,
-            footerText: `${mockExpeditions.filter(e => e.status === 'Email Send Failed').length} errors`
+            footerText: `${emailSendFailedCount} errors`,
+            errorCount: emailSendFailedCount
         },
         inTransit: {
             value: mockExpeditions.filter(e => e.status === 'In Transit').length,
@@ -75,6 +83,24 @@ export default function Home() {
 
   const filteredRecipients = useMemo(() => {
     if (!activeFilter || activeFilter === 'Total') return allRecipients;
+    
+    if (activeFilter === 'DocsFailed') {
+        const recipientIds = allRecipients
+            .filter(r => Object.values(r.documents).some(d => d.status === 'Failed'))
+            .map(r => r.id);
+        return allRecipients.filter(r => recipientIds.includes(r.id));
+    }
+
+    if (activeFilter === 'AwbFailed') {
+        const expeditionIds = mockExpeditions.filter(e => e.status === 'AWB Generation Failed').map(e => e.id);
+        return allRecipients.filter(r => expeditionIds.includes(r.expeditionId));
+    }
+
+    if (activeFilter === 'EmailFailed') {
+        const expeditionIds = mockExpeditions.filter(e => e.status === 'Email Send Failed').map(e => e.id);
+        return allRecipients.filter(r => expeditionIds.includes(r.expeditionId));
+    }
+
     if (activeFilter === 'Issues') {
         const issueExpeditionIds = mockExpeditions
             .filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status))
@@ -86,6 +112,7 @@ export default function Home() {
         
         return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId) || issueRecipientIds.includes(r.id));
     }
+
     if (activeFilter === 'CompletedRecipients') return allRecipients.filter(r => r.status === 'Completed');
     if (activeFilter === 'Delivered') return allRecipients.filter(r => r.status === 'Delivered');
     if (activeFilter === 'Documents Generated') {
