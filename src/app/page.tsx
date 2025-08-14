@@ -120,9 +120,6 @@ export default function Home() {
           <Box className="h-6 w-6" />
           <h1 className="text-xl font-bold tracking-tight">Expedition Manager</h1>
         </div>
-        <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-          <Link href="/" className="text-primary">Dashboard</Link>
-        </nav>
         <div className="ml-auto flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" />
@@ -163,5 +160,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
