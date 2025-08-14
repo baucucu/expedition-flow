@@ -6,7 +6,7 @@ export const mockExpeditions: Expedition[] = [
     origin: "Bucharest, RO",
     destination: "Cluj-Napoca, RO",
     items: ["Laptop", "Charger", "Mouse"],
-    status: "Pending",
+    status: "New",
     documents: {
       "proces verbal de receptie": { status: "Not Generated" },
       "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated" },
@@ -44,7 +44,7 @@ export const mockExpeditions: Expedition[] = [
     origin: "Craiova, RO",
     destination: "Brasov, RO",
     items: ["Mechanical Keyboard", "Monitor Stand"],
-    status: "Pending",
+    status: "New",
     documents: {
       "proces verbal de receptie": { status: "Not Generated" },
       "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated" },

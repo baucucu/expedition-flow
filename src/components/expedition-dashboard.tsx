@@ -52,11 +52,17 @@ import { EmailComposer } from "./email-composer";
 import { useToast } from "@/hooks/use-toast";
 
 const statusVariant: { [key in ExpeditionStatus]: "default" | "secondary" | "outline" | "destructive" } = {
-  Pending: "outline",
+  New: "outline",
+  "Documents Generated": "secondary",
   "AWB Generated": "secondary",
+  "Pending Pickup": "secondary",
   "In Transit": "default",
   Delivered: "default",
+  "Proces Verbal Signed": "default",
   Completed: "default",
+  Canceled: "destructive",
+  "Lost or Damaged": "destructive",
+  Returned: "destructive",
 };
 
 export const ExpeditionDashboard: React.FC = () => {
@@ -105,7 +111,14 @@ export const ExpeditionDashboard: React.FC = () => {
       if (exp.id === expeditionId) {
         const newDocuments = { ...exp.documents };
         newDocuments[documentType] = { ...newDocuments[documentType], status: 'Generated' as const, content };
-        return { ...exp, documents: newDocuments };
+        
+        const allDocsGenerated = Object.values(newDocuments).every(doc => doc.status === 'Generated');
+
+        return { 
+          ...exp, 
+          documents: newDocuments,
+          status: allDocsGenerated ? 'Documents Generated' : exp.status,
+        };
       }
       return exp;
     }));
