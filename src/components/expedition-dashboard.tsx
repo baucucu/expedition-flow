@@ -150,7 +150,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 return <div className="text-destructive">Doc Gen Failed</div>;
             }
 
-            return <span className="text-muted-foreground">N/A</span>;
+            return null;
         }
     },
     {
