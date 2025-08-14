@@ -46,20 +46,6 @@ const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary
   Returned: "destructive",
 };
 
-const expeditionStatusVariant: { [key in ExpeditionStatus]: "default" | "secondary" | "outline" | "destructive" } = {
-    'New': "outline",
-    'Ready for Logistics': "secondary",
-    'AWB Generated': "secondary",
-    'AWB Generation Failed': "destructive",
-    'Sent to Logistics': "secondary",
-    'Email Send Failed': "destructive",
-    'In Transit': "default",
-    'Delivered': "default",
-    'Canceled': "destructive",
-    'Lost or Damaged': "destructive",
-    'Completed': "default"
-  };
-
 type RecipientRow = Recipient & { expeditionId: string; awb?: string, expeditionStatus: ExpeditionStatus };
 
 interface ExpeditionDashboardProps {
@@ -156,20 +142,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             const expeditionHasException = ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(expeditionStatus);
             
             if (expeditionHasException) {
-              return (
-                  <Badge variant={expeditionStatusVariant[expeditionStatus]} className="capitalize">
-                    {expeditionStatus}
-                  </Badge>
-              );
+              return <div className="text-destructive">{expeditionStatus}</div>;
             }
             
             const hasDocFailure = Object.values(recipient.documents).some(d => d.status === 'Failed');
             if (hasDocFailure) {
-                return (
-                    <Badge variant="destructive" className="capitalize">
-                      Doc Gen Failed
-                    </Badge>
-                );
+                return <div className="text-destructive">Doc Gen Failed</div>;
             }
 
             return <span className="text-muted-foreground">N/A</span>;
