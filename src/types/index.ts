@@ -1,6 +1,6 @@
 
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory';
-export type DocumentStatus = 'Not Generated' | 'Generated' | 'Generating...';
+export type DocumentStatus = 'Not Generated' | 'Generating...' | 'Generated' | 'Failed';
 
 export type RecipientStatus = 
   | 'New'
@@ -13,7 +13,9 @@ export type ExpeditionStatus =
   | 'New'
   | 'Ready for Logistics'
   | 'AWB Generated'
+  | 'AWB Generation Failed'
   | 'Sent to Logistics'
+  | 'Email Send Failed'
   | 'In Transit'
   | 'Delivered' // Note: This could be an aggregate status. A recipient-level status might be more accurate.
   | 'Canceled'

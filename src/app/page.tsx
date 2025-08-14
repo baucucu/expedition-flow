@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Box, FilePlus2, Hourglass, ThumbsUp, AlertTriangle, PackageCheck, PackageSearch, PackageX, RotateCcw, Send, Truck } from "lucide-react";
+import { LogOut, Box, FilePlus2, Hourglass, ThumbsUp, AlertTriangle, PackageCheck, PackageSearch, PackageX, RotateCcw, Send, Truck, MailCheck, MailWarning, FileWarning, CheckCircle2 } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,19 +16,19 @@ import { cn } from "@/lib/utils";
 import { DocumentAssistant } from "@/components/document-assistant";
 import { EmailComposer } from "@/components/email-composer";
 
-const statusConfig: { [key in ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered']: { icon: React.FC<any>, label: string } } = {
-  Total: { icon: Box, label: "Total Expeditions" },
-  "Documents Generated": { icon: FilePlus2, label: "Docs Ready" },
-  "AWB Generated": { icon: Hourglass, label: "AWB Ready" },
-  "Sent to Logistics": { icon: Send, label: "In Logistics" },
-  "In Transit": { icon: Truck, label: "In Transit" },
-  "Delivered": { icon: PackageCheck, label: "Delivered" },
-  Issues: { icon: AlertTriangle, label: "Issues" },
-  CompletedRecipients: { icon: ThumbsUp, label: "Recipients Done" },
-  New: { icon: FilePlus2, label: "New" },
-  "Ready for Logistics": { icon: PackageSearch, label: "Ready" },
-  Canceled: { icon: PackageX, label: "Canceled" },
-  "Lost or Damaged": { icon: PackageX, label: "Lost/Damaged" },
+const statusConfig: { [key: string]: { icon: React.FC<any>, label: string, filter?: ExpeditionStatus | 'Issues' | 'CompletedRecipients' | 'Delivered' } } = {
+  totalExpeditions: { icon: Box, label: "Total Expeditions", filter: 'Total' },
+  totalRecipients: { icon: ThumbsUp, label: "Total Recipients", filter: 'Total' },
+  docsGeneratedSuccess: { icon: FilePlus2, label: "Docs Generated", filter: 'Documents Generated' },
+  docsGeneratedFailed: { icon: FileWarning, label: "Doc Fails", filter: 'Issues' },
+  awbGeneratedSuccess: { icon: Hourglass, label: "AWB Generated", filter: 'AWB Generated' },
+  awbGeneratedFailed: { icon: AlertTriangle, label: "AWB Fails", filter: 'Issues' },
+  emailsSentSuccess: { icon: MailCheck, label: "Emails Sent", filter: 'Sent to Logistics' },
+  emailsSentFailed: { icon: MailWarning, label: "Email Fails", filter: 'Issues' },
+  inTransit: { icon: Truck, label: "In Transit", filter: 'In Transit' },
+  delivered: { icon: PackageCheck, label: "Delivered", filter: 'Delivered' },
+  issues: { icon: AlertTriangle, label: "Total Issues", filter: 'Issues' },
+  completed: { icon: CheckCircle2, label: "Completed", filter: 'CompletedRecipients' },
 };
 
 type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | null;
@@ -46,32 +46,35 @@ export default function Home() {
     exp.recipients.map(rec => ({ ...rec, expeditionId: exp.id, expeditionStatus: exp.status, awb: exp.awb }))
   ), [mockExpeditions]);
 
-  const expeditionCounts = useMemo(() => {
-    const recipientDocsGenerated = allRecipients.filter(r => r.status === 'Documents Generated').length;
-    const awbGenerated = mockExpeditions.filter(e => e.status === 'AWB Generated').length;
-    const sentToLogistics = mockExpeditions.filter(e => e.status === 'Sent to Logistics').length;
-    const inTransit = mockExpeditions.filter(e => e.status === 'In Transit').length;
-    const delivered = allRecipients.filter(r => r.status === 'Delivered').length;
-    const issues = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length;
-    const completedRecipients = allRecipients.filter(r => r.status === 'Completed').length;
-
+  const scorecardCounts = useMemo(() => {
+    const allDocs = allRecipients.flatMap(r => Object.values(r.documents));
     return {
-      Total: mockExpeditions.length,
-      "Documents Generated": recipientDocsGenerated,
-      "AWB Generated": awbGenerated,
-      "Sent to Logistics": sentToLogistics,
-      "In Transit": inTransit,
-      "Delivered": delivered,
-      "Issues": issues,
-      "CompletedRecipients": completedRecipients,
-    };
+        totalExpeditions: mockExpeditions.length,
+        totalRecipients: allRecipients.length,
+        docsGeneratedSuccess: allDocs.filter(d => d.status === 'Generated').length,
+        docsGeneratedFailed: allDocs.filter(d => d.status === 'Failed').length,
+        awbGeneratedSuccess: mockExpeditions.filter(e => e.status === 'AWB Generated').length,
+        awbGeneratedFailed: mockExpeditions.filter(e => e.status === 'AWB Generation Failed').length,
+        emailsSentSuccess: mockExpeditions.filter(e => e.status === 'Sent to Logistics').length,
+        emailsSentFailed: mockExpeditions.filter(e => e.status === 'Email Send Failed').length,
+        inTransit: mockExpeditions.filter(e => e.status === 'In Transit').length,
+        delivered: allRecipients.filter(r => r.status === 'Delivered').length,
+        issues: mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status)).length + allDocs.filter(d => d.status === 'Failed').length,
+        completed: allRecipients.filter(r => r.status === 'Completed').length,
+    }
   }, [allRecipients, mockExpeditions]);
 
   const filteredRecipients = useMemo(() => {
     if (!activeFilter || activeFilter === 'Total') return allRecipients;
     if (activeFilter === 'Issues') {
-      const issueExpeditionIds = mockExpeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
-      return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId));
+        const issueExpeditionIds = mockExpeditions
+            .filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status))
+            .map(e => e.id);
+        const issueRecipientIds = allRecipients
+            .filter(r => Object.values(r.documents).some(d => d.status === 'Failed'))
+            .map(r => r.id);
+        
+        return allRecipients.filter(r => issueExpeditionIds.includes(r.expeditionId) || issueRecipientIds.includes(r.id));
     }
     if (activeFilter === 'CompletedRecipients') return allRecipients.filter(r => r.status === 'Completed');
     if (activeFilter === 'Delivered') return allRecipients.filter(r => r.status === 'Delivered');
@@ -160,16 +163,9 @@ export default function Home() {
       </div>
     );
   }
-
-  const scorecardOrder: (keyof typeof expeditionCounts)[] = [
-    'Total',
-    'Documents Generated',
-    'AWB Generated',
-    'Sent to Logistics',
-    'In Transit',
-    'Delivered',
-    'Issues',
-    'CompletedRecipients',
+  
+  const scorecardOrder: (keyof typeof scorecardCounts)[] = [
+    'totalExpeditions', 'totalRecipients', 'docsGeneratedSuccess', 'docsGeneratedFailed', 'awbGeneratedSuccess', 'awbGeneratedFailed', 'emailsSentSuccess', 'emailsSentFailed', 'inTransit', 'delivered', 'issues', 'completed'
   ];
 
   return (
@@ -187,24 +183,26 @@ export default function Home() {
         </div>
       </header>
       <main className="flex flex-1 flex-col p-4 md:p-6 gap-6">
-        <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12">
             {scorecardOrder.map(key => {
-                const Icon = statusConfig[key as keyof typeof statusConfig]?.icon || Box;
-                const label = statusConfig[key as keyof typeof statusConfig]?.label || key;
-                const count = expeditionCounts[key] || 0;
-                const filterKey = key as FilterStatus;
+                const config = statusConfig[key];
+                if (!config) return null;
+                const { icon: Icon, label, filter } = config;
+                const count = scorecardCounts[key] || 0;
+                const isFailed = key.toLowerCase().includes('failed');
+
                 return (
                     <Card 
                         key={key} 
-                        onClick={() => setActiveFilter(filterKey)}
+                        onClick={() => filter && setActiveFilter(filter)}
                         className={cn(
                             "cursor-pointer transition-all hover:shadow-md hover:-translate-y-1",
-                            activeFilter === filterKey && "ring-2 ring-primary shadow-lg"
+                             filter && activeFilter === filter && "ring-2 ring-primary shadow-lg"
                         )}
                     >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">{label}</CardTitle>
-                            <Icon className={cn("h-4 w-4 text-muted-foreground", key === 'Issues' && 'text-destructive')} />
+                            <Icon className={cn("h-4 w-4 text-muted-foreground", isFailed && 'text-destructive')} />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{count}</div>
@@ -217,7 +215,6 @@ export default function Home() {
         <ExpeditionDashboard 
             initialData={filteredRecipients} 
             expeditions={mockExpeditions}
-            onSendToLogistics={handleSendToLogistics}
         />
       </main>
       {selectedExpedition && (

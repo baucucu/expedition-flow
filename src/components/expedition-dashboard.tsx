@@ -15,7 +15,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
-  ArrowUpDown,
   Mail,
 } from "lucide-react";
 import {
@@ -52,7 +51,6 @@ type RecipientRow = Recipient & { expeditionId: string; awb?: string, expedition
 interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
     expeditions: Expedition[];
-    onSendToLogistics: (id: string) => void;
 }
 
 const docShortNames: Record<DocumentType | 'AWB' | 'Email', string> = {

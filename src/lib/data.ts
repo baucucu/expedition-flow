@@ -23,7 +23,7 @@ const recipient1B: Recipient = {
   documents: {
       "proces verbal de receptie": { status: "Generated", url: "#", content: "..." },
       "instructiuni pentru confirmarea primirii coletului": { status: "Generated", url: "#", content: "..." },
-      "parcel inventory": { status: "Generated", url: "#", content: "..." },
+      "parcel inventory": { status: "Failed", url: "#", content: "..." },
   },
 };
 
@@ -53,6 +53,20 @@ const recipient3A: Recipient = {
   },
 };
 
+const recipient4A: Recipient = {
+    id: "REC-004A",
+    name: "Vasile Alecsandri",
+    address: "Iasi, RO",
+    items: ["Monitor", "Webcam"],
+    status: "New",
+    documents: {
+        "proces verbal de receptie": { status: "Not Generated", url: "#" },
+        "instructiuni pentru confirmarea primirii coletului": { status: "Not Generated", url: "#" },
+        "parcel inventory": { status: "Not Generated", url: "#" },
+    },
+};
+
+
 export const mockExpeditions: Expedition[] = [
   {
     id: "EXP-C-001",
@@ -70,12 +84,20 @@ export const mockExpeditions: Expedition[] = [
     awb: "AWB-SINGLE-456",
     recipients: [recipient2A]
   },
-    {
+  {
     id: "EXP-S-003",
     origin: "Craiova, RO",
     destination: "Brasov, RO",
     status: "New",
     awb: undefined,
     recipients: [recipient3A]
+  },
+  {
+    id: "EXP-F-004",
+    origin: "Sibiu, RO",
+    destination: "Iasi, RO",
+    status: "AWB Generation Failed",
+    awb: undefined,
+    recipients: [recipient4A]
   },
 ];
