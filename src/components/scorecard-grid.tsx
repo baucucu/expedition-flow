@@ -47,7 +47,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   return (
     <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
       <Scorecard
-        title="Total Expeditions"
+        title="Total Shipments"
         value={counts.totalExpeditions.value}
         icon={Box}
         footerText={counts.totalExpeditions.footerText}
