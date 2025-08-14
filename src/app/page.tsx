@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Box, FilePlus2, Hourglass, ThumbsUp, AlertTriangle, PackageCheck, PackageSearch, PackageX, RotateCcw, Send, Truck, MailCheck, MailWarning, FileWarning, CheckCircle2, Users } from "lucide-react";
+import { LogOut, Box, FilePlus2, Hourglass, CheckCircle2, AlertTriangle, Send, Truck, PackageCheck, Users } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
