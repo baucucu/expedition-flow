@@ -192,7 +192,7 @@ export default function Home() {
                 return (
                     <Card 
                         key={key} 
-                        onClick={() => filter && setActiveFilter(filter)}
+                        onClick={() => filter && setActiveFilter(filter as FilterStatus)}
                         className={cn(
                             "cursor-pointer transition-all hover:shadow-md hover:-translate-y-1",
                              filter && activeFilter === filter && "ring-2 ring-primary shadow-lg"
