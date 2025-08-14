@@ -16,7 +16,6 @@ import {
 } from "@tanstack/react-table";
 import {
   ArrowUpDown,
-  FileText,
 } from "lucide-react";
 import {
   Sheet,
@@ -24,8 +23,8 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 
 import { Button } from "@/components/ui/button";
@@ -58,76 +57,18 @@ interface ExpeditionDashboardProps {
     initialData: Expedition[];
 }
 
-const docShortNames: Record<DocumentType, string> = {
+const docShortNames: Record<DocumentType | 'AWB', string> = {
     'proces verbal de receptie': 'PV',
     'instructiuni pentru confirmarea primirii coletului': 'Instr.',
-    'parcel inventory': 'Inv.'
+    'parcel inventory': 'Inv.',
+    'AWB': 'AWB'
 }
 
-const DocumentLinkBadge: React.FC<{docType: DocumentType, expedition: Expedition}> = ({ docType, expedition }) => {
-    const doc = expedition.documents[docType];
-    if (doc.status !== 'Generated' || !doc.url) {
-        return <Badge variant="outline" className="font-normal">{docShortNames[docType]}</Badge>
-    }
-
-    return (
-        <Sheet>
-            <SheetTrigger asChild>
-                <Badge 
-                    variant="secondary" 
-                    className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                >
-                    {docShortNames[docType]}
-                </Badge>
-            </SheetTrigger>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>{docType}</SheetTitle>
-                    <SheetDescription>
-                       Document for expedition {expedition.id}.
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="py-4">
-                    {/* In a real app, this would be an iframe or a more robust viewer */}
-                    <p>Displaying content for: {docType}</p>
-                    <iframe src={doc.url} className="w-full h-96 mt-4 border rounded-md" title={docType} />
-                </div>
-            </SheetContent>
-        </Sheet>
-    )
+type SelectedDocument = {
+  expedition: Expedition;
+  docType: DocumentType | 'AWB';
 }
 
-const AWBLinkBadge: React.FC<{expedition: Expedition}> = ({ expedition }) => {
-    if (!expedition.awb) {
-        return <Badge variant="outline" className="font-normal">AWB</Badge>
-    }
-
-    const trackingUrl = `https://www.courier-tracking-placeholder.com/track?id=${expedition.awb}`;
-
-    return (
-        <Sheet>
-            <SheetTrigger asChild>
-                <Badge
-                    variant="secondary"
-                    className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                >
-                    AWB
-                </Badge>
-            </SheetTrigger>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>AWB Tracking: {expedition.awb}</SheetTitle>
-                    <SheetDescription>
-                       Live tracking information for expedition {expedition.id}.
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="py-4">
-                     <iframe src={trackingUrl} className="w-full h-96 mt-4 border rounded-md" title={`AWB Tracking for ${expedition.awb}`} />
-                </div>
-            </SheetContent>
-        </Sheet>
-    )
-}
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initialData }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -135,10 +76,15 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [data, setData] = React.useState<Expedition[]>(initialData);
+  const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
 
   React.useEffect(() => {
     setData(initialData);
   }, [initialData]);
+
+  const handleOpenDocument = (expedition: Expedition, docType: DocumentType | 'AWB') => {
+    setSelectedDocument({ expedition, docType });
+  }
 
   const columns: ColumnDef<Expedition>[] = [
     {
@@ -185,15 +131,35 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
         id: "documents",
         header: "Documents",
         cell: ({ row }) => {
-          const expedition = row.original;
-          return (
-            <div className="flex gap-2">
-                <DocumentLinkBadge docType="proces verbal de receptie" expedition={expedition} />
-                <DocumentLinkBadge docType="instructiuni pentru confirmarea primirii coletului" expedition={expedition} />
-                <DocumentLinkBadge docType="parcel inventory" expedition={expedition} />
-                <AWBLinkBadge expedition={expedition} />
-            </div>
-          )
+            const expedition = row.original;
+            const docTypes: DocumentType[] = ['proces verbal de receptie', 'instructiuni pentru confirmarea primirii coletului', 'parcel inventory'];
+            return (
+                <div className="flex gap-2">
+                    {docTypes.map(docType => {
+                        const doc = expedition.documents[docType];
+                        const isGenerated = doc.status === 'Generated' && doc.url;
+                        return (
+                            <Badge
+                                key={docType}
+                                variant={isGenerated ? "secondary" : "outline"}
+                                className={isGenerated ? "cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground" : "font-normal"}
+                                onClick={() => isGenerated && handleOpenDocument(expedition, docType)}
+                            >
+                                {docShortNames[docType]}
+                            </Badge>
+                        );
+                    })}
+                    {expedition.awb && (
+                         <Badge
+                            variant={"secondary"}
+                            className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => handleOpenDocument(expedition, 'AWB')}
+                        >
+                            {docShortNames['AWB']}
+                        </Badge>
+                    )}
+                </div>
+            );
         },
       },
   ];
@@ -302,6 +268,41 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
           </Button>
         </div>
       </div>
+
+      <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
+        <SheetContent className="w-full sm:w-2/3 lg:w-2/3 sm:max-w-none">
+          {selectedDocument && (
+            <>
+                <SheetHeader>
+                    <SheetTitle>Expedition Documents: {selectedDocument.expedition.id}</SheetTitle>
+                    <SheetDescription>
+                        Review documents for the expedition to {selectedDocument.expedition.recipientName}.
+                    </SheetDescription>
+                </SheetHeader>
+                <Tabs defaultValue={selectedDocument.docType} className="py-4">
+                    <TabsList>
+                        <TabsTrigger value="proces verbal de receptie" disabled={selectedDocument.expedition.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
+                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.expedition.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
+                        <TabsTrigger value="parcel inventory" disabled={selectedDocument.expedition.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
+                        <TabsTrigger value="AWB" disabled={!selectedDocument.expedition.awb}>AWB</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="proces verbal de receptie">
+                        <iframe src={selectedDocument.expedition.documents['proces verbal de receptie'].url} className="w-full h-[80vh] mt-4 border rounded-md" title="Proces verbal de receptie" />
+                    </TabsContent>
+                    <TabsContent value="instructiuni pentru confirmarea primirii coletului">
+                        <iframe src={selectedDocument.expedition.documents['instructiuni pentru confirmarea primirii coletului'].url} className="w-full h-[80vh] mt-4 border rounded-md" title="Instructiuni" />
+                    </TabsContent>
+                    <TabsContent value="parcel inventory">
+                        <iframe src={selectedDocument.expedition.documents['parcel inventory'].url} className="w-full h-[80vh] mt-4 border rounded-md" title="Parcel Inventory" />
+                    </TabsContent>
+                    <TabsContent value="AWB">
+                        <iframe src={`https://www.courier-tracking-placeholder.com/track?id=${selectedDocument.expedition.awb}`} className="w-full h-[80vh] mt-4 border rounded-md" title="AWB Tracking" />
+                    </TabsContent>
+                </Tabs>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
