@@ -5,7 +5,6 @@ export type ExpeditionStatus =
   | 'New'                       // Initial state
   | 'Documents Generated'       // All preparatory documents are created
   | 'AWB Generated'             // AWB number is assigned
-  | 'Pending Pickup'            // Ready for courier collection
   | 'In Transit'                // On its way
   | 'Delivered'                 // Reached destination, awaiting final confirmation
   | 'Completed'                 // Proces verbal signed and uploaded
