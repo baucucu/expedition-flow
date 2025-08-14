@@ -1,4 +1,5 @@
 
+
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory';
 export type DocumentStatus = 'Not Generated' | 'Generating...' | 'Generated' | 'Failed';
 

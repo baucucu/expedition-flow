@@ -36,7 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Recipient, DocumentType, RecipientStatus, Expedition } from "@/types";
+import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus } from "@/types";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -46,7 +46,21 @@ const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary
   Returned: "destructive",
 };
 
-type RecipientRow = Recipient & { expeditionId: string; awb?: string, expeditionStatus: string };
+const expeditionStatusVariant: { [key in ExpeditionStatus]: "default" | "secondary" | "outline" | "destructive" } = {
+    'New': "outline",
+    'Ready for Logistics': "secondary",
+    'AWB Generated': "secondary",
+    'AWB Generation Failed': "destructive",
+    'Sent to Logistics': "secondary",
+    'Email Send Failed': "destructive",
+    'In Transit': "default",
+    'Delivered': "default",
+    'Canceled': "destructive",
+    'Lost or Damaged': "destructive",
+    'Completed': "default"
+  };
+
+type RecipientRow = Recipient & { expeditionId: string; awb?: string, expeditionStatus: ExpeditionStatus };
 
 interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
@@ -97,18 +111,14 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const columns: ColumnDef<RecipientRow>[] = [
     {
-        id: "expedition",
-        header: "Expedition",
-        cell: ({ row }) => {
-            const expedition = expeditions.find(e => e.id === row.original.expeditionId);
-            if (!expedition) return null;
-            return (
-                <div className="flex flex-col">
-                    <span className="font-medium">{expedition.id}</span>
-                    <span className="text-xs text-muted-foreground">{expedition.status}</span>
-                </div>
-            )
-        }
+        accessorKey: "id",
+        header: "Recipient ID",
+        cell: ({ row }) => <div>{row.getValue("id")}</div>,
+    },
+    {
+        accessorKey: "expeditionId",
+        header: "Shipment ID",
+        cell: ({ row }) => <div>{row.getValue("expeditionId")}</div>,
     },
     {
       accessorKey: "name",
@@ -136,6 +146,21 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         accessorKey: "awb",
         header: "AWB",
         cell: ({ row }) => row.getValue("awb") ? <div>{row.getValue("awb")}</div> : <span className="text-muted-foreground">N/A</span>,
+    },
+    {
+        id: "awbException",
+        header: "AWB Exception Details",
+        cell: ({ row }) => {
+            const status: ExpeditionStatus = row.original.expeditionStatus;
+            const isException = ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(status);
+            if (!isException) return <span className="text-muted-foreground">N/A</span>;
+            
+            return (
+                <Badge variant={expeditionStatusVariant[status]} className="capitalize">
+                  {status}
+                </Badge>
+              );
+        }
     },
     {
         id: "documents",
