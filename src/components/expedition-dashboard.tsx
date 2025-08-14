@@ -147,12 +147,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ initia
                     {docTypes.map(docType => {
                         const doc = expedition.documents[docType];
                         const isGenerated = doc.status === 'Generated' && doc.url;
+                        if (!isGenerated) return null;
                         return (
                             <Badge
                                 key={docType}
-                                variant={isGenerated ? "secondary" : "outline"}
-                                className={isGenerated ? "cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground" : "font-normal"}
-                                onClick={() => isGenerated && handleOpenDocument(expedition, docType)}
+                                variant={"secondary"}
+                                className={"cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"}
+                                onClick={() => handleOpenDocument(expedition, docType)}
                             >
                                 {docShortNames[docType]}
                             </Badge>
