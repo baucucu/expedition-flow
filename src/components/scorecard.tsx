@@ -15,6 +15,7 @@ interface ScorecardProps {
   onClick: () => void;
   onFooterClick?: () => void;
   isActive: boolean;
+  isFooterActive?: boolean;
   variant?: 'default' | 'destructive';
   errorCount?: number;
 }
@@ -28,6 +29,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   onClick,
   onFooterClick,
   isActive,
+  isFooterActive = false,
   variant = 'default',
   errorCount,
 }) => {
@@ -61,7 +63,10 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         {hasErrors && onFooterClick ? (
             <Badge 
                 variant="destructive" 
-                className="cursor-pointer"
+                className={cn(
+                    "cursor-pointer",
+                    isFooterActive && "ring-2 ring-offset-2 ring-offset-background ring-destructive"
+                )}
                 onClick={handleFooterClick}
             >
                 {FooterIcon && <FooterIcon className="w-3 h-3 mr-1" />}
