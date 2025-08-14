@@ -148,18 +148,31 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         cell: ({ row }) => row.getValue("awb") ? <div>{row.getValue("awb")}</div> : <span className="text-muted-foreground">N/A</span>,
     },
     {
-        id: "awbException",
-        header: "AWB Exception Details",
+        id: "exceptionDetails",
+        header: "Exception Details",
         cell: ({ row }) => {
-            const status: ExpeditionStatus = row.original.expeditionStatus;
-            const isException = ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(status);
-            if (!isException) return <span className="text-muted-foreground">N/A</span>;
+            const recipient = row.original;
+            const expeditionStatus = recipient.expeditionStatus;
+            const expeditionHasException = ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(expeditionStatus);
             
-            return (
-                <Badge variant={expeditionStatusVariant[status]} className="capitalize">
-                  {status}
-                </Badge>
+            if (expeditionHasException) {
+              return (
+                  <Badge variant={expeditionStatusVariant[expeditionStatus]} className="capitalize">
+                    {expeditionStatus}
+                  </Badge>
               );
+            }
+            
+            const hasDocFailure = Object.values(recipient.documents).some(d => d.status === 'Failed');
+            if (hasDocFailure) {
+                return (
+                    <Badge variant="destructive" className="capitalize">
+                      Doc Gen Failed
+                    </Badge>
+                );
+            }
+
+            return <span className="text-muted-foreground">N/A</span>;
         }
     },
     {
