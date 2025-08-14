@@ -90,6 +90,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [inputValue, setInputValue] = React.useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     setData(initialData);
@@ -106,6 +107,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         }
         setInputValue('');
         event.preventDefault();
+    } else if (event.key === 'Backspace' && inputValue === '' && keywords.length > 0) {
+        removeKeyword(keywords[keywords.length - 1]);
     }
   };
 
@@ -238,6 +241,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, columnId, filterValue) => {
+        const search = filterValue.toLowerCase();
+        const keywords = search.split(' ');
+        const rowData = Object.values(row.original).join(' ').toLowerCase();
+        return keywords.every(keyword => rowData.includes(keyword));
+    },
     state: {
       sorting,
       columnFilters,
@@ -249,25 +258,37 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-4 py-4">
-        <Input
-          placeholder="Search by any text and press Enter..."
-          value={inputValue}
-          onChange={(event) => setInputValue(event.target.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full"
-        />
-        <div className="flex flex-wrap gap-2">
-            {keywords.map((keyword, index) => (
-                <Badge key={index} variant="secondary" className="pl-2 pr-1">
-                    {keyword}
-                    <button onClick={() => removeKeyword(keyword)} className="ml-1 rounded-full p-0.5 hover:bg-background/50">
-                        <XIcon className="h-3 w-3" />
-                    </button>
-                </Badge>
-            ))}
+        <div className="py-4">
+            <div 
+                className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                onClick={() => inputRef.current?.focus()}
+            >
+                <div className="flex flex-wrap gap-1">
+                    {keywords.map((keyword, index) => (
+                        <Badge key={index} variant="secondary" className="pl-2 pr-1">
+                            {keyword}
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeKeyword(keyword);
+                                }} 
+                                className="ml-1 rounded-full p-0.5 hover:bg-background/50"
+                            >
+                                <XIcon className="h-3 w-3" />
+                            </button>
+                        </Badge>
+                    ))}
+                </div>
+                <Input
+                    ref={inputRef}
+                    placeholder={keywords.length === 0 ? "Search by any text and press Enter..." : ""}
+                    value={inputValue}
+                    onChange={(event) => setInputValue(event.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="h-auto flex-1 border-none bg-transparent p-1 shadow-none focus-visible:ring-0"
+                />
+            </div>
         </div>
-      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
