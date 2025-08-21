@@ -24,6 +24,13 @@ const APP_FIELDS = [
     { value: 'awb', label: 'AWB' },
     { value: 'email', label: 'Email' },
     { value: 'telephone', label: 'Telephone' },
+    { value: 'group', label: 'Group' },
+    { value: 'county', label: 'County' },
+    { value: 'city', label: 'City' },
+    { value: 'schoolName', label: 'School Name' },
+    { value: 'schoolUniqueName', label: 'School Unique Name' },
+    { value: 'shipmentId', label: 'Shipment ID' },
+    { value: 'boxType', label: 'Box Type' },
 ];
 
 

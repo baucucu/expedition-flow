@@ -41,6 +41,16 @@ export interface Recipient {
     'instructiuni pentru confirmarea primirii coletului': Document;
     'parcel inventory': Document;
   };
+  // New optional fields
+  group?: string;
+  county?: string;
+  city?: string;
+  schoolName?: string;
+  schoolUniqueName?: string;
+  shipmentId?: string;
+  boxType?: string;
+  email?: string;
+  telephone?: string;
 }
 
 export interface Expedition {
@@ -51,3 +61,4 @@ export interface Expedition {
   recipients: Recipient[];
   awb?: string;
 }
+
