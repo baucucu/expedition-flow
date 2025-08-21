@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,23 +9,61 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
-import { ArrowLeft, FileUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileUp, Loader2, ChevronsRight } from 'lucide-react';
 import * as xlsx from 'xlsx';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type ParsedRow = Record<string, string | number>;
+type ColumnMapping = Record<string, string>;
+
+const APP_FIELDS = [
+    { value: 'id', label: 'Recipient ID' },
+    { value: 'name', label: 'Recipient Name' },
+    { value: 'address', label: 'Recipient Address' },
+    { value: 'items', label: 'Items' },
+    { value: 'awb', label: 'AWB' },
+    { value: 'email', label: 'Email' },
+    { value: 'telephone', label: 'Telephone' },
+];
+
 
 export default function NewExpeditionPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedRow[]>([]);
+  const [columnMapping, setColumnMapping] = useState<ColumnMapping>({});
+  const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  const fileColumns = useMemo(() => {
+    if (parsedData.length === 0) return [];
+    return Object.keys(parsedData[0]);
+  }, [parsedData]);
+  
+  // Auto-map columns based on header names
+  useState(() => {
+    const initialMapping: ColumnMapping = {};
+    const lowerCaseAppFields = APP_FIELDS.map(f => f.label.toLowerCase());
+
+    fileColumns.forEach(col => {
+        const lowerCol = col.toLowerCase().replace(/_/g, ' ');
+        const matchedField = APP_FIELDS.find(field => lowerCol.includes(field.label.toLowerCase()) || field.label.toLowerCase().includes(lowerCol));
+        if (matchedField) {
+            initialMapping[col] = matchedField.value;
+        }
+    });
+    setColumnMapping(initialMapping);
+  });
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFile = event.target.files[0];
       if (selectedFile && (selectedFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || selectedFile.type === 'text/csv')) {
         setFile(selectedFile);
+        setParsedData([]);
+        setColumnMapping({});
       } else {
         toast({
             variant: "destructive",
@@ -80,6 +118,37 @@ export default function NewExpeditionPage() {
     }
     reader.readAsBinaryString(file);
   };
+  
+  const handleMappingChange = (fileCol: string, appField: string) => {
+    setColumnMapping(prev => ({...prev, [fileCol]: appField}));
+  }
+
+  const handleCreateExpedition = () => {
+    // Basic validation
+    if (Object.keys(columnMapping).length === 0 || !columnMapping.name || !columnMapping.address) {
+        toast({
+            variant: 'destructive',
+            title: 'Mapping Incomplete',
+            description: 'Please map at least "Recipient Name" and "Recipient Address".'
+        });
+        return;
+    }
+    setIsCreating(true);
+    // In a real app, this would send the parsedData and columnMapping to the server.
+    console.log("Creating expedition with:", {
+        data: parsedData,
+        mapping: columnMapping
+    });
+
+    setTimeout(() => {
+        toast({
+            title: 'Expedition Created',
+            description: 'The new expedition has been successfully created from the imported file.'
+        });
+        setIsCreating(false);
+        router.push('/');
+    }, 1500)
+  }
 
 
   return (
@@ -93,10 +162,10 @@ export default function NewExpeditionPage() {
             <h1 className="text-2xl font-bold tracking-tight">Import New Expedition</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <Card>
                 <CardHeader>
-                    <CardTitle>Upload File</CardTitle>
+                    <CardTitle>1. Upload File</CardTitle>
                     <CardDescription>Select an Excel (.xlsx) or CSV file to import recipients from.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -117,26 +186,48 @@ export default function NewExpeditionPage() {
                 </CardContent>
             </Card>
 
-             <Card>
+             <Card className={parsedData.length === 0 ? 'bg-muted/50' : ''}>
                 <CardHeader>
-                    <CardTitle>Import Preview</CardTitle>
-                    <CardDescription>A preview of the data to be imported will appear here after parsing.</CardDescription>
+                    <CardTitle>2. Map Columns</CardTitle>
+                    <CardDescription>Match columns from your file to the required application fields.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {parsedData.length > 0 ? (
-                        <div className="text-sm text-muted-foreground">
-                            <p>Successfully parsed {parsedData.length} rows. The next step would be to map columns and create the expedition.</p>
-                            {/* In a real app, you'd show a preview table and have column mapping UI here */}
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                               {fileColumns.map(col => (
+                                <div key={col} className="grid grid-cols-2 gap-4 items-center">
+                                    <Label className="text-right truncate">{col}</Label>
+                                    <Select 
+                                        value={columnMapping[col] || ''}
+                                        onValueChange={(value) => handleMappingChange(col, value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select target field..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ignore" className="italic text-muted-foreground">Ignore this column</SelectItem>
+                                            {APP_FIELDS.map(field => (
+                                                <SelectItem key={field.value} value={field.value}>{field.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                               ))}
+                            </div>
+                            <Button onClick={handleCreateExpedition} disabled={isCreating} className="w-full">
+                                {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChevronsRight className="mr-2 h-4 w-4" />}
+                                Create Expedition from {parsedData.length} Records
+                            </Button>
                         </div>
                     ) : (
                          <div className="text-center text-sm text-muted-foreground border-2 border-dashed rounded-lg p-8">
-                            <p>No data to preview.</p>
-                            <p>Parse a file to see the results.</p>
+                            <p>No data to map.</p>
+                            <p>Parse a file to begin mapping.</p>
                         </div>
                     )}
                 </CardContent>
             </Card>
-
         </div>
       </main>
     </div>
