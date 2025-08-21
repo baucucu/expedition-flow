@@ -34,7 +34,6 @@ const APP_FIELDS = [
     { value: 'schoolUniqueName', label: 'School Unique Name' },
     { value: 'shipmentId', label: 'Shipment ID' },
     { value: 'boxType', label: 'Box Type' },
-    { value: 'count', label: 'Count' },
 ];
 
 
@@ -73,7 +72,6 @@ export default function NewExpeditionPage() {
         fieldMap.set('nume unic scoala', 'schoolUniqueName');
         fieldMap.set('id unic expeditie', 'shipmentId');
         fieldMap.set('tip cutie', 'boxType');
-        fieldMap.set('count', 'count');
         
         fileColumns.forEach(col => {
             const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();

@@ -97,7 +97,6 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
             schoolUniqueName: row[reverseMapping['schoolUniqueName']],
             shipmentId: shipmentId,
             boxType: row[reverseMapping['boxType']],
-            count: Number(row[reverseMapping['count']] || 0),
         };
 
         if (!shipmentsMap.has(shipmentId)) {
