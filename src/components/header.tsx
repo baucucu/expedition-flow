@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { LogOut, Box } from "lucide-react";
+import { LogOut, Box, Plus } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
 
@@ -22,6 +22,10 @@ export const AppHeader = () => {
                 <h1 className="text-xl font-bold tracking-tight">Expedition Manager</h1>
             </div>
             <div className="ml-auto flex items-center gap-4">
+                 <Button onClick={() => router.push('/expeditions/new')}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Expedition
+                </Button>
                 <Button variant="ghost" size="icon" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4" />
                     <span className="sr-only">Sign Out</span>
