@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,19 +42,24 @@ export default function NewExpeditionPage() {
   }, [parsedData]);
   
   // Auto-map columns based on header names
-  useState(() => {
-    const initialMapping: ColumnMapping = {};
-    const lowerCaseAppFields = APP_FIELDS.map(f => f.label.toLowerCase());
-
-    fileColumns.forEach(col => {
-        const lowerCol = col.toLowerCase().replace(/_/g, ' ');
-        const matchedField = APP_FIELDS.find(field => lowerCol.includes(field.label.toLowerCase()) || field.label.toLowerCase().includes(lowerCol));
-        if (matchedField) {
-            initialMapping[col] = matchedField.value;
-        }
-    });
-    setColumnMapping(initialMapping);
-  });
+  useEffect(() => {
+    if (fileColumns.length > 0) {
+        const initialMapping: ColumnMapping = {};
+        
+        fileColumns.forEach(col => {
+            const lowerCol = col.toLowerCase().replace(/_/g, ' ');
+            const matchedField = APP_FIELDS.find(field => 
+                lowerCol.includes(field.label.toLowerCase()) || 
+                field.label.toLowerCase().includes(lowerCol) ||
+                lowerCol.includes(field.value.toLowerCase())
+            );
+            if (matchedField) {
+                initialMapping[col] = matchedField.value;
+            }
+        });
+        setColumnMapping(initialMapping);
+    }
+  }, [fileColumns]);
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,8 +129,9 @@ export default function NewExpeditionPage() {
   }
 
   const handleCreateExpedition = () => {
-    // Basic validation
-    if (Object.keys(columnMapping).length === 0 || !columnMapping.name || !columnMapping.address) {
+    // Basic validation to ensure required fields are mapped.
+    const mappedValues = Object.values(columnMapping);
+    if (!mappedValues.includes('name') || !mappedValues.includes('address')) {
         toast({
             variant: 'destructive',
             title: 'Mapping Incomplete',
