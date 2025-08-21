@@ -118,12 +118,12 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
         for (const [shipmentId, recipients] of shipmentsMap.entries()) {
             // Create Shipment document
             const shipmentRef = doc(db, "shipments", shipmentId);
-            const shipmentData: Omit<Expedition, 'id' | 'recipients'> = {
+            const shipmentData: Omit<Expedition, 'id' | 'recipients' | 'awb'> & {awb?: string} = {
                 origin: "Imported", // Placeholder
                 destination: "Domestic", // Placeholder
                 status: "New",
-                awb: undefined,
             };
+            
             batch.set(shipmentRef, {
                 ...shipmentData,
                 createdAt: serverTimestamp(),
