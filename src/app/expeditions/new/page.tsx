@@ -52,9 +52,28 @@ export default function NewExpeditionPage() {
   useEffect(() => {
     if (fileColumns.length > 0) {
         const initialMapping: ColumnMapping = {};
+        const fieldMap = new Map(APP_FIELDS.map(f => [f.value.toLowerCase(), f.value]));
+        APP_FIELDS.forEach(f => fieldMap.set(f.label.toLowerCase(), f.value));
+
+        // Add common variations
+        fieldMap.set('id unic', 'id');
+        fieldMap.set('grupa', 'group');
+        fieldMap.set('school name', 'schoolName');
+        fieldMap.set('school unic name', 'schoolUniqueName');
+        fieldMap.set('id unic expeditie', 'shipmentId');
+        fieldMap.set('tip cutie', 'boxType');
+        fieldMap.set('telefon', 'telephone');
         
         fileColumns.forEach(col => {
-            const lowerCol = col.toLowerCase().replace(/_/g, ' ');
+            const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();
+            
+            // Direct match
+            if (fieldMap.has(lowerCol)) {
+                initialMapping[col] = fieldMap.get(lowerCol)!;
+                return;
+            }
+
+            // Partial match
             const matchedField = APP_FIELDS.find(field => 
                 lowerCol.includes(field.label.toLowerCase()) || 
                 field.label.toLowerCase().includes(lowerCol) ||
