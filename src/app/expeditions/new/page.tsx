@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
-import { ArrowLeft, FileUp, Loader2, ChevronsRight } from 'lucide-react';
+import { ArrowLeft, FileUp, Loader2, ChevronsRight, Sparkles } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { mapFieldsAction } from '@/app/actions/expedition-actions';
 
 type ParsedRow = Record<string, string | number>;
 type ColumnMapping = Record<string, string>;
@@ -40,6 +41,7 @@ export default function NewExpeditionPage() {
   const [parsedData, setParsedData] = useState<ParsedRow[]>([]);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({});
   const [isCreating, setIsCreating] = useState(false);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -57,23 +59,26 @@ export default function NewExpeditionPage() {
 
         // Add common variations
         fieldMap.set('id unic', 'id');
+        fieldMap.set('nume', 'name');
+        fieldMap.set('adresa', 'address');
+        fieldMap.set('continut', 'items');
+        fieldMap.set('telefon', 'telephone');
         fieldMap.set('grupa', 'group');
-        fieldMap.set('school name', 'schoolName');
-        fieldMap.set('school unic name', 'schoolUniqueName');
+        fieldMap.set('judet', 'county');
+        fieldMap.set('oras', 'city');
+        fieldMap.set('scoala', 'schoolName');
+        fieldMap.set('nume unic scoala', 'schoolUniqueName');
         fieldMap.set('id unic expeditie', 'shipmentId');
         fieldMap.set('tip cutie', 'boxType');
-        fieldMap.set('telefon', 'telephone');
         
         fileColumns.forEach(col => {
             const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();
             
-            // Direct match
             if (fieldMap.has(lowerCol)) {
                 initialMapping[col] = fieldMap.get(lowerCol)!;
                 return;
             }
 
-            // Partial match
             const matchedField = APP_FIELDS.find(field => 
                 lowerCol.includes(field.label.toLowerCase()) || 
                 field.label.toLowerCase().includes(lowerCol) ||
@@ -154,6 +159,29 @@ export default function NewExpeditionPage() {
     setColumnMapping(prev => ({...prev, [fileCol]: appField}));
   }
 
+  const handleSuggestMapping = async () => {
+    setIsSuggesting(true);
+    const result = await mapFieldsAction({
+        fileColumns: fileColumns,
+        appFields: APP_FIELDS,
+    });
+    setIsSuggesting(false);
+
+    if (result.success && result.data) {
+        setColumnMapping(result.data);
+        toast({
+            title: "AI Suggestions Applied",
+            description: "The AI has suggested column mappings."
+        })
+    } else {
+        toast({
+            variant: "destructive",
+            title: "AI Suggestion Failed",
+            description: result.error || "Could not get suggestions from the AI."
+        })
+    }
+  }
+
   const handleCreateExpedition = () => {
     // Basic validation to ensure required fields are mapped.
     const mappedValues = Object.values(columnMapping);
@@ -226,6 +254,10 @@ export default function NewExpeditionPage() {
                 <CardContent>
                     {parsedData.length > 0 ? (
                         <div className="space-y-4">
+                             <Button onClick={handleSuggestMapping} disabled={isSuggesting} variant="outline" size="sm">
+                                {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                Suggest with AI
+                            </Button>
                             <div className="space-y-2">
                                {fileColumns.map(col => (
                                 <div key={col} className="grid grid-cols-2 gap-4 items-center">
