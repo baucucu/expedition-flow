@@ -12,7 +12,7 @@ import { AppHeader } from '@/components/header';
 import { ArrowLeft, FileUp, Loader2, ChevronsRight, Sparkles } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mapFieldsAction } from '@/app/actions/expedition-actions';
+import { mapFieldsAction, createExpeditionFromImport } from '@/app/actions/expedition-actions';
 import type { FieldMapperInput } from '@/ai/flows/field-mapper';
 
 type ParsedRow = Record<string, string | number>;
@@ -186,32 +186,37 @@ export default function NewExpeditionPage() {
     }
   }
 
-  const handleCreateExpedition = () => {
-    // Basic validation to ensure required fields are mapped.
+  const handleCreateExpedition = async () => {
     const mappedValues = Object.values(columnMapping);
-    if (!mappedValues.includes('name') || !mappedValues.includes('address')) {
+    if (!mappedValues.includes('shipmentId') || !mappedValues.includes('id') || !mappedValues.includes('name')) {
         toast({
             variant: 'destructive',
             title: 'Mapping Incomplete',
-            description: 'Please map at least "Recipient Name" and "Recipient Address".'
+            description: 'Please map at least "Shipment ID", "Recipient ID", and "Recipient Name".'
         });
         return;
     }
+    
     setIsCreating(true);
-    // In a real app, this would send the parsedData and columnMapping to the server.
-    console.log("Creating expedition with:", {
+    const result = await createExpeditionFromImport({
         data: parsedData,
         mapping: columnMapping
     });
+    setIsCreating(false);
 
-    setTimeout(() => {
-        toast({
-            title: 'Expedition Created',
-            description: 'The new expedition has been successfully created from the imported file.'
+    if (result.success && result.data) {
+         toast({
+            title: 'Expedition Created Successfully',
+            description: `Created ${result.data.shipmentCount} shipment(s) with ${result.data.recipientCount} recipient(s).`
         });
-        setIsCreating(false);
         router.push('/');
-    }, 1500)
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Failed to Create Expedition',
+            description: result.error || "An unknown error occurred while saving the data."
+        });
+    }
   }
 
 
@@ -258,7 +263,7 @@ export default function NewExpeditionPage() {
                 <CardContent>
                     {parsedData.length > 0 ? (
                         <div className="space-y-4">
-                             <Button onClick={handleSuggestMapping} disabled={isSuggesting} variant="outline" size="sm">
+                             <Button onClick={handleSuggestMapping} disabled={isSuggesting || isCreating} variant="outline" size="sm">
                                 {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                                 Suggest with AI
                             </Button>
@@ -269,6 +274,7 @@ export default function NewExpeditionPage() {
                                     <Select 
                                         value={columnMapping[col] || ''}
                                         onValueChange={(value) => handleMappingChange(col, value)}
+                                        disabled={isCreating}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select target field..." />
@@ -285,7 +291,7 @@ export default function NewExpeditionPage() {
                             </div>
                             <Button onClick={handleCreateExpedition} disabled={isCreating} className="w-full">
                                 {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChevronsRight className="mr-2 h-4 w-4" />}
-                                Create Expedition from {parsedData.length} Records
+                                {isCreating ? 'Creating Expedition...' : `Create Expedition from ${parsedData.length} Records`}
                             </Button>
                         </div>
                     ) : (
