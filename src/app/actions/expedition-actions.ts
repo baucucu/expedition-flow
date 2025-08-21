@@ -80,8 +80,10 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
     const shipmentsMap = new Map<string, MappedRow[]>();
 
     for (const row of rawData) {
-        const shipmentId = row[reverseMapping['shipmentId']];
-        if (!shipmentId) continue;
+        const shipmentIdValue = row[reverseMapping['shipmentId']];
+        if (!shipmentIdValue) continue;
+
+        const shipmentId = String(shipmentIdValue);
 
         const recipientData: MappedRow = {
             id: String(row[reverseMapping['id']] || doc(collection(db, 'recipients')).id), // Use imported ID or generate a new one
@@ -131,7 +133,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
 
             // Create Recipient documents
             for (const recipient of recipients) {
-                const recipientRef = doc(db, "recipients", String(recipient.id));
+                const recipientRef = doc(db, "recipients", recipient.id);
                  const recipientForDb: Omit<Recipient, 'id'> = {
                     ...recipient,
                     status: 'New',
