@@ -58,7 +58,15 @@ const mapFieldsFlow = ai.defineFlow(
     outputSchema: FieldMapperOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Dynamically create the output schema based on the input file columns
+    const dynamicOutputProperties: Record<string, z.ZodString> = {};
+    input.fileColumns.forEach(column => {
+      dynamicOutputProperties[column] = z.string();
+    });
+    const dynamicOutputSchema = z.object(dynamicOutputProperties);
+
+    // Call the prompt with the dynamically generated output schema
+    const { output } = await prompt(input, { output: { schema: dynamicOutputSchema }});
     return output!;
   }
 );

@@ -5,6 +5,7 @@ import { documentContentGenerator, type DocumentContentGeneratorInput } from "@/
 import { mapFields } from "@/ai/flows/field-mapper";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp } from "firebase/firestore";
 import type { Recipient, Expedition } from "@/types";
 
