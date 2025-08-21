@@ -13,6 +13,7 @@ import { ArrowLeft, FileUp, Loader2, ChevronsRight, Sparkles } from 'lucide-reac
 import * as xlsx from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mapFieldsAction } from '@/app/actions/expedition-actions';
+import type { FieldMapperInput } from '@/ai/flows/field-mapper';
 
 type ParsedRow = Record<string, string | number>;
 type ColumnMapping = Record<string, string>;
@@ -32,6 +33,7 @@ const APP_FIELDS = [
     { value: 'schoolUniqueName', label: 'School Unique Name' },
     { value: 'shipmentId', label: 'Shipment ID' },
     { value: 'boxType', label: 'Box Type' },
+    { value: 'count', label: 'Count' },
 ];
 
 
@@ -70,6 +72,7 @@ export default function NewExpeditionPage() {
         fieldMap.set('nume unic scoala', 'schoolUniqueName');
         fieldMap.set('id unic expeditie', 'shipmentId');
         fieldMap.set('tip cutie', 'boxType');
+        fieldMap.set('count', 'count');
         
         fileColumns.forEach(col => {
             const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();
@@ -161,10 +164,11 @@ export default function NewExpeditionPage() {
 
   const handleSuggestMapping = async () => {
     setIsSuggesting(true);
-    const result = await mapFieldsAction({
+    const input: FieldMapperInput = {
         fileColumns: fileColumns,
         appFields: APP_FIELDS,
-    });
+    };
+    const result = await mapFieldsAction(input);
     setIsSuggesting(false);
 
     if (result.success && result.data) {

@@ -51,6 +51,7 @@ export interface Recipient {
   boxType?: string;
   email?: string;
   telephone?: string;
+  count?: number;
 }
 
 export interface Expedition {
@@ -61,4 +62,3 @@ export interface Expedition {
   recipients: Recipient[];
   awb?: string;
 }
-
