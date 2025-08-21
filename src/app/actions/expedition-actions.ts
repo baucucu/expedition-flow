@@ -3,7 +3,6 @@
 
 import { documentContentGenerator, type DocumentContentGeneratorInput } from "@/ai/flows/document-content-generator";
 import { mapFields } from "@/ai/flows/field-mapper";
-import type { FieldMapperInput } from '@/ai/flows/field-mapper';
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp } from "firebase/firestore";
@@ -30,11 +29,12 @@ export async function generateDocumentContentAction(input: DocumentContentGenera
     }
 }
 
-
 const mapFieldsActionInputSchema = z.object({
   fileColumns: z.array(z.string()),
   appFields: z.array(z.object({ value: z.string(), label: z.string() })),
 });
+export type FieldMapperInput = z.infer<typeof mapFieldsActionInputSchema>;
+
 
 export async function mapFieldsAction(input: FieldMapperInput) {
     const validatedInput = mapFieldsActionInputSchema.safeParse(input);
@@ -131,7 +131,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
 
             // Create Recipient documents
             for (const recipient of recipients) {
-                const recipientRef = doc(db, "recipients", recipient.id);
+                const recipientRef = doc(db, "recipients", String(recipient.id));
                  const recipientForDb: Omit<Recipient, 'id'> = {
                     ...recipient,
                     status: 'New',
