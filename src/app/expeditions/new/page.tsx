@@ -12,8 +12,9 @@ import { AppHeader } from '@/components/header';
 import { ArrowLeft, FileUp, Loader2, ChevronsRight, Sparkles } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mapFieldsAction, createExpeditionFromImport } from '@/app/actions/expedition-actions';
+import { createExpeditionFromImport } from '@/app/actions/expedition-actions';
 import type { FieldMapperInput } from '@/ai/flows/field-mapper';
+import { mapFieldsAction } from '@/app/actions/expedition-actions';
 
 type ParsedRow = Record<string, string | number>;
 type ColumnMapping = Record<string, string>;
@@ -198,8 +199,12 @@ export default function NewExpeditionPage() {
     }
     
     setIsCreating(true);
+
+    // This is the fix: ensure data is a plain object before sending to server action
+    const plainData = JSON.parse(JSON.stringify(parsedData));
+
     const result = await createExpeditionFromImport({
-        data: parsedData,
+        data: plainData,
         mapping: columnMapping
     });
     setIsCreating(false);
