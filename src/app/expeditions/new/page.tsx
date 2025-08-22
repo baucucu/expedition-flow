@@ -71,6 +71,7 @@ export default function NewExpeditionPage() {
         fieldMap.set('continut', 'items');
         fieldMap.set('telefon', 'telephone');
         fieldMap.set('număruldumneavoastrădetelefon', 'telephone');
+        fieldMap.set('phone', 'telephone');
         fieldMap.set('adresa dumneavoastră de e-mail activă', 'email');
         fieldMap.set('grupa', 'group');
         fieldMap.set('județul în care se află unitatea de învățământ cu personalitate juridică', 'county');
@@ -79,6 +80,7 @@ export default function NewExpeditionPage() {
         fieldMap.set('oras', 'city');
         fieldMap.set('denumirea unității de învățământ cu personalitate juridică', 'schoolName');
         fieldMap.set('scoala', 'schoolName');
+        fieldMap.set('location', 'schoolName');
         fieldMap.set('nume unic scoala', 'schoolUniqueName');
         fieldMap.set('cod unic', 'schoolUniqueName');
         fieldMap.set('id unic expeditie', 'shipmentId');
@@ -86,6 +88,7 @@ export default function NewExpeditionPage() {
         fieldMap.set('nume_awb', 'awbName');
         fieldMap.set('nr_tel_awb', 'awbTelephone');
         fieldMap.set('greutate_cutie', 'boxWeight');
+        fieldMap.set('parcel_count', 'boxWeight');
         
         fileColumns.forEach(col => {
             const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();
