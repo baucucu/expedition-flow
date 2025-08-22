@@ -182,6 +182,15 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                             'parcel inventory': { status: 'Not Generated' },
                         },
                     };
+                    
+                    // Remove any undefined fields before writing to Firestore
+                    Object.keys(recipientForDb).forEach(key => {
+                        const K = key as keyof typeof recipientForDb;
+                        if (recipientForDb[K] === undefined) {
+                            delete recipientForDb[K];
+                        }
+                    });
+
                     batch.set(recipientRef, recipientForDb);
                 }
             }
