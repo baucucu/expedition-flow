@@ -31,7 +31,7 @@ export interface Document {
 }
 
 export interface Recipient {
-  id: string;
+  id: string; // id_unic
   name: string;
   address: string;
   items: string[];
@@ -41,16 +41,25 @@ export interface Recipient {
     'instructiuni pentru confirmarea primirii coletului': Document;
     'parcel inventory': Document;
   };
-  // New optional fields
   group?: string;
   county?: string;
   city?: string;
   schoolName?: string;
   schoolUniqueName?: string;
-  shipmentId?: string;
+  shipmentId?: string; // id_unic_expeditie
+  awbId?: string; // Link to the AWB document
   boxType?: string;
   email?: string;
   telephone?: string;
+}
+
+export interface AWB {
+    id: string;
+    shipmentId: string;
+    awbName: string;
+    awbTelephone?: string;
+    boxWeight?: number;
+    recipientIds: string[];
 }
 
 export interface Expedition {
@@ -59,5 +68,5 @@ export interface Expedition {
   destination: string;
   status: ExpeditionStatus;
   recipients: Recipient[];
-  awb?: string;
+  awb?: string; // This might represent a master AWB or could be deprecated in favor of the AWB collection
 }

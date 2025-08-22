@@ -13,18 +13,17 @@ import { ArrowLeft, FileUp, Loader2, ChevronsRight, Sparkles } from 'lucide-reac
 import * as xlsx from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createExpeditionFromImport } from '@/app/actions/expedition-actions';
-import type { FieldMapperInput } from '@/ai/flows/field-mapper';
+import type { FieldMapperInput } from '@/app/actions/expedition-actions';
 import { mapFieldsAction } from '@/app/actions/expedition-actions';
 
 type ParsedRow = Record<string, string | number>;
 type ColumnMapping = Record<string, string>;
 
 const APP_FIELDS = [
-    { value: 'id', label: 'Recipient ID' },
+    { value: 'id', label: 'Recipient ID' }, // id_unic
     { value: 'name', label: 'Recipient Name' },
     { value: 'address', label: 'Recipient Address' },
     { value: 'items', label: 'Items' },
-    { value: 'awb', label: 'AWB' },
     { value: 'email', label: 'Email' },
     { value: 'telephone', label: 'Telephone' },
     { value: 'group', label: 'Group' },
@@ -32,8 +31,12 @@ const APP_FIELDS = [
     { value: 'city', label: 'City' },
     { value: 'schoolName', label: 'School Name' },
     { value: 'schoolUniqueName', label: 'School Unique Name' },
-    { value: 'shipmentId', label: 'Shipment ID' },
+    { value: 'shipmentId', label: 'Shipment ID' }, // id_unic_expeditie
     { value: 'boxType', label: 'Box Type' },
+    // AWB related fields
+    { value: 'awbName', label: 'AWB Name' }, // Nume_awb
+    { value: 'awbTelephone', label: 'AWB Telephone' }, // Nr_tel_awb
+    { value: 'boxWeight', label: 'Box Weight' }, // Greutate_cutie
 ];
 
 
@@ -62,16 +65,27 @@ export default function NewExpeditionPage() {
         // Add common variations
         fieldMap.set('id unic', 'id');
         fieldMap.set('nume', 'name');
+        fieldMap.set('nume și prenume', 'name');
         fieldMap.set('adresa', 'address');
+        fieldMap.set('adresa unității de învățământ cu personalitate juridică (județ, localitate, stradă, număr, cod poștal - dacă este cazul)', 'address');
         fieldMap.set('continut', 'items');
         fieldMap.set('telefon', 'telephone');
+        fieldMap.set('număruldumneavoastrădetelefon', 'telephone');
+        fieldMap.set('adresa dumneavoastră de e-mail activă', 'email');
         fieldMap.set('grupa', 'group');
+        fieldMap.set('județul în care se află unitatea de învățământ cu personalitate juridică', 'county');
         fieldMap.set('judet', 'county');
+        fieldMap.set('localitate', 'city');
         fieldMap.set('oras', 'city');
+        fieldMap.set('denumirea unității de învățământ cu personalitate juridică', 'schoolName');
         fieldMap.set('scoala', 'schoolName');
         fieldMap.set('nume unic scoala', 'schoolUniqueName');
+        fieldMap.set('cod unic', 'schoolUniqueName');
         fieldMap.set('id unic expeditie', 'shipmentId');
         fieldMap.set('tip cutie', 'boxType');
+        fieldMap.set('nume_awb', 'awbName');
+        fieldMap.set('nr_tel_awb', 'awbTelephone');
+        fieldMap.set('greutate_cutie', 'boxWeight');
         
         fileColumns.forEach(col => {
             const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();
@@ -165,7 +179,7 @@ export default function NewExpeditionPage() {
     setIsSuggesting(true);
     const input: FieldMapperInput = {
         fileColumns: fileColumns,
-        appFields: APP_FIELDS,
+        appFields: APP_FIELDS.map(({value, label}) => ({value, label})),
     };
     const result = await mapFieldsAction(input);
     setIsSuggesting(false);
@@ -198,7 +212,6 @@ export default function NewExpeditionPage() {
     
     setIsCreating(true);
 
-    // This is the fix: ensure data is a plain object before sending to server action
     const plainData = JSON.parse(JSON.stringify(parsedData));
 
     const result = await createExpeditionFromImport({
@@ -209,8 +222,8 @@ export default function NewExpeditionPage() {
 
     if (result.success && result.data) {
          toast({
-            title: 'Expedition Created Successfully',
-            description: `Created ${result.data.shipmentCount} shipment(s) with ${result.data.recipientCount} recipient(s).`
+            title: 'Import Successful',
+            description: `Created ${result.data.shipmentCount} shipment(s), ${result.data.awbCount} AWB(s), and ${result.data.recipientCount} recipient(s).`
         });
         router.push('/');
     } else {

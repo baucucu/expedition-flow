@@ -6,8 +6,8 @@ import { mapFields } from "@/ai/flows/field-mapper";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { auth } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp } from "firebase/firestore";
-import type { Recipient, Expedition } from "@/types";
+import { collection, writeBatch, doc, serverTimestamp, where, getDocs, query } from "firebase/firestore";
+import type { Recipient, Expedition, AWB } from "@/types";
 
 const generateActionInputSchema = z.object({
     documentType: z.enum(['proces verbal de receptie', 'instructiuni pentru confirmarea primirii coletului', 'parcel inventory']),
@@ -57,8 +57,11 @@ const createExpeditionActionInputSchema = z.object({
     mapping: z.record(z.string(), z.string()),
 });
 
-type MappedRow = Omit<Recipient, 'id' | 'status' | 'documents'> & {
+type MappedRow = Omit<Recipient, 'id' | 'status' | 'documents' | 'items'> & {
     id: string; // From id_unic
+    awbName?: string;
+    awbTelephone?: string;
+    boxWeight?: number;
 };
 
 export async function createExpeditionFromImport(input: {data: any[], mapping: Record<string,string>}) {
@@ -69,7 +72,6 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
 
     const { data: rawData, mapping } = validation.data;
 
-    // Create a reverse mapping for easier lookup
     const reverseMapping: Record<string, string> = {};
     for (const key in mapping) {
         if (mapping[key] !== 'ignore') {
@@ -87,10 +89,9 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
         const shipmentId = String(shipmentIdValue);
 
         const recipientData: MappedRow = {
-            id: String(row[reverseMapping['id']] || doc(collection(db, 'recipients')).id), // Use imported ID or generate a new one
+            id: String(row[reverseMapping['id']] || doc(collection(db, 'recipients')).id),
             name: row[reverseMapping['name']],
             address: row[reverseMapping['address']],
-            items: [], // Assuming items are not in the import file for now
             email: row[reverseMapping['email']],
             telephone: row[reverseMapping['telephone']],
             group: row[reverseMapping['group']],
@@ -100,6 +101,10 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
             schoolUniqueName: row[reverseMapping['schoolUniqueName']],
             shipmentId: shipmentId,
             boxType: row[reverseMapping['boxType']],
+            // AWB details to be grouped later
+            awbName: row[reverseMapping['awbName']],
+            awbTelephone: row[reverseMapping['awbTelephone']],
+            boxWeight: row[reverseMapping['boxWeight']],
         };
 
         if (!shipmentsMap.has(shipmentId)) {
@@ -109,47 +114,79 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
     }
     
     if (shipmentsMap.size === 0) {
-        return { success: false, error: "No valid shipments found in the file. Ensure 'shipmentId' is mapped and present." };
+        return { success: false, error: "No valid shipments found. Ensure 'shipmentId' is mapped and present." };
     }
 
     try {
         const batch = writeBatch(db);
         const createdShipmentIds: string[] = [];
+        let totalAwbsCreated = 0;
 
         for (const [shipmentId, recipients] of shipmentsMap.entries()) {
-            // Create Shipment document
-            const shipmentRef = doc(db, "shipments", shipmentId);
-            const shipmentData: Omit<Expedition, 'id' | 'recipients' | 'awb'> & {awb?: string} = {
-                origin: "Imported", // Placeholder
-                destination: "Domestic", // Placeholder
-                status: "New",
-            };
             
-            batch.set(shipmentRef, {
-                ...shipmentData,
+            // Create or update Shipment document
+            const shipmentRef = doc(db, "shipments", shipmentId);
+            const shipmentData: Partial<Expedition> = {
+                status: "New",
                 createdAt: serverTimestamp(),
                 recipientCount: recipients.length
-            });
+            };
+            batch.set(shipmentRef, shipmentData, { merge: true });
             createdShipmentIds.push(shipmentId);
 
-            // Create Recipient documents
+            // Group recipients by AWB info to create consolidated AWBs
+            const awbsMap = new Map<string, MappedRow[]>();
             for (const recipient of recipients) {
-                const recipientRef = doc(db, "recipients", recipient.id);
-                 const recipientForDb: Omit<Recipient, 'id'> = {
-                    ...recipient,
-                    status: 'New',
-                    documents: {
-                        'proces verbal de receptie': { status: 'Not Generated' },
-                        'instructiuni pentru confirmarea primirii coletului': { status: 'Not Generated' },
-                        'parcel inventory': { status: 'Not Generated' },
-                    },
+                // A unique key for an AWB is its name within a shipment
+                const awbKey = `${recipient.awbName}`; 
+                if (!awbsMap.has(awbKey)) {
+                    awbsMap.set(awbKey, []);
+                }
+                awbsMap.get(awbKey)!.push(recipient);
+            }
+
+            // Create AWB and Recipient documents
+            for (const [awbKey, awbRecipients] of awbsMap.entries()) {
+                const awbId = doc(collection(db, 'awbs')).id;
+                totalAwbsCreated++;
+
+                const firstRecipientOfAwb = awbRecipients[0];
+                const awbData: AWB = {
+                    id: awbId,
+                    shipmentId: shipmentId,
+                    awbName: firstRecipientOfAwb.awbName!,
+                    awbTelephone: firstRecipientOfAwb.awbTelephone,
+                    boxWeight: firstRecipientOfAwb.boxWeight,
+                    recipientIds: awbRecipients.map(r => r.id),
                 };
-                batch.set(recipientRef, recipientForDb);
+                const awbRef = doc(db, "awbs", awbId);
+                batch.set(awbRef, awbData);
+
+                for (const recipient of awbRecipients) {
+                    const recipientRef = doc(db, "recipients", recipient.id);
+                    const { awbName, awbTelephone, boxWeight, ...recipientFields } = recipient;
+                    const recipientForDb: Omit<Recipient, 'id' | 'items'> = {
+                        ...recipientFields,
+                        awbId: awbId, // Link recipient to the AWB
+                        status: 'New',
+                        documents: {
+                            'proces verbal de receptie': { status: 'Not Generated' },
+                            'instructiuni pentru confirmarea primirii coletului': { status: 'Not Generated' },
+                            'parcel inventory': { status: 'Not Generated' },
+                        },
+                    };
+                    batch.set(recipientRef, recipientForDb);
+                }
             }
         }
 
         await batch.commit();
-        return { success: true, data: { shipmentCount: createdShipmentIds.length, recipientCount: rawData.length, shipmentIds: createdShipmentIds } };
+        return { success: true, data: { 
+            shipmentCount: createdShipmentIds.length, 
+            awbCount: totalAwbsCreated,
+            recipientCount: rawData.length, 
+            shipmentIds: createdShipmentIds 
+        }};
     } catch (error: any) {
         console.error("Error writing to Firestore:", error);
         return { success: false, error: `Failed to save data to the database: ${error.message}` };
