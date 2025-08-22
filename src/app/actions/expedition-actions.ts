@@ -152,14 +152,20 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                 totalAwbsCreated++;
 
                 const firstRecipientOfAwb = awbRecipients[0];
-                const awbData: AWB = {
+                const awbData: Partial<AWB> = {
                     id: awbId,
                     shipmentId: shipmentId,
                     awbName: firstRecipientOfAwb.awbName!,
-                    awbTelephone: firstRecipientOfAwb.awbTelephone,
-                    boxWeight: firstRecipientOfAwb.boxWeight,
                     recipientIds: awbRecipients.map(r => r.id),
                 };
+                
+                if (firstRecipientOfAwb.awbTelephone) {
+                    awbData.awbTelephone = firstRecipientOfAwb.awbTelephone;
+                }
+                if (firstRecipientOfAwb.boxWeight) {
+                    awbData.boxWeight = firstRecipientOfAwb.boxWeight;
+                }
+
                 const awbRef = doc(db, "awbs", awbId);
                 batch.set(awbRef, awbData);
 
