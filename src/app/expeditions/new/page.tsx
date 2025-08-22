@@ -26,6 +26,7 @@ const APP_FIELDS = [
     { value: 'items', label: 'Items' },
     { value: 'email', label: 'Email' },
     { value: 'telephone', label: 'Telephone' },
+    { value: 'postalCode', label: 'Postal Code' },
     { value: 'group', label: 'Group' },
     { value: 'county', label: 'County' },
     { value: 'city', label: 'City' },
@@ -73,6 +74,8 @@ export default function NewExpeditionPage() {
         fieldMap.set('număruldumneavoastrădetelefon', 'telephone');
         fieldMap.set('phone', 'telephone');
         fieldMap.set('adresa dumneavoastră de e-mail activă', 'email');
+        fieldMap.set('cod postal', 'postalCode');
+        fieldMap.set('cod_postal', 'postalCode');
         fieldMap.set('grupa', 'group');
         fieldMap.set('județul în care se află unitatea de învățământ cu personalitate juridică', 'county');
         fieldMap.set('judet', 'county');

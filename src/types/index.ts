@@ -51,6 +51,7 @@ export interface Recipient {
   boxType?: string;
   email?: string;
   telephone?: string;
+  postalCode?: string;
 }
 
 export interface AWB {
@@ -63,10 +64,10 @@ export interface AWB {
 }
 
 export interface Expedition {
-  id: string;
-  origin: string;
-  destination: string;
+  id: string; // This is the shipmentId
   status: ExpeditionStatus;
+  recipientCount: number;
+  // Dynamic fields, not stored directly
   recipients: Recipient[];
-  awb?: string; // This might represent a master AWB or could be deprecated in favor of the AWB collection
+  awbs: AWB[];
 }

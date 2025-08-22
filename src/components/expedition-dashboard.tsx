@@ -153,6 +153,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       cell: ({ row }) => <div>{row.getValue("county")}</div>,
     },
     {
+      accessorKey: "postalCode",
+      header: "Postal Code",
+      cell: ({ row }) => <div>{row.getValue("postalCode")}</div>,
+    },
+    {
       accessorKey: "status",
       header: "Recipient Status",
       cell: ({ row }) => {
@@ -386,7 +391,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
                         <TabsTrigger value="proces verbal de receptie" disabled={selectedDocument.recipient.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
-                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selected.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
+                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
                         <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>

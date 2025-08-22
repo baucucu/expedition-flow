@@ -94,6 +94,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
             address: row[reverseMapping['address']],
             email: row[reverseMapping['email']],
             telephone: row[reverseMapping['telephone']],
+            postalCode: row[reverseMapping['postalCode']],
             group: row[reverseMapping['group']],
             county: row[reverseMapping['county']],
             city: row[reverseMapping['city']],
