@@ -5,10 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Expedition, ExpeditionStatus, DocumentType, Recipient, AWB } from "@/types";
+import type { Expedition, ExpeditionStatus, Recipient, AWB } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard";
-import { DocumentAssistant } from "@/components/document-assistant";
-import { EmailComposer } from "@/components/email-composer";
 import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
 import { Box } from "lucide-react";
@@ -25,10 +23,6 @@ export default function Home() {
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [awbs, setAwbs] = useState<AWB[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [isDocAssistantOpen, setIsDocAssistantOpen] = useState(false);
-  const [isEmailComposerOpen, setIsEmailComposerOpen] = useState(false);
-  const [selectedExpedition, setSelectedExpedition] = useState<Expedition | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -194,17 +188,6 @@ export default function Home() {
     return allRecipientsWithFullData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
   }, [activeFilter, allRecipientsWithFullData, expeditions]);
 
-
-  const handleSendToLogistics = (expeditionId: string) => {
-    // This would be a firestore update in a real app
-    console.log("Would update expedition to 'Sent to Logistics'", expeditionId)
-  };
-
-  const handleDocumentGenerated = (expeditionId: string, recipientId: string, documentType: DocumentType, content: string) => {
-     // This would be a firestore update in a real app
-     console.log("Would update document status", expeditionId, recipientId, documentType)
-  };
-
   if (authLoading || loading || !user) {
     return (
        <div className="min-h-screen w-full bg-background">
@@ -249,22 +232,6 @@ export default function Home() {
             expeditions={expeditions}
         />
       </main>
-      {selectedExpedition && (
-        <>
-          <DocumentAssistant 
-            isOpen={isDocAssistantOpen}
-            setIsOpen={setIsDocAssistantOpen}
-            expedition={selectedExpedition}
-            onDocumentGenerated={handleDocumentGenerated}
-          />
-          <EmailComposer 
-            isOpen={isEmailComposerOpen}
-            setIsOpen={setIsEmailComposerOpen}
-            expedition={selectedExpedition}
-            onEmailSent={handleSendToLogistics}
-          />
-        </>
-      )}
     </div>
   );
 }

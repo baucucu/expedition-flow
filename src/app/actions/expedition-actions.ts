@@ -1,34 +1,13 @@
 
 "use server";
 
-import { documentContentGenerator, type DocumentContentGeneratorInput } from "@/ai/flows/document-content-generator";
 import { mapFields } from "@/ai/flows/field-mapper";
 import { generateAwb } from "@/ai/flows/awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp } from "firebase/firestore";
+import { collection, writeBatch, doc, serverTimestamp, getDocs } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
-
-// Action for Document Content Generation
-const generateActionInputSchema = z.object({
-    documentType: z.enum(['proces verbal de receptie', 'instructiuni pentru confirmarea primirii coletului', 'parcel inventory']),
-    expeditionDetails: z.string(),
-    existingContent: z.string().optional(),
-});
-
-export async function generateDocumentContentAction(input: DocumentContentGeneratorInput) {
-    const validatedInput = generateActionInputSchema.safeParse(input);
-    if (!validatedInput.success) {
-        return { success: false, error: "Invalid input." };
-    }
-    try {
-        const output = await documentContentGenerator(validatedInput.data);
-        return { success: true, data: output };
-    } catch (error) {
-        console.error("Error in documentContentGenerator flow:", error);
-        return { success: false, error: "Failed to generate document content due to a server error." };
-    }
-}
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
 // Action for Field Mapping
 const mapFieldsActionInputSchema = z.object({
@@ -214,5 +193,50 @@ export async function generateAwbAction(input: { shipmentIds: string[] }) {
     } catch (error: any) {
         console.error("Error in generateAwb flow:", error);
         return { success: false, message: `Failed to generate AWBs due to a server error: ${error.message}` };
+    }
+}
+
+
+// Action for linking static documents
+export async function updateRecipientDocumentsAction() {
+    try {
+        const storage = getStorage();
+        const inventoryRef = ref(storage, 'static/inventory.xlsx');
+        const instructionsRef = ref(storage, 'static/instructions.pdf');
+
+        // Get download URLs for the static files
+        const inventoryUrl = await getDownloadURL(inventoryRef);
+        const instructionsUrl = await getDownloadURL(instructionsRef);
+
+        // Get all recipient documents
+        const recipientsQuery = query(collection(db, "recipients"));
+        const querySnapshot = await getDocs(recipientsQuery);
+        const recipients = querySnapshot.docs;
+
+        if (recipients.length === 0) {
+            return { success: true, message: "No recipients found to update." };
+        }
+
+        // Create a batch to update all recipients
+        const batch = writeBatch(db);
+        recipients.forEach(docSnap => {
+            const recipientRef = doc(db, "recipients", docSnap.id);
+            batch.update(recipientRef, {
+                'documents.parcel inventory.status': 'Generated',
+                'documents.parcel inventory.url': inventoryUrl,
+                'documents.instructiuni pentru confirmarea primirii coletului.status': 'Generated',
+                'documents.instructiuni pentru confirmarea primirii coletului.url': instructionsUrl,
+            });
+        });
+
+        await batch.commit();
+
+        return { success: true, message: `Successfully updated ${recipients.length} recipients with static document links.` };
+    } catch (error: any) {
+        console.error("Error updating recipient documents:", error);
+        if (error.code === 'storage/object-not-found') {
+            return { success: false, error: "Static file not found in Storage. Please ensure 'static/inventory.xlsx' and 'static/instructions.pdf' are uploaded." };
+        }
+        return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
