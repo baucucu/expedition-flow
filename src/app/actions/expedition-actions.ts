@@ -246,10 +246,6 @@ export async function updateRecipientDocumentsAction() {
 // Action to upload a static file
 export async function uploadStaticFileAction(formData: FormData) {
     try {
-        if (!adminApp) {
-            return { success: false, error: 'The Admin SDK is not initialized. Please ensure the service account file is available.' };
-        }
-
         const file = formData.get('file') as File;
         const fileType = formData.get('fileType') as string;
 
