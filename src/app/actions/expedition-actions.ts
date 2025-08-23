@@ -201,14 +201,19 @@ export async function generateAwbAction(input: { shipmentIds: string[] }) {
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
     try {
-        // We use the client-side storage to get the URLs, as the Admin SDK doesn't have a direct equivalent for getDownloadURL
         const storage = getStorage();
+        
+        // Define references for all three static files
         const inventoryRef = ref(storage, 'static/inventory.xlsx');
         const instructionsRef = ref(storage, 'static/instructions.pdf');
+        const procesVerbalRef = ref(storage, 'static/proces-verbal-de-receptie.pdf');
 
-        // Get download URLs for the static files
-        const inventoryUrl = await getDownloadURL(inventoryRef);
-        const instructionsUrl = await getDownloadURL(instructionsRef);
+        // Get download URLs for all static files in parallel
+        const [inventoryUrl, instructionsUrl, procesVerbalUrl] = await Promise.all([
+            getDownloadURL(inventoryRef),
+            getDownloadURL(instructionsRef),
+            getDownloadURL(procesVerbalRef)
+        ]);
 
         // Get all recipient documents
         const recipientsQuery = query(collection(db, "recipients"));
@@ -228,6 +233,8 @@ export async function updateRecipientDocumentsAction() {
                 'documents.parcel inventory.url': inventoryUrl,
                 'documents.instructiuni pentru confirmarea primirii coletului.status': 'Generated',
                 'documents.instructiuni pentru confirmarea primirii coletului.url': instructionsUrl,
+                'documents.proces verbal de receptie.status': 'Generated',
+                'documents.proces verbal de receptie.url': procesVerbalUrl,
             });
         });
 
@@ -237,7 +244,7 @@ export async function updateRecipientDocumentsAction() {
     } catch (error: any) {
         console.error("Error updating recipient documents:", error);
         if (error.code === 'storage/object-not-found') {
-            return { success: false, error: "Static file not found in Storage. Please ensure 'static/inventory.xlsx' and 'static/instructions.pdf' are uploaded." };
+            return { success: false, error: "A static file was not found in Storage. Please ensure 'inventory.xlsx', 'instructions.pdf', and 'proces-verbal-de-receptie.pdf' are all uploaded." };
         }
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
@@ -252,11 +259,17 @@ export async function uploadStaticFileAction(formData: FormData) {
         if (!file) {
             return { success: false, error: 'No file provided.' };
         }
-        if (!fileType || (fileType !== 'inventory' && fileType !== 'instructions')) {
-            return { success: false, error: 'Invalid file type.' };
-        }
         
-        const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
+        let filePath = '';
+        if (fileType === 'inventory') {
+            filePath = 'static/inventory.xlsx';
+        } else if (fileType === 'instructions') {
+            filePath = 'static/instructions.pdf';
+        } else if (fileType === 'procesVerbal') {
+            filePath = 'static/proces-verbal-de-receptie.pdf';
+        } else {
+            return { success: false, error: 'Invalid file type specified.' };
+        }
         
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         

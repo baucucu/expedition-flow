@@ -11,35 +11,42 @@ import { ArrowLeft, FileScan, Loader2, Upload, FileCheck2, AlertCircle } from 'l
 import { updateRecipientDocumentsAction, uploadStaticFileAction } from '@/app/actions/expedition-actions';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 
-type UploadableFile = 'inventory' | 'instructions';
+type UploadableFile = 'inventory' | 'instructions' | 'procesVerbal';
 
 export default function ManageDocumentsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
   const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<Record<UploadableFile, 'idle' | 'uploading' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle' });
-  const [uploadError, setUploadError] = useState<Record<UploadableFile, string | null>>({ inventory: null, instructions: null });
+  const [procesVerbalFile, setProcesVerbalFile] = useState<File | null>(null);
+  
+  const [uploadStatus, setUploadStatus] = useState<Record<UploadableFile, 'idle' | 'uploading' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle', procesVerbal: 'idle' });
+  const [uploadError, setUploadError] = useState<Record<UploadableFile, string | null>>({ inventory: null, instructions: null, procesVerbal: null });
 
   const router = useRouter();
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: UploadableFile) => {
     const file = e.target.files?.[0] ?? null;
+    
+    setUploadStatus(prev => ({...prev, [fileType]: 'idle'}));
+    setUploadError(prev => ({...prev, [fileType]: null}));
+
     if (fileType === 'inventory') {
       setInventoryFile(file);
-      setUploadStatus(prev => ({...prev, inventory: 'idle'}));
-      setUploadError(prev => ({...prev, inventory: null}));
-    } else {
+    } else if (fileType === 'instructions') {
       setInstructionsFile(file);
-      setUploadStatus(prev => ({...prev, instructions: 'idle'}));
-      setUploadError(prev => ({...prev, instructions: null}));
+    } else {
+      setProcesVerbalFile(file);
     }
   };
 
   const handleUpload = async (fileType: UploadableFile) => {
-    const file = fileType === 'inventory' ? inventoryFile : instructionsFile;
+    let file: File | null = null;
+    if (fileType === 'inventory') file = inventoryFile;
+    else if (fileType === 'instructions') file = instructionsFile;
+    else file = procesVerbalFile;
+
     if (!file) {
       toast({ variant: 'destructive', title: 'No file selected' });
       return;
@@ -176,16 +183,53 @@ export default function ManageDocumentsPage() {
                 </CardFooter>
             </Card>
 
-            <Card className="lg:col-span-1">
+             <Card className="lg:col-span-1">
+                 <CardHeader>
+                    <CardTitle>3. Upload Proces Verbal File</CardTitle>
+                    <CardDescription>Upload the `proces-verbal-de-receptie.pdf` file. This will overwrite any existing version.</CardDescription>
+                </CardHeader>
+                 <CardContent className="space-y-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="proces-verbal-upload">Proces Verbal File (.pdf)</Label>
+                        <Input id="proces-verbal-upload" type="file" accept=".pdf,application/pdf" onChange={(e) => handleFileChange(e, 'procesVerbal')} disabled={isUploading('procesVerbal')} />
+                     </div>
+                    {isUploading('procesVerbal') && (
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Uploading...</span>
+                        </div>
+                    )}
+                     {isSuccess('procesVerbal') && (
+                        <div className="text-sm text-green-600 flex items-center gap-2">
+                            <FileCheck2 className="h-4 w-4" />
+                            <span>Upload complete.</span>
+                        </div>
+                    )}
+                    {isError('procesVerbal') && (
+                       <div className="text-sm text-destructive flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            <span>{uploadError.procesVerbal}</span>
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter>
+                    <Button onClick={() => handleUpload('procesVerbal')} disabled={!procesVerbalFile || isUploading('procesVerbal')} className="w-full">
+                        {isUploading('procesVerbal') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                         {isUploading('procesVerbal') ? 'Uploading...' : 'Upload Proces Verbal'}
+                    </Button>
+                </CardFooter>
+            </Card>
+
+            <Card className="lg:col-span-3">
                 <CardHeader>
-                    <CardTitle>3. Sync Links to Recipients</CardTitle>
+                    <CardTitle>4. Sync Links to All Recipients</CardTitle>
                     <CardDescription>
-                        After uploading the files, run this action to link them to all existing recipients in the database.
+                        After uploading the files, run this action to link them to all existing recipients in the database. This will update all three static documents.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                        This will fetch the download URLs for the two files from Storage and update every recipient document in your Firestore database.
+                        This will fetch the download URLs for the three static files from Storage and update every recipient document in your Firestore database.
                     </p>
                 </CardContent>
                  <CardFooter>
