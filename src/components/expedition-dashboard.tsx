@@ -38,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB } from "@/types";
 import { generateAwbAction } from "@/app/actions/expedition-actions";
@@ -100,6 +101,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   React.useEffect(() => {
     setData(initialData);
+    setRowSelection({}); // Reset selection when data changes
   }, [initialData]);
 
   React.useEffect(() => {
@@ -128,19 +130,36 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const handleGenerateAwbs = async () => {
-    const shipmentsToProcess = expeditions.filter(e => e.status === 'Ready for AWB');
-    if (shipmentsToProcess.length === 0) {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Recipients Selected",
+            description: "Please select at least one recipient to generate an AWB for.",
+        });
+        return;
+    }
+
+    // Get unique shipment IDs from selected rows that are ready for AWB
+    const shipmentIdsToProcess = [...new Set(
+        selectedRows
+            .map(row => row.original)
+            .filter(recipient => recipient.expeditionStatus === 'Ready for AWB')
+            .map(recipient => recipient.expeditionId)
+    )];
+
+
+    if (shipmentIdsToProcess.length === 0) {
         toast({
             variant: "destructive",
             title: "No Shipments Ready",
-            description: "There are no shipments in the 'Ready for AWB' status.",
+            description: "None of the selected recipients belong to a shipment that is 'Ready for AWB'.",
         });
         return;
     }
 
     setIsGeneratingAwb(true);
-    const shipmentIds = shipmentsToProcess.map(s => s.id);
-    const result = await generateAwbAction({ shipmentIds });
+    const result = await generateAwbAction({ shipmentIds: shipmentIdsToProcess });
     setIsGeneratingAwb(false);
     
     if (result.success) {
@@ -148,6 +167,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             title: "AWB Generation Started",
             description: result.message,
         });
+        table.resetRowSelection(); // Clear selection after action
     } else {
         toast({
             variant: "destructive",
@@ -158,6 +178,28 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const columns: ColumnDef<RecipientRow>[] = [
+    {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+    },
     {
         accessorKey: "id",
         header: "Recipient ID",
@@ -189,11 +231,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       cell: ({ row }) => <div>{row.getValue("county")}</div>,
     },
     {
-      accessorKey: "postalCode",
-      header: "Postal Code",
-      cell: ({ row }) => <div>{row.getValue("postalCode")}</div>,
-    },
-    {
       accessorKey: "status",
       header: "Recipient Status",
       cell: ({ row }) => {
@@ -209,26 +246,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         accessorKey: "awb.mainRecipientName",
         header: "AWB Name",
         cell: ({ row }) => row.original.awb?.mainRecipientName ?? <span className="text-muted-foreground">N/A</span>,
-    },
-    {
-        id: "exceptionDetails",
-        header: "Exception Details",
-        cell: ({ row }) => {
-            const recipient = row.original;
-            const expeditionStatus = recipient.expeditionStatus;
-            const expeditionHasException = ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(expeditionStatus);
-            
-            if (expeditionHasException) {
-              return <div className="text-destructive">{expeditionStatus}</div>;
-            }
-            
-            const hasDocFailure = recipient.documents && Object.values(recipient.documents).some(d => d.status === 'Failed');
-            if (hasDocFailure) {
-                return <div className="text-destructive">Doc Gen Failed</div>;
-            }
-
-            return null;
-        }
     },
     {
         id: "documents",
@@ -255,7 +272,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             </Badge>
                         );
                     })}
-                    {recipient.awb?.id && (
+                    {recipient.awb?.awbNumber && (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
@@ -320,7 +337,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     },
   });
   
-  const shipmentsReadyForAwb = expeditions.filter(e => e.status === 'Ready for AWB').length;
+  const selectedRowCount = Object.keys(rowSelection).length;
 
   return (
     <div className="w-full">
@@ -354,12 +371,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     className="h-auto flex-1 border-none bg-transparent p-1 shadow-none focus-visible:ring-0"
                 />
             </div>
-             {shipmentsReadyForAwb > 0 && (
-                <Button onClick={handleGenerateAwbs} disabled={isGeneratingAwb}>
-                    {isGeneratingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    {isGeneratingAwb ? 'Generating...' : `Generate ${shipmentsReadyForAwb} AWB(s)`}
-                </Button>
-            )}
+             <Button 
+                onClick={handleGenerateAwbs} 
+                disabled={isGeneratingAwb || selectedRowCount === 0}
+            >
+                {isGeneratingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                {isGeneratingAwb 
+                    ? 'Generating...' 
+                    : `Generate AWB(s) for ${selectedRowCount} selected`
+                }
+            </Button>
         </div>
       <div className="rounded-md border">
         <Table>
@@ -412,8 +433,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} row(s) displayed.
+         <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of{" "}
+          {table.getFilteredRowModel().rows.length} row(s) selected.
         </div>
         <div className="space-x-2">
           <Button
@@ -442,7 +464,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 <SheetHeader>
                     <SheetTitle>Documents for Recipient: {selectedDocument.recipient.name} ({selectedDocument.recipient.id})</SheetTitle>
                     <SheetDescription>
-                        Part of expedition {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb?.mainRecipientName || 'N/A'}.
+                        Part of shipment {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb?.mainRecipientName || 'N/A'}.
                     </SheetDescription>
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
@@ -450,7 +472,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="proces verbal de receptie" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
                         <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
                         <TabsTrigger value="parcel inventory" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
-                        <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb}>AWB</TabsTrigger>
+                        <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb?.awbNumber}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="proces verbal de receptie">
@@ -463,10 +485,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <DocumentPlaceholder title="Parcel Inventory" />
                     </TabsContent>
                     <TabsContent value="AWB">
-                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb?.id}`} />
+                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb?.awbNumber}`} />
                     </TabsContent>
                     <TabsContent value="Email">
-                        <DocumentPlaceholder title={`Email to Logistics for AWB: ${selectedDocument.recipient.awb?.id}`} />
+                        <DocumentPlaceholder title={`Email to Logistics for AWB: ${selectedDocument.recipient.awb?.awbNumber}`} />
                     </TabsContent>
                 </Tabs>
             </>
@@ -476,3 +498,5 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    
