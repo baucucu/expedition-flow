@@ -3,7 +3,6 @@ import * as admin from 'firebase-admin';
 import path from 'path';
 import fs from 'fs';
 
-// This function ensures that we initialize the app only once.
 const initializeAdminApp = (): admin.app.App => {
   if (admin.apps.length > 0) {
     // If the app is already initialized, return the existing instance.
