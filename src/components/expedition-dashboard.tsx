@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -43,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB } from "@/types";
 import { generateAwbAction } from "@/app/actions/expedition-actions";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentViewer } from "./document-viewer";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -469,20 +471,26 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="proces verbal de receptie" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
-                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
-                        <TabsTrigger value="parcel inventory" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
+                        <TabsTrigger value="proces verbal de receptie" disabled={!selectedDocument.recipient.documents?.['proces verbal de receptie']?.url}>Proces verbal</TabsTrigger>
+                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={!selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url}>Instructiuni</TabsTrigger>
+                        <TabsTrigger value="parcel inventory" disabled={!selectedDocument.recipient.documents?.['parcel inventory']?.url}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb?.awbNumber}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="proces verbal de receptie">
-                        <DocumentPlaceholder title="Proces verbal de receptie" />
+                         {selectedDocument.recipient.documents?.['proces verbal de receptie']?.url ? (
+                            <DocumentViewer url={selectedDocument.recipient.documents['proces verbal de receptie'].url!} docType="pdf" />
+                         ) : <DocumentPlaceholder title="Proces verbal de receptie not available" />}
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
-                        <DocumentPlaceholder title="Instructiuni pentru confirmarea primirii coletului" />
+                         {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
+                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="pdf" />
+                         ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
-                        <DocumentPlaceholder title="Parcel Inventory" />
+                        {selectedDocument.recipient.documents?.['parcel inventory']?.url ? (
+                            <DocumentViewer url={selectedDocument.recipient.documents['parcel inventory'].url!} docType="excel" />
+                         ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">
                         <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb?.awbNumber}`} />
@@ -498,5 +506,3 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
-
-    
