@@ -3,26 +3,31 @@ import * as admin from 'firebase-admin';
 import path from 'path';
 import fs from 'fs';
 
-let adminApp: admin.app.App;
-
-if (admin.apps.length > 0) {
-  adminApp = admin.app();
-} else {
-  const serviceAccountPath = path.resolve(process.cwd(), 'expeditionflow-firebase-adminsdk.json');
-  
-  if (fs.existsSync(serviceAccountPath)) {
-    const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-    adminApp = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: 'expeditionflow.appspot.com',
-    });
-  } else {
-    console.error("CRITICAL: Firebase Admin initialization failed. Service account key file not found at", serviceAccountPath);
-    // In a real app, you might want to throw an error to prevent the server from starting.
-    // For this environment, we'll log the error. The action will fail gracefully.
-    // @ts-ignore
-    adminApp = undefined;
+// This function ensures that we initialize the app only once.
+const initializeAdminApp = (): admin.app.App => {
+  if (admin.apps.length > 0) {
+    // If the app is already initialized, return the existing instance.
+    return admin.app();
   }
-}
+
+  const serviceAccountPath = path.resolve(process.cwd(), 'expeditionflow-firebase-adminsdk.json');
+
+  if (!fs.existsSync(serviceAccountPath)) {
+    // If the service account file doesn't exist, throw a clear error.
+    // This stops the server and prevents cryptic runtime errors.
+    throw new Error(`CRITICAL: Firebase Admin initialization failed. Service account key file not found at ${serviceAccountPath}`);
+  }
+
+  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+
+  // Initialize the app with the service account credentials.
+  return admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: 'expeditionflow.appspot.com',
+  });
+};
+
+// Call the function to get the initialized app instance.
+const adminApp = initializeAdminApp();
 
 export { adminApp };
