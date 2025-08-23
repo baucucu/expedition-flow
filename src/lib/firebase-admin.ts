@@ -1,6 +1,6 @@
 
 import * as admin from 'firebase-admin';
-import serviceAccount from '@/../expeditionflow-firebase-adminsdk.json';
+import serviceAccount from '../../expeditionflow-firebase-adminsdk.json';
 
 let app;
 
