@@ -13,7 +13,7 @@ export type RecipientStatus =
 
 export type ExpeditionStatus = 
   | 'New'
-  | 'Ready for Logistics'
+  | 'Ready for AWB'
   | 'AWB Generated'
   | 'AWB Generation Failed'
   | 'Sent to Logistics'
@@ -57,6 +57,7 @@ export interface Recipient {
 export interface AWB {
     id: string; // Firestore auto-generated ID
     shipmentId: string;
+    awbNumber?: string; // The number received from the courier API
     mainRecipientName: string; // Nume_awb
     mainRecipientTelephone?: string; // Nr_tel_awb
     parcelCount?: number; // parcel_count

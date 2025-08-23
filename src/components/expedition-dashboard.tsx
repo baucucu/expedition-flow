@@ -17,6 +17,8 @@ import {
 import {
   Mail,
   X as XIcon,
+  Loader2,
+  Send,
 } from "lucide-react";
 import {
   Sheet,
@@ -38,6 +40,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB } from "@/types";
+import { generateAwbAction } from "@/app/actions/expedition-actions";
+import { useToast } from "@/hooks/use-toast";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -91,6 +95,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [inputValue, setInputValue] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [isGeneratingAwb, setIsGeneratingAwb] = React.useState(false);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     setData(initialData);
@@ -119,6 +125,36 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email') => {
     setSelectedDocument({ recipient, docType });
+  }
+
+  const handleGenerateAwbs = async () => {
+    const shipmentsToProcess = expeditions.filter(e => e.status === 'Ready for AWB');
+    if (shipmentsToProcess.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Shipments Ready",
+            description: "There are no shipments in the 'Ready for AWB' status.",
+        });
+        return;
+    }
+
+    setIsGeneratingAwb(true);
+    const shipmentIds = shipmentsToProcess.map(s => s.id);
+    const result = await generateAwbAction({ shipmentIds });
+    setIsGeneratingAwb(false);
+    
+    if (result.success) {
+        toast({
+            title: "AWB Generation Started",
+            description: result.message,
+        });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "AWB Generation Failed",
+            description: result.message,
+        });
+    }
   }
 
   const columns: ColumnDef<RecipientRow>[] = [
@@ -283,12 +319,14 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       globalFilter,
     },
   });
+  
+  const shipmentsReadyForAwb = expeditions.filter(e => e.status === 'Ready for AWB').length;
 
   return (
     <div className="w-full">
-        <div className="py-4">
+        <div className="flex items-center py-4 gap-4">
             <div 
-                className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 flex-1"
                 onClick={() => inputRef.current?.focus()}
             >
                 <div className="flex flex-wrap gap-1">
@@ -316,6 +354,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     className="h-auto flex-1 border-none bg-transparent p-1 shadow-none focus-visible:ring-0"
                 />
             </div>
+             {shipmentsReadyForAwb > 0 && (
+                <Button onClick={handleGenerateAwbs} disabled={isGeneratingAwb}>
+                    {isGeneratingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    {isGeneratingAwb ? 'Generating...' : `Generate ${shipmentsReadyForAwb} AWB(s)`}
+                </Button>
+            )}
         </div>
       <div className="rounded-md border">
         <Table>

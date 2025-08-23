@@ -3,6 +3,7 @@
 
 import { documentContentGenerator, type DocumentContentGeneratorInput } from "@/ai/flows/document-content-generator";
 import { mapFields } from "@/ai/flows/field-mapper";
+import { generateAwb } from "@/ai/flows/awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp } from "firebase/firestore";
@@ -173,7 +174,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
             const shipmentRef = doc(db, "shipments", shipmentId);
             const shipmentData: Expedition = {
                 id: shipmentId,
-                status: "New",
+                status: "Ready for AWB",
                 createdAt: serverTimestamp(),
                 recipientCount: groupData.recipientCount,
                 awbCount: groupData.awbIds.length,
@@ -194,5 +195,24 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
     } catch (error: any) {
         console.error("Error writing to Firestore:", error);
         return { success: false, error: `Failed to save data to the database: ${error.message}` };
+    }
+}
+
+// Action for AWB Generation
+const generateAwbActionInputSchema = z.object({
+  shipmentIds: z.array(z.string()),
+});
+
+export async function generateAwbAction(input: { shipmentIds: string[] }) {
+    const validatedInput = generateAwbActionInputSchema.safeParse(input);
+    if (!validatedInput.success) {
+        return { success: false, message: "Invalid input for AWB generation." };
+    }
+    try {
+        const output = await generateAwb(validatedInput.data);
+        return { success: output.success, message: output.message, details: output.details };
+    } catch (error: any) {
+        console.error("Error in generateAwb flow:", error);
+        return { success: false, message: `Failed to generate AWBs due to a server error: ${error.message}` };
     }
 }
