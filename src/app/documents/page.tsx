@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
-import { ArrowLeft, FileSync, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileScan, Loader2 } from 'lucide-react';
 import { updateRecipientDocumentsAction } from '@/app/actions/expedition-actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -71,7 +71,7 @@ export default function ManageDocumentsPage() {
                     </p>
 
                     <Button onClick={handleUpdateLinks} disabled={isUpdating} className="w-full">
-                        {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSync className="mr-2 h-4 w-4" />}
+                        {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileScan className="mr-2 h-4 w-4" />}
                         {isUpdating ? 'Updating All Recipients...' : 'Sync Files and Update All Recipients'}
                     </Button>
                 </CardContent>
