@@ -3,9 +3,11 @@ import * as admin from 'firebase-admin';
 import path from 'path';
 import fs from 'fs';
 
-const serviceAccountPath = path.resolve(process.cwd(), 'expeditionflow-firebase-adminsdk.json');
-
+// This is the recommended approach for initializing the Admin SDK in a Next.js server environment.
+// It ensures that the SDK is initialized only once.
 if (!admin.apps.length) {
+  const serviceAccountPath = path.resolve(process.cwd(), 'expeditionflow-firebase-adminsdk.json');
+
   if (fs.existsSync(serviceAccountPath)) {
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     admin.initializeApp({
