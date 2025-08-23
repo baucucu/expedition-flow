@@ -7,7 +7,7 @@ import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
-import { getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { adminApp } from "@/lib/firebase-admin";
 
 // Action for Field Mapping
@@ -245,6 +245,13 @@ export async function updateRecipientDocumentsAction() {
 
 // Action to upload a static file
 export async function uploadStaticFileAction(formData: FormData) {
+    if (!adminApp) {
+        return { 
+            success: false, 
+            error: 'The Admin SDK is not initialized. Please ensure the FIREBASE_SERVICE_ACCOUNT_KEY environment variable is set.' 
+        };
+    }
+    
     try {
         const file = formData.get('file') as File;
         const fileType = formData.get('fileType') as string;

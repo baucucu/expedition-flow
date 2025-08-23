@@ -1,24 +1,26 @@
 
 import * as admin from 'firebase-admin';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : null;
+let adminApp: admin.app.App | null = null;
 
 if (!admin.apps.length) {
-  if (serviceAccount) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: 'expeditionflow.appspot.com',
-    });
-  } else {
-    // Initialize without credentials in environments where they might not be available
-    // (like client-side rendering, though this file should be server-only)
-    // The Admin SDK will try to autodiscover credentials in a GCP environment.
-    admin.initializeApp({
-        storageBucket: 'expeditionflow.appspot.com',
-    });
-  }
+    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+    if (serviceAccountKey) {
+        try {
+            const serviceAccount = JSON.parse(serviceAccountKey);
+            adminApp = admin.initializeApp({
+                credential: admin.credential.cert(serviceAccount),
+                storageBucket: 'expeditionflow.appspot.com',
+            });
+        } catch (e: any) {
+            console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:", e.message);
+        }
+    } else {
+        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY is not set. Firebase Admin SDK not initialized.");
+    }
+} else {
+    adminApp = admin.apps[0];
 }
 
-export const adminApp = admin.apps[0]!;
+export { adminApp };
