@@ -1,6 +1,3 @@
-
-
-
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory';
 export type DocumentStatus = 'Not Generated' | 'Generating...' | 'Generated' | 'Failed';
 
@@ -37,7 +34,6 @@ export interface Recipient {
   awbId: string; // The ID of the AWB document this recipient belongs to
   name: string; // Nume și prenume
   address: string;
-  // items: string[]; // This might not be in the new file, handle gracefully
   status: RecipientStatus;
   documents: {
     'proces verbal de receptie': Document;
@@ -62,7 +58,6 @@ export interface AWB {
     mainRecipientTelephone?: string; // Nr_tel_awb
     parcelCount?: number; // parcel_count
     packageSize?: string; // TIP CUTIE
-    // We no longer store recipientIds here, the link is on the recipient document
 }
 
 export interface Expedition {
@@ -71,7 +66,4 @@ export interface Expedition {
   recipientCount: number;
   awbCount: number;
   createdAt: any; // Firestore serverTimestamp
-  // These are no longer stored directly, they are queried
-  // recipients: Recipient[];
-  // awbs: AWB[];
 }

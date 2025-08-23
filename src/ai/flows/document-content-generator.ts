@@ -39,11 +39,23 @@ const prompt = ai.definePrompt({
 
 You will receive details about an expedition and the type of document to generate content for. Based on this information, generate relevant and informative content for the document.
 
+IMPORTANT: If the documentType is 'instructiuni pentru confirmarea primirii coletului', you MUST return the following static text, ignoring the other expedition details:
+"Stimate partener,
+Vă mulțumim pentru colaborare.
+Pentru o bună desfășurare a activităților, vă rugăm să parcurgeți cu atenție instrucțiunile de mai jos:
+1. Recepționați coletul de la curier.
+2. Realizați inventarul produselor primite, conform documentului de însoțire (proces verbal de predare-primire).
+3. Semnați și ștampilați procesul verbal de predare-primire.
+4. Încărcați procesul verbal semnat și ștampilați în platforma noastră, scanând codul QR de pe colet.
+Vă mulțumim!"
+
+For all other document types, use the provided details to generate the content.
+
 Expedition Details: {{{expeditionDetails}}}
 Document Type: {{{documentType}}}
 Existing Content: {{{existingContent}}}
 
-Content:`, // Provide a more descriptive and context-aware prompt
+Content:`,
 });
 
 const documentContentGeneratorFlow = ai.defineFlow(
