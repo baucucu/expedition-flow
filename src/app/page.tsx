@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Expedition, ExpeditionStatus, DocumentType, Recipient } from "@/types";
+import type { Expedition, ExpeditionStatus, DocumentType, Recipient, AWB } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard";
 import { DocumentAssistant } from "@/components/document-assistant";
 import { EmailComposer } from "@/components/email-composer";
@@ -23,6 +23,7 @@ export default function Home() {
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('Total');
   const [expeditions, setExpeditions] = useState<Expedition[]>([]);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [awbs, setAwbs] = useState<AWB[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isDocAssistantOpen, setIsDocAssistantOpen] = useState(false);
@@ -51,39 +52,48 @@ export default function Home() {
         const recipientsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Recipient));
         setRecipients(recipientsData);
     });
+
+    const awbsQuery = query(collection(db, "awbs"));
+    const awbsUnsubscribe = onSnapshot(awbsQuery, (querySnapshot) => {
+        const awbsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AWB));
+        setAwbs(awbsData);
+    });
     
     setLoading(false);
 
     return () => {
         shipmentsUnsubscribe();
         recipientsUnsubscribe();
+        awbsUnsubscribe();
     };
   }, [user]);
   
 
-  const allRecipientsWithExpeditionData = useMemo(() => {
-    if (!recipients.length || !expeditions.length) return [];
+  const allRecipientsWithFullData = useMemo(() => {
+    if (!recipients.length || !expeditions.length || !awbs.length) return [];
     
     const expeditionsMap = new Map(expeditions.map(exp => [exp.id, exp]));
+    const awbsMap = new Map(awbs.map(awb => [awb.id, awb]));
 
     return recipients.map(rec => {
         const expedition = expeditionsMap.get(rec.shipmentId!);
+        const awb = awbsMap.get(rec.awbId);
         return {
             ...rec,
             expeditionId: expedition?.id || rec.shipmentId,
             expeditionStatus: expedition?.status || 'New',
-            awb: expedition?.awb
+            awb: awb
         };
     });
-  }, [recipients, expeditions]);
+  }, [recipients, expeditions, awbs]);
 
   const scorecardCounts: ScorecardData = useMemo(() => {
-    const recipientsWithAllDocsGenerated = allRecipientsWithExpeditionData.filter(r => 
-        Object.values(r.documents).every(d => d.status === 'Generated')
+    const recipientsWithAllDocsGenerated = allRecipientsWithFullData.filter(r => 
+        r.documents && Object.values(r.documents).every(d => d.status === 'Generated')
     );
 
-    const recipientsWithFailedDocs = allRecipientsWithExpeditionData.filter(r => 
-        Object.values(r.documents).some(d => d.status === 'Failed')
+    const recipientsWithFailedDocs = allRecipientsWithFullData.filter(r => 
+        r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
     );
 
     const awbGenerationFailedCount = expeditions.filter(e => e.status === 'AWB Generation Failed').length;
@@ -97,7 +107,7 @@ export default function Home() {
     return {
         totalExpeditions: {
             value: expeditions.length,
-            footerText: `${allRecipientsWithExpeditionData.length} recipients`
+            footerText: `${allRecipientsWithFullData.length} recipients`
         },
         docsGenerated: {
             value: recipientsWithAllDocsGenerated.length,
@@ -118,35 +128,34 @@ export default function Home() {
             value: expeditions.filter(e => e.status === 'In Transit').length,
         },
         delivered: {
-            value: allRecipientsWithExpeditionData.filter(r => r.status === 'Delivered').length,
+            value: allRecipientsWithFullData.filter(r => r.status === 'Delivered').length,
         },
         issues: {
             value: issuesCount,
         },
         completed: {
-            value: allRecipientsWithExpeditionData.filter(r => r.status === 'Completed').length,
+            value: allRecipientsWithFullData.filter(r => r.status === 'Completed').length,
         }
     }
-  }, [allRecipientsWithExpeditionData, expeditions]);
+  }, [allRecipientsWithFullData, expeditions]);
 
   const filteredRecipients = useMemo(() => {
-    if (!activeFilter || activeFilter === 'Total') return allRecipientsWithExpeditionData;
+    if (!activeFilter || activeFilter === 'Total') return allRecipientsWithFullData;
     
     if (activeFilter === 'DocsFailed') {
-        const recipientIds = allRecipientsWithExpeditionData
-            .filter(r => Object.values(r.documents).some(d => d.status === 'Failed'))
-            .map(r => r.id);
-        return allRecipientsWithExpeditionData.filter(r => recipientIds.includes(r.id));
+        return allRecipientsWithFullData.filter(r => 
+            r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
+        );
     }
 
     if (activeFilter === 'AwbFailed') {
         const expeditionIds = expeditions.filter(e => e.status === 'AWB Generation Failed').map(e => e.id);
-        return allRecipientsWithExpeditionData.filter(r => expeditionIds.includes(r.expeditionId!));
+        return allRecipientsWithFullData.filter(r => expeditionIds.includes(r.expeditionId!));
     }
 
     if (activeFilter === 'EmailFailed') {
         const expeditionIds = expeditions.filter(e => e.status === 'Email Send Failed').map(e => e.id);
-        return allRecipientsWithExpeditionData.filter(r => expeditionIds.includes(r.expeditionId!));
+        return allRecipientsWithFullData.filter(r => expeditionIds.includes(r.expeditionId!));
     }
 
     if (activeFilter === 'Issues') {
@@ -154,11 +163,11 @@ export default function Home() {
             .filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status))
             .map(e => e.id);
         
-        const issueRecipientIds = allRecipientsWithExpeditionData
-            .filter(r => Object.values(r.documents).some(d => d.status === 'Failed'))
+        const issueRecipientIds = allRecipientsWithFullData
+            .filter(r => r.documents && Object.values(r.documents).some(d => d.status === 'Failed'))
             .map(r => r.id);
         
-        return allRecipientsWithExpeditionData.filter(r => issueExpeditionIds.includes(r.expeditionId!) || issueRecipientIds.includes(r.id));
+        return allRecipientsWithFullData.filter(r => issueExpeditionIds.includes(r.expeditionId!) || issueRecipientIds.includes(r.id));
     }
 
     if (['NewRecipient', 'CompletedRecipients', 'Delivered', 'Returned'].includes(activeFilter)) {
@@ -169,19 +178,18 @@ export default function Home() {
             'Returned': 'Returned'
         };
         const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
-        return allRecipientsWithExpeditionData.filter(r => r.status === recipientStatus);
+        return allRecipientsWithFullData.filter(r => r.status === recipientStatus);
     }
 
     if (activeFilter === 'Documents Generated') {
-        const recipientIds = allRecipientsWithExpeditionData
-            .filter(r => Object.values(r.documents).every(d => d.status === 'Generated'))
-            .map(r => r.id);
-        return allRecipientsWithExpeditionData.filter(r => recipientIds.includes(r.id));
+        return allRecipientsWithFullData.filter(r => 
+            r.documents && Object.values(r.documents).every(d => d.status === 'Generated')
+        );
     }
 
     const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
-    return allRecipientsWithExpeditionData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
-  }, [activeFilter, allRecipientsWithExpeditionData, expeditions]);
+    return allRecipientsWithFullData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
+  }, [activeFilter, allRecipientsWithFullData, expeditions]);
 
 
   const handleSendToLogistics = (expeditionId: string) => {

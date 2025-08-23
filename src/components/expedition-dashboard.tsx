@@ -37,7 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus } from "@/types";
+import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB } from "@/types";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -47,7 +47,7 @@ const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary
   Returned: "destructive",
 };
 
-type RecipientRow = Recipient & { expeditionId: string; awb?: string, expeditionStatus: ExpeditionStatus };
+type RecipientRow = Recipient & { expeditionId: string; awb?: AWB, expeditionStatus: ExpeditionStatus };
 
 interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
@@ -170,9 +170,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       },
     },
     {
-        accessorKey: "awb",
-        header: "AWB",
-        cell: ({ row }) => row.getValue("awb") ? <div>{row.getValue("awb")}</div> : <span className="text-muted-foreground">N/A</span>,
+        accessorKey: "awb.mainRecipientName",
+        header: "AWB Name",
+        cell: ({ row }) => row.original.awb?.mainRecipientName ?? <span className="text-muted-foreground">N/A</span>,
     },
     {
         id: "exceptionDetails",
@@ -186,7 +186,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
               return <div className="text-destructive">{expeditionStatus}</div>;
             }
             
-            const hasDocFailure = Object.values(recipient.documents).some(d => d.status === 'Failed');
+            const hasDocFailure = recipient.documents && Object.values(recipient.documents).some(d => d.status === 'Failed');
             if (hasDocFailure) {
                 return <div className="text-destructive">Doc Gen Failed</div>;
             }
@@ -204,9 +204,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
             return (
                 <div className="flex gap-2">
-                    {docTypes.map(docType => {
+                    {recipient.documents && docTypes.map(docType => {
                         const doc = recipient.documents[docType];
-                        const isGenerated = doc.status === 'Generated' && doc.url;
+                        const isGenerated = doc.status === 'Generated';
                         if (!isGenerated) return null;
                         return (
                             <Badge
@@ -219,7 +219,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             </Badge>
                         );
                     })}
-                    {recipient.awb && (
+                    {recipient.awb?.id && (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
@@ -259,8 +259,21 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     globalFilterFn: (row, columnId, filterValue) => {
         const search = filterValue.toLowerCase();
         const keywords = search.split(' ');
-        const rowData = Object.values(row.original).join(' ').toLowerCase();
-        return keywords.every(keyword => rowData.includes(keyword));
+        
+        const rowValues = [
+            row.original.id,
+            row.original.expeditionId,
+            row.original.name,
+            row.original.address,
+            row.original.city,
+            row.original.county,
+            row.original.postalCode,
+            row.original.status,
+            row.original.awb?.mainRecipientName,
+            row.original.awb?.id
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return keywords.every(keyword => rowValues.includes(keyword));
     },
     state: {
       sorting,
@@ -385,14 +398,14 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 <SheetHeader>
                     <SheetTitle>Documents for Recipient: {selectedDocument.recipient.name} ({selectedDocument.recipient.id})</SheetTitle>
                     <SheetDescription>
-                        Part of expedition {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb || 'N/A'}.
+                        Part of expedition {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb?.mainRecipientName || 'N/A'}.
                     </SheetDescription>
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="proces verbal de receptie" disabled={selectedDocument.recipient.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
-                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
-                        <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
+                        <TabsTrigger value="proces verbal de receptie" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['proces verbal de receptie'].status !== 'Generated'}>Proces verbal</TabsTrigger>
+                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].status !== 'Generated'}>Instructiuni</TabsTrigger>
+                        <TabsTrigger value="parcel inventory" disabled={!selectedDocument.recipient.documents || selectedDocument.recipient.documents['parcel inventory'].status !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
@@ -406,10 +419,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <DocumentPlaceholder title="Parcel Inventory" />
                     </TabsContent>
                     <TabsContent value="AWB">
-                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb}`} />
+                        <DocumentPlaceholder title={`AWB Tracking: ${selectedDocument.recipient.awb?.id}`} />
                     </TabsContent>
                     <TabsContent value="Email">
-                        <DocumentPlaceholder title={`Email to Logistics for AWB: ${selectedDocument.recipient.awb}`} />
+                        <DocumentPlaceholder title={`Email to Logistics for AWB: ${selectedDocument.recipient.awb?.id}`} />
                     </TabsContent>
                 </Tabs>
             </>

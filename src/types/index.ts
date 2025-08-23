@@ -1,5 +1,6 @@
 
 
+
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory';
 export type DocumentStatus = 'Not Generated' | 'Generating...' | 'Generated' | 'Failed';
 
@@ -36,7 +37,7 @@ export interface Recipient {
   awbId: string; // The ID of the AWB document this recipient belongs to
   name: string; // Nume și prenume
   address: string;
-  items: string[]; // This might not be in the new file, handle gracefully
+  // items: string[]; // This might not be in the new file, handle gracefully
   status: RecipientStatus;
   documents: {
     'proces verbal de receptie': Document;
