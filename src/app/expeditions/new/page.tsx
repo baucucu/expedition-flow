@@ -37,7 +37,7 @@ const APP_FIELDS = [
     
     // AWB related fields
     { value: 'awbName', label: 'AWB Main Recipient Name' }, // Nume_awb
-    { value anme: 'awbTelephone', label: 'AWB Telephone' }, // Nr_tel_awb
+    { value: 'awbTelephone', label: 'AWB Telephone' }, // Nr_tel_awb
     { value: 'parcelCount', label: 'AWB Parcel Count' }, // parcel_count
 ];
 
