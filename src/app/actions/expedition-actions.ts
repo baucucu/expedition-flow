@@ -5,7 +5,7 @@ import { mapFields } from "@/ai/flows/field-mapper";
 import { generateAwb } from "@/ai/flows/awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp, getDocs, query } from "firebase/firestore";
+import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
 import { adminApp } from "@/lib/firebase-admin";
 
@@ -202,17 +202,27 @@ export async function updateRecipientDocumentsAction() {
     try {
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         
-        const filePaths = {
-            inventory: 'static/inventory.xlsx',
-            instructions: 'static/instructions.pdf',
-            procesVerbal: 'static/proces-verbal-de-receptie.pdf',
-        };
+        const docTypes = ['inventory', 'instructions', 'procesVerbal'];
+        const filePaths: Record<string, string | null> = {};
+        const fileUrls: Record<string, string | null> = {};
 
-        const getPublicUrl = async (filePath: string): Promise<string | null> => {
+        // 1. Get file paths from Firestore
+        for (const type of docTypes) {
+            const docRef = doc(db, 'static_documents', type);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().path) {
+                filePaths[type] = docSnap.data().path;
+            } else {
+                filePaths[type] = null;
+            }
+        }
+        
+        // 2. Get public URLs from Storage
+        const getPublicUrl = async (filePath: string | null): Promise<string | null> => {
+            if (!filePath) return null;
             try {
                 const file = bucket.file(filePath);
-                // We ensure the file is public, which it should be from the upload action.
-                await file.makePublic();
+                await file.makePublic(); // Ensure it's public
                 return file.publicUrl();
             } catch (error) {
                 console.warn(`Could not get public URL for ${filePath}. It might not exist.`, error);
@@ -226,11 +236,17 @@ export async function updateRecipientDocumentsAction() {
             getPublicUrl(filePaths.procesVerbal),
         ]);
 
-        if (!inventoryUrl || !instructionsUrl || !procesVerbalUrl) {
-             return { success: false, error: "A static file was not found in Storage. Please ensure 'inventory.xlsx', 'instructions.pdf', and 'proces-verbal-de-receptie.pdf' are all uploaded." };
+        fileUrls.inventory = inventoryUrl;
+        fileUrls.instructions = instructionsUrl;
+        fileUrls.procesVerbal = procesVerbalUrl;
+        
+        const missingFiles = Object.entries(fileUrls).filter(([, url]) => !url).map(([key]) => key);
+
+        if (missingFiles.length > 0) {
+             return { success: false, error: `Static file(s) not found: ${missingFiles.join(', ')}. Please upload them first.` };
         }
 
-        // Get all recipient documents
+        // 3. Get all recipient documents
         const recipientsQuery = query(collection(db, "recipients"));
         const querySnapshot = await getDocs(recipientsQuery);
         const recipients = querySnapshot.docs;
@@ -239,17 +255,17 @@ export async function updateRecipientDocumentsAction() {
             return { success: true, message: "No recipients found to update." };
         }
 
-        // Create a batch to update all recipients
+        // 4. Create a batch to update all recipients
         const batch = writeBatch(db);
         recipients.forEach(docSnap => {
             const recipientRef = doc(db, "recipients", docSnap.id);
             batch.update(recipientRef, {
                 'documents.parcel inventory.status': 'Generated',
-                'documents.parcel inventory.url': inventoryUrl,
+                'documents.parcel inventory.url': fileUrls.inventory,
                 'documents.instructiuni pentru confirmarea primirii coletului.status': 'Generated',
-                'documents.instructiuni pentru confirmarea primirii coletului.url': instructionsUrl,
+                'documents.instructiuni pentru confirmarea primirii coletului.url': fileUrls.instructions,
                 'documents.proces verbal de receptie.status': 'Generated',
-                'documents.proces verbal de receptie.url': procesVerbalUrl,
+                'documents.proces verbal de receptie.url': fileUrls.procesVerbal,
             });
         });
 
@@ -268,34 +284,25 @@ export async function uploadStaticFileAction(formData: FormData) {
         const file = formData.get('file') as File;
         const fileType = formData.get('fileType') as string;
 
-        if (!file) {
-            return { success: false, error: 'No file provided.' };
+        if (!file || !fileType) {
+            return { success: false, error: 'File or file type not provided.' };
         }
         
-        let filePath = '';
-        if (fileType === 'inventory') {
-            filePath = 'static/inventory.xlsx';
-        } else if (fileType === 'instructions') {
-            filePath = 'static/instructions.pdf';
-        } else if (fileType === 'procesVerbal') {
-            filePath = 'static/proces-verbal-de-receptie.pdf';
-        } else {
-            return { success: false, error: 'Invalid file type specified.' };
-        }
+        const filePath = `static/${fileType}/${file.name}`;
         
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
-        
-        const fileBuffer = await file.arrayBuffer();
         const storageFile = bucket.file(filePath);
 
+        const fileBuffer = await file.arrayBuffer();
         await storageFile.save(Buffer.from(fileBuffer), {
-            metadata: {
-                contentType: file.type,
-            },
+            metadata: { contentType: file.type },
         });
         
-        // Make the file public immediately after upload
         await storageFile.makePublic();
+
+        // Save the file path to Firestore
+        const docRef = doc(db, 'static_documents', fileType);
+        await setDoc(docRef, { path: filePath, name: file.name, uploadedAt: serverTimestamp() });
 
         return { success: true, message: `${file.name} uploaded successfully.` };
 
@@ -309,28 +316,30 @@ export async function uploadStaticFileAction(formData: FormData) {
 export async function getStaticFilesStatusAction() {
     try {
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
-        
-        const fileTypes = {
-            inventory: 'static/inventory.xlsx',
-            instructions: 'static/instructions.pdf',
-            procesVerbal: 'static/proces-verbal-de-receptie.pdf',
-        };
+        const statuses: Record<string, {name: string, url: string} | null> = {};
+        const fileTypes = ['inventory', 'instructions', 'procesVerbal'];
 
-        const statuses = {} as Record<string, {name: string, url: string} | null>;
+        for (const type of fileTypes) {
+            const docRef = doc(db, 'static_documents', type);
+            const docSnap = await getDoc(docRef);
 
-        for (const [type, path] of Object.entries(fileTypes)) {
-            const file = bucket.file(path);
-            const [exists] = await file.exists();
-
-            if (exists) {
-                // File should be public already, but let's ensure it.
-                await file.makePublic();
-                const publicUrl = file.publicUrl();
-
-                statuses[type] = {
-                    name: path.split('/').pop() || 'Unknown File',
-                    url: publicUrl,
-                };
+            if (docSnap.exists() && docSnap.data().path) {
+                const filePath = docSnap.data().path;
+                const fileName = docSnap.data().name;
+                const file = bucket.file(filePath);
+                
+                // We assume the file is public from the upload action.
+                const [exists] = await file.exists();
+                if (exists) {
+                    await file.makePublic();
+                    const publicUrl = file.publicUrl();
+                    statuses[type] = {
+                        name: fileName,
+                        url: publicUrl,
+                    };
+                } else {
+                    statuses[type] = null;
+                }
             } else {
                 statuses[type] = null;
             }
@@ -342,5 +351,3 @@ export async function getStaticFilesStatusAction() {
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
-
-    

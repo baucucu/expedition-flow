@@ -168,12 +168,12 @@ export default function ManageDocumentsPage() {
             <Card className="lg:col-span-1 flex flex-col">
                  <CardHeader>
                     <CardTitle>1. Upload Inventory File</CardTitle>
-                    <CardDescription>Upload the `inventory.xlsx` file. This will overwrite any existing version.</CardDescription>
+                    <CardDescription>Upload the inventory file (e.g., .xlsx). This will be linked to all recipients.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 flex-grow">
                      {renderFileStatus('inventory')}
                      <div className="space-y-2">
-                        <Label htmlFor="inventory-upload">Upload New Inventory (.xlsx)</Label>
+                        <Label htmlFor="inventory-upload">Upload New Inventory</Label>
                         <Input id="inventory-upload" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e) => handleFileChange(e, 'inventory')} disabled={isUploading('inventory')} />
                      </div>
                     {renderUploadStatus('inventory')}
@@ -189,12 +189,12 @@ export default function ManageDocumentsPage() {
             <Card className="lg:col-span-1 flex flex-col">
                  <CardHeader>
                     <CardTitle>2. Upload Instructions File</CardTitle>
-                    <CardDescription>Upload the `instructions.pdf` file. This will overwrite any existing version.</CardDescription>
+                    <CardDescription>Upload the instructions file (e.g., .pdf). This will be linked to all recipients.</CardDescription>
                 </CardHeader>
                  <CardContent className="space-y-4 flex-grow">
                      {renderFileStatus('instructions')}
                      <div className="space-y-2">
-                        <Label htmlFor="instructions-upload">Upload New Instructions (.pdf)</Label>
+                        <Label htmlFor="instructions-upload">Upload New Instructions</Label>
                         <Input id="instructions-upload" type="file" accept=".pdf,application/pdf" onChange={(e) => handleFileChange(e, 'instructions')} disabled={isUploading('instructions')} />
                      </div>
                     {renderUploadStatus('instructions')}
@@ -210,12 +210,12 @@ export default function ManageDocumentsPage() {
              <Card className="lg:col-span-1 flex flex-col">
                  <CardHeader>
                     <CardTitle>3. Upload Proces Verbal File</CardTitle>
-                    <CardDescription>Upload the `proces-verbal-de-receptie.pdf` file. This will overwrite any existing version.</CardDescription>
+                    <CardDescription>Upload the proces verbal file (e.g., .pdf). This will be linked to all recipients.</CardDescription>
                 </CardHeader>
                  <CardContent className="space-y-4 flex-grow">
                     {renderFileStatus('procesVerbal')}
                      <div className="space-y-2">
-                        <Label htmlFor="proces-verbal-upload">Upload New Proces Verbal (.pdf)</Label>
+                        <Label htmlFor="proces-verbal-upload">Upload New Proces Verbal</Label>
                         <Input id="proces-verbal-upload" type="file" accept=".pdf,application/pdf" onChange={(e) => handleFileChange(e, 'procesVerbal')} disabled={isUploading('procesVerbal')} />
                      </div>
                     {renderUploadStatus('procesVerbal')}
@@ -232,13 +232,12 @@ export default function ManageDocumentsPage() {
                 <CardHeader>
                     <CardTitle>4. Sync Links to All Recipients</CardTitle>
                     <CardDescription>
-                        After uploading the files, run this action to link them to all existing recipients in the database. This will update all three static documents.
+                        After uploading all required files, run this action to link them to all existing recipients in the database.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                        This will fetch the download URLs for the three static files from Storage and update every recipient document in your Firestore database.
-                        This action will fail if any of the three static files are not uploaded.
+                        This action will fail if any of the three static files (Inventory, Instructions, Proces Verbal) have not been uploaded yet.
                     </p>
                 </CardContent>
                  <CardFooter>
