@@ -245,13 +245,6 @@ export async function updateRecipientDocumentsAction() {
 
 // Action to upload a static file
 export async function uploadStaticFileAction(formData: FormData) {
-    if (!adminApp) {
-        return { 
-            success: false, 
-            error: 'The Admin SDK is not initialized. Please ensure the service account file is available.' 
-        };
-    }
-    
     try {
         const file = formData.get('file') as File;
         const fileType = formData.get('fileType') as string;
@@ -261,6 +254,10 @@ export async function uploadStaticFileAction(formData: FormData) {
         }
         if (!fileType || (fileType !== 'inventory' && fileType !== 'instructions')) {
             return { success: false, error: 'Invalid file type.' };
+        }
+        
+        if (!adminApp) {
+            return { success: false, error: 'The Admin SDK is not initialized. Please ensure the service account file is available.' };
         }
 
         const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
