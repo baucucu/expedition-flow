@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -20,24 +21,24 @@ type ParsedRow = Record<string, string | number>;
 type ColumnMapping = Record<string, string>;
 
 const APP_FIELDS = [
-    { value: 'id', label: 'Recipient ID' }, // id_unic
-    { value: 'name', label: 'Recipient Name' },
-    { value: 'address', label: 'Recipient Address' },
-    { value: 'items', label: 'Items' },
-    { value: 'email', label: 'Email' },
-    { value: 'telephone', label: 'Telephone' },
-    { value: 'postalCode', label: 'Postal Code' },
+    { value: 'recipientId', label: 'Recipient ID' }, // destinatar_id
+    { value: 'shipmentId', label: 'Shipment ID' }, // id_unic_expeditie
+    { value: 'name', label: 'Recipient Name' }, // Nume și prenume
     { value: 'group', label: 'Group' },
     { value: 'county', label: 'County' },
     { value: 'city', label: 'City' },
-    { value: 'schoolName', label: 'School Name' },
-    { value: 'schoolUniqueName', label: 'School Unique Name' },
-    { value: 'shipmentId', label: 'Shipment ID' }, // id_unic_expeditie
-    { value: 'boxType', label: 'Box Type' },
+    { value: 'schoolName', label: 'School Name' }, // location
+    { value: 'address', label: 'Recipient Address' },
+    { value: 'telephone', label: 'Telephone' }, // phone
+    { value: 'postalCode', label: 'Postal Code' }, // cod_postal
+    { value: 'email', label: 'Email' },
+    { value: 'schoolUniqueName', label: 'School Unique Name' }, // COD UNIC
+    { value: 'packageSize', label: 'Package Size' }, // TIP CUTIE
+    
     // AWB related fields
-    { value: 'awbName', label: 'AWB Name' }, // Nume_awb
-    { value: 'awbTelephone', label: 'AWB Telephone' }, // Nr_tel_awb
-    { value: 'boxWeight', label: 'Box Weight' }, // Greutate_cutie
+    { value: 'awbName', label: 'AWB Main Recipient Name' }, // Nume_awb
+    { value anme: 'awbTelephone', label: 'AWB Telephone' }, // Nr_tel_awb
+    { value: 'parcelCount', label: 'AWB Parcel Count' }, // parcel_count
 ];
 
 
@@ -64,34 +65,27 @@ export default function NewExpeditionPage() {
         APP_FIELDS.forEach(f => fieldMap.set(f.label.toLowerCase(), f.value));
 
         // Add common variations
-        fieldMap.set('id unic', 'id');
-        fieldMap.set('nume', 'name');
+        fieldMap.set('destinatar_id', 'recipientId');
+        fieldMap.set('id unic expeditie', 'shipmentId');
+        fieldMap.set('id unic expeditie_2', 'shipmentId');
         fieldMap.set('nume și prenume', 'name');
-        fieldMap.set('adresa', 'address');
-        fieldMap.set('adresa unității de învățământ cu personalitate juridică (județ, localitate, stradă, număr, cod poștal - dacă este cazul)', 'address');
-        fieldMap.set('continut', 'items');
-        fieldMap.set('telefon', 'telephone');
-        fieldMap.set('număruldumneavoastrădetelefon', 'telephone');
-        fieldMap.set('phone', 'telephone');
-        fieldMap.set('adresa dumneavoastră de e-mail activă', 'email');
-        fieldMap.set('cod postal', 'postalCode');
-        fieldMap.set('cod_postal', 'postalCode');
         fieldMap.set('grupa', 'group');
         fieldMap.set('județul în care se află unitatea de învățământ cu personalitate juridică', 'county');
         fieldMap.set('judet', 'county');
         fieldMap.set('localitate', 'city');
         fieldMap.set('oras', 'city');
-        fieldMap.set('denumirea unității de învățământ cu personalitate juridică', 'schoolName');
-        fieldMap.set('scoala', 'schoolName');
         fieldMap.set('location', 'schoolName');
-        fieldMap.set('nume unic scoala', 'schoolUniqueName');
+        fieldMap.set('denumirea unității de învățământ cu personalitate juridică', 'schoolName');
+        fieldMap.set('adresa unității de învățământ cu personalitate juridică (județ, localitate, stradă, număr, cod poștal - dacă este cazul)', 'address');
+        fieldMap.set('phone', 'telephone');
+        fieldMap.set('număruldumneavoastrădetelefon', 'telephone');
+        fieldMap.set('cod_postal', 'postalCode');
+        fieldMap.set('adresa dumneavoastră de e-mail activă', 'email');
         fieldMap.set('cod unic', 'schoolUniqueName');
-        fieldMap.set('id unic expeditie', 'shipmentId');
-        fieldMap.set('tip cutie', 'boxType');
+        fieldMap.set('tip cutie', 'packageSize');
         fieldMap.set('nume_awb', 'awbName');
         fieldMap.set('nr_tel_awb', 'awbTelephone');
-        fieldMap.set('greutate_cutie', 'boxWeight');
-        fieldMap.set('parcel_count', 'boxWeight');
+        fieldMap.set('parcel_count', 'parcelCount');
         
         fileColumns.forEach(col => {
             const lowerCol = col.toLowerCase().replace(/_/g, ' ').trim();
@@ -108,6 +102,8 @@ export default function NewExpeditionPage() {
             );
             if (matchedField) {
                 initialMapping[col] = matchedField.value;
+            } else {
+                initialMapping[col] = 'ignore';
             }
         });
         setColumnMapping(initialMapping);
@@ -207,11 +203,14 @@ export default function NewExpeditionPage() {
 
   const handleCreateExpedition = async () => {
     const mappedValues = Object.values(columnMapping);
-    if (!mappedValues.includes('shipmentId') || !mappedValues.includes('id') || !mappedValues.includes('name')) {
+    const requiredFields = ['recipientId', 'shipmentId', 'name', 'awbName'];
+    const missingFields = requiredFields.filter(f => !mappedValues.includes(f));
+
+    if (missingFields.length > 0) {
         toast({
             variant: 'destructive',
             title: 'Mapping Incomplete',
-            description: 'Please map at least "Shipment ID", "Recipient ID", and "Recipient Name".'
+            description: `Please map the following fields: ${missingFields.join(', ')}.`
         });
         return;
     }
@@ -289,7 +288,7 @@ export default function NewExpeditionPage() {
                                 {isSuggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                                 Suggest with AI
                             </Button>
-                            <div className="space-y-2">
+                            <div className="max-h-[400px] overflow-y-auto pr-4 space-y-2">
                                {fileColumns.map(col => (
                                 <div key={col} className="grid grid-cols-2 gap-4 items-center">
                                     <Label className="text-right truncate">{col}</Label>
