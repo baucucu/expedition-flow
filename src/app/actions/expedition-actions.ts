@@ -258,12 +258,8 @@ export async function uploadStaticFileAction(formData: FormData) {
         
         const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
         
-        const bucket = adminApp.storage().bucket();
+        const bucket = adminApp.storage().bucket('expeditionflow.appspot.com');
         
-        if (!bucket) {
-             return { success: false, error: 'Storage bucket is not available. Please check Firebase Admin initialization.' };
-        }
-
         const fileBuffer = await file.arrayBuffer();
 
         await bucket.file(filePath).save(Buffer.from(fileBuffer), {
