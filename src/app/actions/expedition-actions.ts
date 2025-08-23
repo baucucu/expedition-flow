@@ -202,29 +202,33 @@ export async function updateRecipientDocumentsAction() {
     try {
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         
-        // Define file paths
-        const inventoryPath = 'static/inventory.xlsx';
-        const instructionsPath = 'static/instructions.pdf';
-        const procesVerbalPath = 'static/proces-verbal-de-receptie.pdf';
+        const filePaths = {
+            inventory: 'static/inventory.xlsx',
+            instructions: 'static/instructions.pdf',
+            procesVerbal: 'static/proces-verbal-de-receptie.pdf',
+        };
 
-        // Check for existence and get public URLs
-        const inventoryFile = bucket.file(inventoryPath);
-        const instructionsFile = bucket.file(instructionsPath);
-        const procesVerbalFile = bucket.file(procesVerbalPath);
+        const getPublicUrl = async (filePath: string): Promise<string | null> => {
+            try {
+                const file = bucket.file(filePath);
+                // We ensure the file is public, which it should be from the upload action.
+                await file.makePublic();
+                return file.publicUrl();
+            } catch (error) {
+                console.warn(`Could not get public URL for ${filePath}. It might not exist.`, error);
+                return null;
+            }
+        };
 
-        const [inventoryExists, instructionsExists, procesVerbalExists] = await Promise.all([
-            inventoryFile.exists().then(r => r[0]),
-            instructionsFile.exists().then(r => r[0]),
-            procesVerbalFile.exists().then(r => r[0])
+        const [inventoryUrl, instructionsUrl, procesVerbalUrl] = await Promise.all([
+            getPublicUrl(filePaths.inventory),
+            getPublicUrl(filePaths.instructions),
+            getPublicUrl(filePaths.procesVerbal),
         ]);
 
-        if (!inventoryExists || !instructionsExists || !procesVerbalExists) {
+        if (!inventoryUrl || !instructionsUrl || !procesVerbalUrl) {
              return { success: false, error: "A static file was not found in Storage. Please ensure 'inventory.xlsx', 'instructions.pdf', and 'proces-verbal-de-receptie.pdf' are all uploaded." };
         }
-
-        const inventoryUrl = inventoryFile.publicUrl();
-        const instructionsUrl = instructionsFile.publicUrl();
-        const procesVerbalUrl = procesVerbalFile.publicUrl();
 
         // Get all recipient documents
         const recipientsQuery = query(collection(db, "recipients"));
@@ -338,3 +342,5 @@ export async function getStaticFilesStatusAction() {
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
+
+    
