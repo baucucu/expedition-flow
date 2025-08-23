@@ -13,12 +13,12 @@ if (!admin.apps.length) {
       storageBucket: 'expeditionflow.appspot.com',
     });
   } else {
-    console.error(`CRITICAL: Firebase Admin initialization failed. Service account key file not found at ${serviceAccountPath}`);
     // In a real app, you might want to throw an error or handle this differently.
     // For now, we'll log the error. The app will likely fail on storage operations.
+    console.error(`CRITICAL: Firebase Admin initialization failed. Service account key file not found at ${serviceAccountPath}`);
   }
 }
 
-const adminApp = admin.app();
+const adminApp = admin;
 
 export { adminApp };
