@@ -5,7 +5,7 @@ import { mapFields } from "@/ai/flows/field-mapper";
 import { generateAwb } from "@/ai/flows/awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp, getDocs } from "firebase/firestore";
+import { collection, writeBatch, doc, serverTimestamp, getDocs, query } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
