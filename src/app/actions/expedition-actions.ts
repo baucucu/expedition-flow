@@ -288,3 +288,41 @@ export async function uploadStaticFileAction(formData: FormData) {
         return { success: false, error: `Upload failed: ${error.message}` };
     }
 }
+
+// Action to get status of static files
+export async function getStaticFilesStatusAction() {
+    try {
+        const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
+        
+        const fileTypes = {
+            inventory: 'static/inventory.xlsx',
+            instructions: 'static/instructions.pdf',
+            procesVerbal: 'static/proces-verbal-de-receptie.pdf',
+        };
+
+        const statuses = {} as Record<string, {name: string, url: string} | null>;
+
+        for (const [type, path] of Object.entries(fileTypes)) {
+            const file = bucket.file(path);
+            const [exists] = await file.exists();
+
+            if (exists) {
+                // We need a public URL, getSignedUrl is temporary. Let's make the file public.
+                await file.makePublic();
+                const publicUrl = file.publicUrl();
+
+                statuses[type] = {
+                    name: path.split('/').pop() || 'Unknown File',
+                    url: publicUrl,
+                };
+            } else {
+                statuses[type] = null;
+            }
+        }
+        return { success: true, data: statuses };
+
+    } catch (error: any) {
+        console.error("Error getting static file status:", error);
+        return { success: false, error: `An unexpected error occurred: ${error.message}` };
+    }
+}
