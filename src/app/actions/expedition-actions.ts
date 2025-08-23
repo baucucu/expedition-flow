@@ -201,52 +201,36 @@ export async function generateAwbAction(input: { shipmentIds: string[] }) {
 export async function updateRecipientDocumentsAction() {
     try {
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
-        
-        const docTypes = ['inventory', 'instructions', 'procesVerbal'];
-        const filePaths: Record<string, string | null> = {};
-        const fileUrls: Record<string, string | null> = {};
+        const statuses = await getStaticFilesStatusAction();
 
-        // 1. Get file paths from Firestore
-        for (const type of docTypes) {
-            const docRef = doc(db, 'static_documents', type);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().path) {
-                filePaths[type] = docSnap.data().path;
-            } else {
-                filePaths[type] = null;
-            }
-        }
-        
-        // 2. Get public URLs from Storage
-        const getPublicUrl = async (filePath: string | null): Promise<string | null> => {
-            if (!filePath) return null;
-            try {
-                const file = bucket.file(filePath);
-                await file.makePublic(); // Ensure it's public
-                return file.publicUrl();
-            } catch (error) {
-                console.warn(`Could not get public URL for ${filePath}. It might not exist.`, error);
-                return null;
-            }
-        };
-
-        const [inventoryUrl, instructionsUrl, procesVerbalUrl] = await Promise.all([
-            getPublicUrl(filePaths.inventory),
-            getPublicUrl(filePaths.instructions),
-            getPublicUrl(filePaths.procesVerbal),
-        ]);
-
-        fileUrls.inventory = inventoryUrl;
-        fileUrls.instructions = instructionsUrl;
-        fileUrls.procesVerbal = procesVerbalUrl;
-        
-        const missingFiles = Object.entries(fileUrls).filter(([, url]) => !url).map(([key]) => key);
-
-        if (missingFiles.length > 0) {
-             return { success: false, error: `Static file(s) not found: ${missingFiles.join(', ')}. Please upload them first.` };
+        if (!statuses.success || !statuses.data) {
+            return { success: false, error: 'Could not retrieve static file statuses.' };
         }
 
-        // 3. Get all recipient documents
+        const updateData: Record<string, any> = {};
+        let filesToSyncCount = 0;
+
+        if (statuses.data.inventory?.url) {
+            updateData['documents.parcel inventory.status'] = 'Generated';
+            updateData['documents.parcel inventory.url'] = statuses.data.inventory.url;
+            filesToSyncCount++;
+        }
+        if (statuses.data.instructions?.url) {
+            updateData['documents.instructiuni pentru confirmarea primirii coletului.status'] = 'Generated';
+            updateData['documents.instructiuni pentru confirmarea primirii coletului.url'] = statuses.data.instructions.url;
+            filesToSyncCount++;
+        }
+        if (statuses.data.procesVerbal?.url) {
+            updateData['documents.proces verbal de receptie.status'] = 'Generated';
+            updateData['documents.proces verbal de receptie.url'] = statuses.data.procesVerbal.url;
+            filesToSyncCount++;
+        }
+
+        if (filesToSyncCount === 0) {
+            return { success: false, error: 'No static files have been uploaded. Nothing to sync.' };
+        }
+
+        // Get all recipient documents
         const recipientsQuery = query(collection(db, "recipients"));
         const querySnapshot = await getDocs(recipientsQuery);
         const recipients = querySnapshot.docs;
@@ -255,23 +239,16 @@ export async function updateRecipientDocumentsAction() {
             return { success: true, message: "No recipients found to update." };
         }
 
-        // 4. Create a batch to update all recipients
+        // Create a batch to update all recipients
         const batch = writeBatch(db);
         recipients.forEach(docSnap => {
             const recipientRef = doc(db, "recipients", docSnap.id);
-            batch.update(recipientRef, {
-                'documents.parcel inventory.status': 'Generated',
-                'documents.parcel inventory.url': fileUrls.inventory,
-                'documents.instructiuni pentru confirmarea primirii coletului.status': 'Generated',
-                'documents.instructiuni pentru confirmarea primirii coletului.url': fileUrls.instructions,
-                'documents.proces verbal de receptie.status': 'Generated',
-                'documents.proces verbal de receptie.url': fileUrls.procesVerbal,
-            });
+            batch.update(recipientRef, updateData);
         });
 
         await batch.commit();
 
-        return { success: true, message: `Successfully updated ${recipients.length} recipients with static document links.` };
+        return { success: true, message: `Successfully synced ${filesToSyncCount} file(s) to ${recipients.length} recipients.` };
     } catch (error: any) {
         console.error("Error updating recipient documents:", error);
         return { success: false, error: `An unexpected error occurred: ${error.message}` };

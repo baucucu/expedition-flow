@@ -230,20 +230,21 @@ export default function ManageDocumentsPage() {
 
             <Card className="lg:col-span-3">
                 <CardHeader>
-                    <CardTitle>4. Sync Links to All Recipients</CardTitle>
+                    <CardTitle>4. Sync Links to Recipients</CardTitle>
                     <CardDescription>
-                        After uploading all required files, run this action to link them to all existing recipients in the database.
+                        Run this action to link any uploaded static files to all existing recipients in the database.
+                        This will only sync files that have been successfully uploaded.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                        This action will fail if any of the three static files (Inventory, Instructions, Proces Verbal) have not been uploaded yet.
+                       This process will update all recipient records. If a file is uploaded later, you can run this sync again to add the new link.
                     </p>
                 </CardContent>
                  <CardFooter>
                     <Button onClick={handleSyncLinks} disabled={isSyncing} className="w-full">
                         {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileScan className="mr-2 h-4 w-4" />}
-                        {isSyncing ? 'Syncing All Recipients...' : 'Sync Files to All Recipients'}
+                        {isSyncing ? 'Syncing...' : 'Sync Files to All Recipients'}
                     </Button>
                 </CardFooter>
             </Card>
