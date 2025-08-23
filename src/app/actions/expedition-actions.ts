@@ -260,6 +260,10 @@ export async function uploadStaticFileAction(formData: FormData) {
         
         const bucket = adminApp.storage().bucket();
         
+        if (!bucket) {
+             return { success: false, error: 'Storage bucket is not available. Please check Firebase Admin initialization.' };
+        }
+
         const fileBuffer = await file.arrayBuffer();
 
         await bucket.file(filePath).save(Buffer.from(fileBuffer), {
