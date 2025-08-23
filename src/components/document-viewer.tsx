@@ -22,9 +22,8 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     useEffect(() => {
         const fetchAndRenderExcel = async () => {
             try {
-                // Using a CORS proxy for development/testing if direct fetch fails.
                 // In production, ensure Firebase Storage CORS is configured correctly.
-                const response = await fetch(`https://cors-anywhere.herokuapp.com/${url}`);
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch file: ${response.statusText}`);
                 }
