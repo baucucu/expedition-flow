@@ -7,7 +7,6 @@ import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
 import { adminApp } from "@/lib/firebase-admin";
 
 // Action for Field Mapping
@@ -201,19 +200,31 @@ export async function generateAwbAction(input: { shipmentIds: string[] }) {
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
     try {
-        const storage = getStorage();
+        const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         
-        // Define references for all three static files
-        const inventoryRef = ref(storage, 'static/inventory.xlsx');
-        const instructionsRef = ref(storage, 'static/instructions.pdf');
-        const procesVerbalRef = ref(storage, 'static/proces-verbal-de-receptie.pdf');
+        // Define file paths
+        const inventoryPath = 'static/inventory.xlsx';
+        const instructionsPath = 'static/instructions.pdf';
+        const procesVerbalPath = 'static/proces-verbal-de-receptie.pdf';
 
-        // Get download URLs for all static files in parallel
-        const [inventoryUrl, instructionsUrl, procesVerbalUrl] = await Promise.all([
-            getDownloadURL(inventoryRef),
-            getDownloadURL(instructionsRef),
-            getDownloadURL(procesVerbalRef)
+        // Check for existence and get public URLs
+        const inventoryFile = bucket.file(inventoryPath);
+        const instructionsFile = bucket.file(instructionsPath);
+        const procesVerbalFile = bucket.file(procesVerbalPath);
+
+        const [inventoryExists, instructionsExists, procesVerbalExists] = await Promise.all([
+            inventoryFile.exists().then(r => r[0]),
+            instructionsFile.exists().then(r => r[0]),
+            procesVerbalFile.exists().then(r => r[0])
         ]);
+
+        if (!inventoryExists || !instructionsExists || !procesVerbalExists) {
+             return { success: false, error: "A static file was not found in Storage. Please ensure 'inventory.xlsx', 'instructions.pdf', and 'proces-verbal-de-receptie.pdf' are all uploaded." };
+        }
+
+        const inventoryUrl = inventoryFile.publicUrl();
+        const instructionsUrl = instructionsFile.publicUrl();
+        const procesVerbalUrl = procesVerbalFile.publicUrl();
 
         // Get all recipient documents
         const recipientsQuery = query(collection(db, "recipients"));
@@ -243,9 +254,6 @@ export async function updateRecipientDocumentsAction() {
         return { success: true, message: `Successfully updated ${recipients.length} recipients with static document links.` };
     } catch (error: any) {
         console.error("Error updating recipient documents:", error);
-        if (error.code === 'storage/object-not-found') {
-            return { success: false, error: "A static file was not found in Storage. Please ensure 'inventory.xlsx', 'instructions.pdf', and 'proces-verbal-de-receptie.pdf' are all uploaded." };
-        }
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
@@ -274,12 +282,16 @@ export async function uploadStaticFileAction(formData: FormData) {
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         
         const fileBuffer = await file.arrayBuffer();
+        const storageFile = bucket.file(filePath);
 
-        await bucket.file(filePath).save(Buffer.from(fileBuffer), {
+        await storageFile.save(Buffer.from(fileBuffer), {
             metadata: {
                 contentType: file.type,
             },
         });
+        
+        // Make the file public immediately after upload
+        await storageFile.makePublic();
 
         return { success: true, message: `${file.name} uploaded successfully.` };
 
@@ -307,7 +319,7 @@ export async function getStaticFilesStatusAction() {
             const [exists] = await file.exists();
 
             if (exists) {
-                // We need a public URL, getSignedUrl is temporary. Let's make the file public.
+                // File should be public already, but let's ensure it.
                 await file.makePublic();
                 const publicUrl = file.publicUrl();
 
