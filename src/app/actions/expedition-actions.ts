@@ -7,7 +7,8 @@ import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
+import { adminApp } from "@/lib/firebase-admin";
 
 // Action for Field Mapping
 const mapFieldsActionInputSchema = z.object({
@@ -200,6 +201,7 @@ export async function generateAwbAction(input: { shipmentIds: string[] }) {
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
     try {
+        // We use the client-side storage to get the URLs, as the Admin SDK doesn't have a direct equivalent for getDownloadURL
         const storage = getStorage();
         const inventoryRef = ref(storage, 'static/inventory.xlsx');
         const instructionsRef = ref(storage, 'static/instructions.pdf');
@@ -238,5 +240,39 @@ export async function updateRecipientDocumentsAction() {
             return { success: false, error: "Static file not found in Storage. Please ensure 'static/inventory.xlsx' and 'static/instructions.pdf' are uploaded." };
         }
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
+    }
+}
+
+// Action to upload a static file
+export async function uploadStaticFileAction(formData: FormData) {
+    try {
+        const file = formData.get('file') as File;
+        const fileType = formData.get('fileType') as string;
+
+        if (!file) {
+            return { success: false, error: 'No file provided.' };
+        }
+        if (!fileType || (fileType !== 'inventory' && fileType !== 'instructions')) {
+            return { success: false, error: 'Invalid file type.' };
+        }
+
+        const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
+        
+        const storage = adminApp.storage();
+        const bucket = storage.bucket(); 
+        
+        const fileBuffer = await file.arrayBuffer();
+
+        await bucket.file(filePath).save(Buffer.from(fileBuffer), {
+            metadata: {
+                contentType: file.type,
+            },
+        });
+
+        return { success: true, message: `${file.name} uploaded successfully.` };
+
+    } catch (error: any) {
+        console.error('Upload failed:', error);
+        return { success: false, error: `Upload failed: ${error.message}` };
     }
 }

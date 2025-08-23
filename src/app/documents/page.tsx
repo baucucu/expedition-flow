@@ -8,11 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
 import { ArrowLeft, FileScan, Loader2, Upload, FileCheck2, AlertCircle } from 'lucide-react';
-import { updateRecipientDocumentsAction } from '@/app/actions/expedition-actions';
+import { updateRecipientDocumentsAction, uploadStaticFileAction } from '@/app/actions/expedition-actions';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Progress } from '@/components/ui/progress';
 
 type UploadableFile = 'inventory' | 'instructions';
@@ -21,8 +19,7 @@ export default function ManageDocumentsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
   const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<Record<UploadableFile, number | null>>({ inventory: null, instructions: null });
-  const [uploading, setUploading] = useState<Record<UploadableFile, boolean>>({ inventory: false, instructions: false });
+  const [uploadStatus, setUploadStatus] = useState<Record<UploadableFile, 'idle' | 'uploading' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle' });
   const [uploadError, setUploadError] = useState<Record<UploadableFile, string | null>>({ inventory: null, instructions: null });
 
   const router = useRouter();
@@ -32,10 +29,12 @@ export default function ManageDocumentsPage() {
     const file = e.target.files?.[0] ?? null;
     if (fileType === 'inventory') {
       setInventoryFile(file);
+      setUploadStatus(prev => ({...prev, inventory: 'idle'}));
       setUploadError(prev => ({...prev, inventory: null}));
     } else {
       setInstructionsFile(file);
-       setUploadError(prev => ({...prev, instructions: null}));
+      setUploadStatus(prev => ({...prev, instructions: 'idle'}));
+      setUploadError(prev => ({...prev, instructions: null}));
     }
   };
 
@@ -46,34 +45,24 @@ export default function ManageDocumentsPage() {
       return;
     }
 
-    const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
-    const storageRef = ref(storage, filePath);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileType', fileType);
     
-    setUploading(prev => ({...prev, [fileType]: true}));
-    setUploadProgress(prev => ({...prev, [fileType]: 0}));
+    setUploadStatus(prev => ({...prev, [fileType]: 'uploading'}));
     setUploadError(prev => ({...prev, [fileType]: null}));
 
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const result = await uploadStaticFileAction(formData);
 
-    uploadTask.on('state_changed', 
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(prev => ({...prev, [fileType]: progress}));
-      }, 
-      (error) => {
-        setUploading(prev => ({...prev, [fileType]: false}));
-        setUploadError(prev => ({...prev, [fileType]: `Upload failed: ${error.message}`}));
-        toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
-      }, 
-      () => {
-        // This block runs upon successful completion of the upload
-        getDownloadURL(uploadTask.snapshot.ref).then(() => {
-          setUploading(prev => ({...prev, [fileType]: false}));
-          setUploadProgress(prev => ({...prev, [fileType]: 100}));
-          toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.`});
-        });
-      }
-    );
+    if (result.success) {
+      setUploadStatus(prev => ({...prev, [fileType]: 'success'}));
+      toast({ title: 'Upload Successful', description: result.message });
+    } else {
+      const errorMessage = result.error || 'An unknown error occurred.';
+      setUploadStatus(prev => ({...prev, [fileType]: 'error'}));
+      setUploadError(prev => ({...prev, [fileType]: errorMessage}));
+      toast({ variant: 'destructive', title: 'Upload Failed', description: errorMessage });
+    }
   };
 
   const handleSyncLinks = async () => {
@@ -94,6 +83,11 @@ export default function ManageDocumentsPage() {
       });
     }
   };
+
+  const isUploading = (fileType: UploadableFile) => uploadStatus[fileType] === 'uploading';
+  const isSuccess = (fileType: UploadableFile) => uploadStatus[fileType] === 'success';
+  const isError = (fileType: UploadableFile) => uploadStatus[fileType] === 'error';
+
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -116,19 +110,21 @@ export default function ManageDocumentsPage() {
                 <CardContent className="space-y-4">
                      <div className="space-y-2">
                         <Label htmlFor="inventory-upload">Inventory File (.xlsx)</Label>
-                        <Input id="inventory-upload" type="file" accept=".xlsx" onChange={(e) => handleFileChange(e, 'inventory')} disabled={uploading.inventory} />
+                        <Input id="inventory-upload" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e) => handleFileChange(e, 'inventory')} disabled={isUploading('inventory')} />
                      </div>
-                    {uploadProgress.inventory !== null && (
-                      <Progress value={uploadProgress.inventory} className="w-full" />
+                    {isUploading('inventory') && (
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Uploading...</span>
+                        </div>
                     )}
-                    {uploading.inventory && <p className="text-sm text-muted-foreground animate-pulse">Uploading...</p>}
-                    {uploadProgress.inventory === 100 && !uploading.inventory && (
+                    {isSuccess('inventory') && (
                         <div className="text-sm text-green-600 flex items-center gap-2">
                             <FileCheck2 className="h-4 w-4" />
                             <span>Upload complete.</span>
                         </div>
                     )}
-                    {uploadError.inventory && (
+                    {isError('inventory') && (
                        <div className="text-sm text-destructive flex items-center gap-2">
                             <AlertCircle className="h-4 w-4" />
                             <span>{uploadError.inventory}</span>
@@ -136,9 +132,9 @@ export default function ManageDocumentsPage() {
                     )}
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={() => handleUpload('inventory')} disabled={!inventoryFile || uploading.inventory} className="w-full">
-                        {uploading.inventory ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        {uploading.inventory ? 'Uploading...' : 'Upload Inventory'}
+                    <Button onClick={() => handleUpload('inventory')} disabled={!inventoryFile || isUploading('inventory')} className="w-full">
+                        {isUploading('inventory') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                        {isUploading('inventory') ? 'Uploading...' : 'Upload Inventory'}
                     </Button>
                 </CardFooter>
             </Card>
@@ -151,19 +147,21 @@ export default function ManageDocumentsPage() {
                  <CardContent className="space-y-4">
                      <div className="space-y-2">
                         <Label htmlFor="instructions-upload">Instructions File (.pdf)</Label>
-                        <Input id="instructions-upload" type="file" accept=".pdf" onChange={(e) => handleFileChange(e, 'instructions')} disabled={uploading.instructions} />
+                        <Input id="instructions-upload" type="file" accept=".pdf,application/pdf" onChange={(e) => handleFileChange(e, 'instructions')} disabled={isUploading('instructions')} />
                      </div>
-                    {uploadProgress.instructions !== null && (
-                      <Progress value={uploadProgress.instructions} className="w-full" />
+                    {isUploading('instructions') && (
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Uploading...</span>
+                        </div>
                     )}
-                    {uploading.instructions && <p className="text-sm text-muted-foreground animate-pulse">Uploading...</p>}
-                     {uploadProgress.instructions === 100 && !uploading.instructions && (
+                     {isSuccess('instructions') && (
                         <div className="text-sm text-green-600 flex items-center gap-2">
                             <FileCheck2 className="h-4 w-4" />
                             <span>Upload complete.</span>
                         </div>
                     )}
-                    {uploadError.instructions && (
+                    {isError('instructions') && (
                        <div className="text-sm text-destructive flex items-center gap-2">
                             <AlertCircle className="h-4 w-4" />
                             <span>{uploadError.instructions}</span>
@@ -171,9 +169,9 @@ export default function ManageDocumentsPage() {
                     )}
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={() => handleUpload('instructions')} disabled={!instructionsFile || uploading.instructions} className="w-full">
-                        {uploading.instructions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                         {uploading.instructions ? 'Uploading...' : 'Upload Instructions'}
+                    <Button onClick={() => handleUpload('instructions')} disabled={!instructionsFile || isUploading('instructions')} className="w-full">
+                        {isUploading('instructions') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                         {isUploading('instructions') ? 'Uploading...' : 'Upload Instructions'}
                     </Button>
                 </CardFooter>
             </Card>
