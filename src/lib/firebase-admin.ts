@@ -15,8 +15,9 @@ const initializeAdminApp = (): admin.app.App => {
   if (!fs.existsSync(serviceAccountPath)) {
     // If the service account file doesn't exist, throw a clear error.
     // This stops the server and prevents cryptic runtime errors.
-    console.error(`CRITICAL: Firebase Admin initialization failed. Service account key file not found at ${serviceAccountPath}`);
-    throw new Error(`CRITICAL: Firebase Admin initialization failed. Service account key file not found at ${serviceAccountPath}`);
+    const errorMessage = `CRITICAL: Firebase Admin initialization failed. Service account key file not found at ${serviceAccountPath}`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));

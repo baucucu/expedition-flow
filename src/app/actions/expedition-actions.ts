@@ -256,9 +256,9 @@ export async function uploadStaticFileAction(formData: FormData) {
             return { success: false, error: 'Invalid file type.' };
         }
         
-
         const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
         
+        // This ensures adminApp is initialized before we use it.
         const bucket = adminApp.storage().bucket();
         
         const fileBuffer = await file.arrayBuffer();
