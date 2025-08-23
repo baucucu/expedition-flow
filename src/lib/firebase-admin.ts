@@ -1,23 +1,19 @@
 
 import * as admin from 'firebase-admin';
+import serviceAccount from '@/../expeditionflow-firebase-adminsdk.json';
 
 let adminApp: admin.app.App | null = null;
 
 if (!admin.apps.length) {
-    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-
-    if (serviceAccountKey) {
-        try {
-            const serviceAccount = JSON.parse(serviceAccountKey);
-            adminApp = admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-                storageBucket: 'expeditionflow.appspot.com',
-            });
-        } catch (e: any) {
-            console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:", e.message);
-        }
-    } else {
-        console.warn("FIREBASE_SERVICE_ACCOUNT_KEY is not set. Firebase Admin SDK not initialized.");
+    try {
+        // The type assertion is necessary because the JSON import is not strongly typed.
+        const credential = admin.credential.cert(serviceAccount as admin.ServiceAccount);
+        adminApp = admin.initializeApp({
+            credential,
+            storageBucket: 'expeditionflow.appspot.com',
+        });
+    } catch (e: any) {
+        console.error("Failed to initialize Firebase Admin SDK:", e.message);
     }
 } else {
     adminApp = admin.apps[0];

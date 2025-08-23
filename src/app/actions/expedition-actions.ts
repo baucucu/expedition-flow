@@ -248,7 +248,7 @@ export async function uploadStaticFileAction(formData: FormData) {
     if (!adminApp) {
         return { 
             success: false, 
-            error: 'The Admin SDK is not initialized. Please ensure the FIREBASE_SERVICE_ACCOUNT_KEY environment variable is set.' 
+            error: 'The Admin SDK is not initialized. Please ensure the service account file is available.' 
         };
     }
     
