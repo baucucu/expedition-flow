@@ -66,9 +66,12 @@ export default function ManageDocumentsPage() {
         toast({ variant: 'destructive', title: 'Upload Failed', description: error.message });
       }, 
       () => {
-        setUploading(prev => ({...prev, [fileType]: false}));
-        setUploadProgress(prev => ({...prev, [fileType]: 100}));
-        toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.`});
+        // This block runs upon successful completion of the upload
+        getDownloadURL(uploadTask.snapshot.ref).then(() => {
+          setUploading(prev => ({...prev, [fileType]: false}));
+          setUploadProgress(prev => ({...prev, [fileType]: 100}));
+          toast({ title: 'Upload Successful', description: `${file.name} has been uploaded.`});
+        });
       }
     );
   };
