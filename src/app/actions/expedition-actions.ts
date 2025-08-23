@@ -263,8 +263,7 @@ export async function uploadStaticFileAction(formData: FormData) {
 
         const filePath = fileType === 'inventory' ? 'static/inventory.xlsx' : 'static/instructions.pdf';
         
-        const storage = adminApp.storage();
-        const bucket = storage.bucket(); 
+        const bucket = adminApp.storage().bucket();
         
         const fileBuffer = await file.arrayBuffer();
 
