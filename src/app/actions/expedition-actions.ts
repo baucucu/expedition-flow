@@ -132,7 +132,6 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
 
                 // Add default document structure
                 recipientData.documents = {
-                    'proces verbal de receptie': { status: 'Not Generated' },
                     'instructiuni pentru confirmarea primirii coletului': { status: 'Not Generated' },
                     'parcel inventory': { status: 'Not Generated' },
                 };
@@ -200,7 +199,6 @@ export async function generateAwbAction(input: { shipmentIds: string[] }) {
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
     try {
-        const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         const statuses = await getStaticFilesStatusAction();
 
         if (!statuses.success || !statuses.data) {
@@ -220,12 +218,7 @@ export async function updateRecipientDocumentsAction() {
             updateData['documents.instructiuni pentru confirmarea primirii coletului.url'] = statuses.data.instructions.url;
             filesToSyncCount++;
         }
-        if (statuses.data.procesVerbal?.url) {
-            updateData['documents.proces verbal de receptie.status'] = 'Generated';
-            updateData['documents.proces verbal de receptie.url'] = statuses.data.procesVerbal.url;
-            filesToSyncCount++;
-        }
-
+        
         if (filesToSyncCount === 0) {
             return { success: false, error: 'No static files have been uploaded. Nothing to sync.' };
         }
@@ -294,7 +287,7 @@ export async function getStaticFilesStatusAction() {
     try {
         const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
         const statuses: Record<string, {name: string, url: string} | null> = {};
-        const fileTypes = ['inventory', 'instructions', 'procesVerbal'];
+        const fileTypes = ['inventory', 'instructions'];
 
         for (const type of fileTypes) {
             const docRef = doc(db, 'static_documents', type);

@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -20,6 +19,7 @@ import {
   X as XIcon,
   Loader2,
   Send,
+  FileText,
 } from "lucide-react";
 import {
   Sheet,
@@ -61,17 +61,18 @@ interface ExpeditionDashboardProps {
     expeditions: Expedition[];
 }
 
-const docShortNames: Record<DocumentType | 'AWB' | 'Email', string> = {
+const docShortNames: Record<DocumentType | 'AWB' | 'Email' | 'PV', string> = {
     'proces verbal de receptie': 'PV',
     'instructiuni pentru confirmarea primirii coletului': 'Instr.',
     'parcel inventory': 'Inv.',
     'AWB': 'AWB',
-    'Email': 'Email'
+    'Email': 'Email',
+    'PV': 'PV'
 }
 
 type SelectedDocument = {
   recipient: RecipientRow;
-  docType: DocumentType | 'AWB' | 'Email';
+  docType: DocumentType | 'AWB' | 'Email' | 'PV';
 }
 
 const DocumentPlaceholder = ({ title }: { title: string }) => (
@@ -127,7 +128,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   };
 
 
-  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email') => {
+  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email' | 'PV') => {
     setSelectedDocument({ recipient, docType });
   }
 
@@ -254,14 +255,24 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         header: "Documents",
         cell: ({ row }) => {
             const recipient = row.original;
-            const docTypes: DocumentType[] = ['proces verbal de receptie', 'instructiuni pentru confirmarea primirii coletului', 'parcel inventory'];
+            const docTypes: DocumentType[] = ['instructiuni pentru confirmarea primirii coletului', 'parcel inventory'];
             const emailSent = ['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(recipient.expeditionStatus);
 
             return (
                 <div className="flex gap-2">
+                    {recipient.pvUrl && (
+                         <Badge
+                            variant={"secondary"}
+                            className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                            onClick={() => handleOpenDocument(recipient, 'PV')}
+                        >
+                            <FileText className="w-3 h-3" />
+                            {docShortNames['PV']}
+                        </Badge>
+                    )}
                     {recipient.documents && docTypes.map(docType => {
                         const doc = recipient.documents[docType];
-                        const isGenerated = doc.status === 'Generated';
+                        const isGenerated = doc?.status === 'Generated';
                         if (!isGenerated) return null;
                         return (
                             <Badge
@@ -471,15 +482,15 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="proces verbal de receptie" disabled={!selectedDocument.recipient.documents?.['proces verbal de receptie']?.url}>Proces verbal</TabsTrigger>
+                        <TabsTrigger value="PV" disabled={!selectedDocument.recipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
                         <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={!selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url}>Instructiuni</TabsTrigger>
                         <TabsTrigger value="parcel inventory" disabled={!selectedDocument.recipient.documents?.['parcel inventory']?.url}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb?.awbNumber}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="proces verbal de receptie">
-                         {selectedDocument.recipient.documents?.['proces verbal de receptie']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['proces verbal de receptie'].url!} docType="pdf" />
+                    <TabsContent value="PV">
+                         {selectedDocument.recipient.pvUrl ? (
+                            <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="pdf" />
                          ) : <DocumentPlaceholder title="Proces verbal de receptie not available" />}
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">

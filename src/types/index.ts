@@ -37,10 +37,11 @@ export interface Recipient {
   address: string;
   status: RecipientStatus;
   documents: {
-    'proces verbal de receptie': Document;
+    // 'proces verbal de receptie' is now dynamic, so it's removed from here
     'instructiuni pentru confirmarea primirii coletului': Document;
     'parcel inventory': Document;
   };
+  pvUrl?: string; // URL for the dynamic Google Drive Proces Verbal
   group?: string;
   county?: string;
   city?: string;

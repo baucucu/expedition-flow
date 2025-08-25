@@ -12,7 +12,7 @@ import { updateRecipientDocumentsAction, uploadStaticFileAction, getStaticFilesS
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-type UploadableFile = 'inventory' | 'instructions' | 'procesVerbal';
+type UploadableFile = 'inventory' | 'instructions';
 type FileStatus = { name: string; url: string } | null;
 
 export default function ManageDocumentsPage() {
@@ -21,16 +21,14 @@ export default function ManageDocumentsPage() {
 
   const [inventoryFile, setInventoryFile] = useState<File | null>(null);
   const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
-  const [procesVerbalFile, setProcesVerbalFile] = useState<File | null>(null);
 
   const [currentFiles, setCurrentFiles] = useState<Record<UploadableFile, FileStatus>>({
     inventory: null,
     instructions: null,
-    procesVerbal: null,
   });
   
-  const [uploadStatus, setUploadStatus] = useState<Record<UploadableFile, 'idle' | 'uploading' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle', procesVerbal: 'idle' });
-  const [uploadError, setUploadError] = useState<Record<UploadableFile, string | null>>({ inventory: null, instructions: null, procesVerbal: null });
+  const [uploadStatus, setUploadStatus] = useState<Record<UploadableFile, 'idle' | 'uploading' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle' });
+  const [uploadError, setUploadError] = useState<Record<UploadableFile, string | null>>({ inventory: null, instructions: null });
 
   const router = useRouter();
   const { toast } = useToast();
@@ -58,14 +56,12 @@ export default function ManageDocumentsPage() {
 
     if (fileType === 'inventory') setInventoryFile(file);
     else if (fileType === 'instructions') setInstructionsFile(file);
-    else setProcesVerbalFile(file);
   };
 
   const handleUpload = async (fileType: UploadableFile) => {
     let file: File | null = null;
     if (fileType === 'inventory') file = inventoryFile;
     else if (fileType === 'instructions') file = instructionsFile;
-    else file = procesVerbalFile;
 
     if (!file) {
       toast({ variant: 'destructive', title: 'No file selected' });
@@ -163,7 +159,7 @@ export default function ManageDocumentsPage() {
             </Button>
         </div>
         
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto">
             
             <Card className="lg:col-span-1 flex flex-col">
                  <CardHeader>
@@ -207,30 +203,10 @@ export default function ManageDocumentsPage() {
                 </CardFooter>
             </Card>
 
-             <Card className="lg:col-span-1 flex flex-col">
-                 <CardHeader>
-                    <CardTitle>3. Upload Proces Verbal File</CardTitle>
-                    <CardDescription>Upload the proces verbal file (e.g., .pdf). This will be linked to all recipients.</CardDescription>
-                </CardHeader>
-                 <CardContent className="space-y-4 flex-grow">
-                    {renderFileStatus('procesVerbal')}
-                     <div className="space-y-2">
-                        <Label htmlFor="proces-verbal-upload">Upload New Proces Verbal</Label>
-                        <Input id="proces-verbal-upload" type="file" accept=".pdf,application/pdf" onChange={(e) => handleFileChange(e, 'procesVerbal')} disabled={isUploading('procesVerbal')} />
-                     </div>
-                    {renderUploadStatus('procesVerbal')}
-                </CardContent>
-                <CardFooter>
-                    <Button onClick={() => handleUpload('procesVerbal')} disabled={!procesVerbalFile || isUploading('procesVerbal')} className="w-full">
-                        {isUploading('procesVerbal') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                         {isUploading('procesVerbal') ? 'Uploading...' : 'Upload Proces Verbal'}
-                    </Button>
-                </CardFooter>
-            </Card>
 
-            <Card className="lg:col-span-3">
+            <Card className="md:col-span-2">
                 <CardHeader>
-                    <CardTitle>4. Sync Links to Recipients</CardTitle>
+                    <CardTitle>3. Sync Links to Recipients</CardTitle>
                     <CardDescription>
                         Run this action to link any uploaded static files to all existing recipients in the database.
                         This will only sync files that have been successfully uploaded.
