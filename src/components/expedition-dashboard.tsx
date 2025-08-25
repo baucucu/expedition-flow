@@ -62,7 +62,7 @@ interface ExpeditionDashboardProps {
     expeditions: Expedition[];
 }
 
-const docShortNames: Record<DocumentType | 'AWB' | 'Email' | 'PV', string> = {
+const docShortNames: Record<DocumentType | 'AWB' | 'Email', string> = {
     'proces verbal de receptie': 'PV',
     'instructiuni pentru confirmarea primirii coletului': 'Instr.',
     'parcel inventory': 'Inv.',
@@ -73,7 +73,7 @@ const docShortNames: Record<DocumentType | 'AWB' | 'Email' | 'PV', string> = {
 
 type SelectedDocument = {
   recipient: RecipientRow;
-  docType: DocumentType | 'AWB' | 'Email' | 'PV';
+  docType: DocumentType | 'AWB' | 'Email';
 }
 
 const DocumentPlaceholder = ({ title }: { title: string }) => (
@@ -130,7 +130,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   };
 
 
-  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email' | 'PV') => {
+  const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType | 'AWB' | 'Email') => {
     setSelectedDocument({ recipient, docType });
   }
 
@@ -534,7 +534,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     <TabsContent value="PV">
                          {selectedDocument.recipient.pvUrl ? (
                             <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="pdf" />
-                         ) : <DocumentPlaceholder title="Proces verbal de receptie not available" />}
+                         ) : <DocumentPlaceholder title="Proces Verbal not available" />}
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
                          {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (

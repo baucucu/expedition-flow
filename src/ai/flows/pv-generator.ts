@@ -55,7 +55,7 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: recipient.name,
-                recipient_id: recipient.id, // Correctly sending the document ID
+                recipient_id: recipient.id,
             }),
         });
 
@@ -65,13 +65,17 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
         }
 
         const result = await response.json();
-        const docId = result.id; // Assuming n8n returns { "id": "..." }
+
+        // The webhook returns an array with one file object.
+        const driveFile = Array.isArray(result) ? result[0] : null;
+        const docId = driveFile?.id;
 
         if (!docId) {
             return { recipientId: recipient.id, error: 'Webhook response did not include a document ID.' };
         }
         
-        const pvUrl = `https://docs.google.com/document/d/${docId}/`;
+        // Construct the standard Google Docs/Drive URL for viewing/embedding
+        const pvUrl = `https://drive.google.com/file/d/${docId}/preview`;
         
         // Update Firestore
         const recipientRef = doc(db, "recipients", recipient.id);
