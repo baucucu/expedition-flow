@@ -3,6 +3,7 @@
 
 import { mapFields } from "@/ai/flows/field-mapper";
 import { generateAwb } from "@/ai/flows/awb-generator";
+import { generateProcesVerbal } from "@/ai/flows/pv-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc } from "firebase/firestore";
@@ -319,5 +320,29 @@ export async function getStaticFilesStatusAction() {
     } catch (error: any) {
         console.error("Error getting static file status:", error);
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
+    }
+}
+
+// Action for PV Generation
+const generatePvActionInputSchema = z.object({
+  recipients: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+  })),
+});
+
+export async function generateProcesVerbalAction(input: z.infer<typeof generatePvActionInputSchema>) {
+    const validatedInput = generatePvActionInputSchema.safeParse(input);
+    if (!validatedInput.success) {
+        return { success: false, message: "Invalid input for PV generation." };
+    }
+    try {
+        // We don't wait for the flow to finish, just trigger it.
+        // The flow will update Firestore in the background.
+        generateProcesVerbal(validatedInput.data);
+        return { success: true, message: `PV generation process started for ${validatedInput.data.recipients.length} recipients. This may take a while.` };
+    } catch (error: any) {
+        console.error("Error in generateProcesVerbal flow:", error);
+        return { success: false, message: `Failed to start PV generation due to a server error: ${error.message}` };
     }
 }

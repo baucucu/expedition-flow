@@ -20,6 +20,7 @@ import {
   Loader2,
   Send,
   FileText,
+  FileSignature,
 } from "lucide-react";
 import {
   Sheet,
@@ -42,7 +43,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB } from "@/types";
-import { generateAwbAction } from "@/app/actions/expedition-actions";
+import { generateAwbAction, generateProcesVerbalAction } from "@/app/actions/expedition-actions";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
 
@@ -100,6 +101,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [inputValue, setInputValue] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [isGeneratingAwb, setIsGeneratingAwb] = React.useState(false);
+  const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -179,6 +181,36 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         });
     }
   }
+
+  const handleGeneratePvs = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
+        toast({ variant: "destructive", title: "No Recipients Selected" });
+        return;
+    }
+
+    const recipientsToProcess = selectedRows
+        .map(row => row.original)
+        .map(({ id, name }) => ({ id, name }));
+
+    setIsGeneratingPv(true);
+    const result = await generateProcesVerbalAction({ recipients: recipientsToProcess });
+    setIsGeneratingPv(false);
+    
+    if (result.success) {
+        toast({
+            title: "PV Generation Started",
+            description: result.message,
+        });
+        table.resetRowSelection();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "PV Generation Failed",
+            description: result.message,
+        });
+    }
+  };
 
   const columns: ColumnDef<RecipientRow>[] = [
     {
@@ -384,6 +416,17 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     className="h-auto flex-1 border-none bg-transparent p-1 shadow-none focus-visible:ring-0"
                 />
             </div>
+             <Button 
+                variant="outline"
+                onClick={handleGeneratePvs}
+                disabled={isGeneratingPv || selectedRowCount === 0}
+             >
+                {isGeneratingPv ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
+                {isGeneratingPv
+                    ? 'Generating...'
+                    : `Generate PV for ${selectedRowCount} selected`
+                }
+             </Button>
              <Button 
                 onClick={handleGenerateAwbs} 
                 disabled={isGeneratingAwb || selectedRowCount === 0}
