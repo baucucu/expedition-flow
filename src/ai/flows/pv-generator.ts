@@ -55,7 +55,7 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: recipient.name,
-                recipient_id: recipient.id,
+                recipient_id: recipient.id, // Correctly sending the document ID
             }),
         });
 
