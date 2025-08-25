@@ -65,7 +65,7 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
         }
 
         const result = await response.json();
-
+        
         // The webhook returns an array with one file object.
         const driveFile = Array.isArray(result) ? result[0] : null;
         const docId = driveFile?.id;
@@ -74,7 +74,7 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
             return { recipientId: recipient.id, error: 'Webhook response did not include a document ID.' };
         }
         
-        // Construct the standard Google Docs/Drive URL for viewing/embedding
+        // Construct the Google Drive URL for embedding/preview
         const pvUrl = `https://drive.google.com/file/d/${docId}/preview`;
         
         // Update Firestore

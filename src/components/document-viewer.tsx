@@ -9,7 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 
 interface DocumentViewerProps {
     url: string;
-    docType: 'pdf' | 'excel';
+    docType: 'pdf' | 'excel' | 'gdrive-pdf';
 }
 
 type SheetData = (string | number)[][];
@@ -21,6 +21,8 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
 
     useEffect(() => {
         const fetchAndRenderExcel = async () => {
+            setLoading(true);
+            setError(null);
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
@@ -61,6 +63,15 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
                 <AlertTriangle className="h-8 w-8 mb-4" />
                 <p className="text-center font-semibold">Error Loading Document</p>
                 <p className="text-center text-sm">{error}</p>
+            </div>
+        );
+    }
+    
+    // Handle Google Drive preview links for PVs
+    if (docType === 'gdrive-pdf') {
+         return (
+            <div className="w-full h-[80vh] mt-4 border rounded-md">
+                <iframe src={url} style={{ width: '100%', height: '100%', border: 'none' }} title="Google Drive PDF Preview" />
             </div>
         );
     }

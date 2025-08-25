@@ -533,7 +533,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsList>
                     <TabsContent value="PV">
                          {selectedDocument.recipient.pvUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
