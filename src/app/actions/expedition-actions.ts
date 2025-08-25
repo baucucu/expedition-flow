@@ -337,10 +337,8 @@ export async function generateProcesVerbalAction(input: z.infer<typeof generateP
         return { success: false, message: "Invalid input for PV generation." };
     }
     try {
-        // We don't wait for the flow to finish, just trigger it.
-        // The flow will update Firestore in the background.
-        generateProcesVerbal(validatedInput.data);
-        return { success: true, message: `PV generation process started for ${validatedInput.data.recipients.length} recipients. This may take a while.` };
+        const result = await generateProcesVerbal(validatedInput.data);
+        return result; // Directly return the result from the flow
     } catch (error: any) {
         console.error("Error in generateProcesVerbal flow:", error);
         return { success: false, message: `Failed to start PV generation due to a server error: ${error.message}` };

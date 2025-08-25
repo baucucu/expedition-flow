@@ -199,7 +199,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     
     if (result.success) {
         toast({
-            title: "PV Generation Started",
+            title: "PV Generation Succeeded",
             description: result.message,
         });
         table.resetRowSelection();
