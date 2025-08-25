@@ -22,7 +22,6 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     useEffect(() => {
         const fetchAndRenderExcel = async () => {
             try {
-                // In production, ensure Firebase Storage CORS is configured correctly.
                 const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Failed to fetch file: ${response.statusText}`);
@@ -67,9 +66,11 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     }
 
     if (docType === 'pdf') {
+        const encodedUrl = encodeURIComponent(url);
+        const googleDocsUrl = `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
         return (
             <div className="w-full h-[80vh] mt-4 border rounded-md">
-                <iframe src={url} width="100%" height="100%" title="PDF Document Viewer" />
+                <iframe src={googleDocsUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Document Viewer" />
             </div>
         );
     }
