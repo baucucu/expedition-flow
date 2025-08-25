@@ -12,7 +12,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Users,
-  Paperclip,
 } from 'lucide-react';
 import { Scorecard } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -25,7 +24,6 @@ interface ScorecardInfo {
 
 export interface ScorecardData {
   totalExpeditions: ScorecardInfo;
-  readyForAwb: ScorecardInfo;
   docsGenerated: ScorecardInfo;
   awbGenerated: ScorecardInfo;
   sentToLogistics: ScorecardInfo;
@@ -47,7 +45,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   }
   
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-9">
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
       <Scorecard
         title="Total Shipments"
         value={counts.totalExpeditions.value}
@@ -56,13 +54,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         footerIcon={Users}
         onClick={() => setActiveFilter('Total')}
         isActive={activeFilter === 'Total'}
-      />
-       <Scorecard
-        title="Ready for AWB"
-        value={counts.readyForAwb.value}
-        icon={Paperclip}
-        onClick={() => setActiveFilter('Ready for AWB')}
-        isActive={activeFilter === 'Ready for AWB'}
       />
       <Scorecard
         title="Docs Generated"

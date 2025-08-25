@@ -103,9 +103,6 @@ export default function Home() {
             value: expeditions.length,
             footerText: `${allRecipientsWithFullData.length} recipients`
         },
-        readyForAwb: {
-            value: expeditions.filter(e => e.status === 'Ready for AWB').length,
-        },
         docsGenerated: {
             value: recipientsWithAllDocsGenerated.length,
             footerText: `${recipientsWithFailedDocs.length} errors`,
