@@ -1,13 +1,8 @@
-import { defineConfig } from "@trigger.dev/sdk";
 
-export default defineConfig({
+import type { TriggerConfig } from "@trigger.dev/sdk";
+
+export const config: TriggerConfig = {
   project: "proj_mrxpgmvgheruislaxmui",
-  runtime: "node",
-  logLevel: "log",
-  // The max compute seconds a task is allowed to run. If the task run exceeds this duration, it will be stopped.
-  // You can override this on an individual task.
-  // See https://trigger.dev/docs/runs/max-duration
-  maxDuration: 3600,
   retries: {
     enabledInDev: true,
     default: {
@@ -18,5 +13,5 @@ export default defineConfig({
       randomize: true,
     },
   },
-  dirs: ["./src/trigger"],
-});
+  dirs: ["src/trigger"],
+};
