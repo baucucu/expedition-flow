@@ -152,16 +152,17 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
             }
         }
 
-        // 5. Create the shipment documents
+        // 5. Create or update the shipment documents
         for (const [shipmentId, groupData] of shipmentsMap.entries()) {
             const shipmentRef = doc(db, "shipments", shipmentId);
-            const shipmentData: Expedition = {
+            const shipmentData: Partial<Expedition> = {
                 id: shipmentId,
                 status: "Ready for AWB",
                 createdAt: serverTimestamp(),
                 recipientCount: groupData.recipientCount,
                 awbCount: groupData.awbIds.length,
             };
+             // Use merge: true to update existing shipments or create new ones
             batch.set(shipmentRef, shipmentData, { merge: true });
         }
 
@@ -365,7 +366,7 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
 
         // 2. Prepare the events for Trigger.dev
         const events = awbIds.map(awbId => ({
-            name: "generate.sameday.awb",
+            name: "generate-sameday-awb",
             payload: { awbId },
         }));
 
