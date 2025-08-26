@@ -94,7 +94,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                 status: "New",
                 mainRecipientName: firstRow[reverseMapping['awbName']],
                 mainRecipientTelephone: firstRow[reverseMapping['awbTelephone']],
-                parcelCount: firstRow[reverseMapping['parcelCount']],
+                parcelCount: recipientRows.length, // The number of recipients/parcels in this consolidated AWB
                 packageSize: firstRow[reverseMapping['packageSize']],
             };
             
@@ -245,7 +245,7 @@ export async function uploadStaticFileAction(formData: FormData) {
         
         const filePath = `static/${fileType}/${file.name}`;
         
-        const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
+        const bucket = adminApp.storage().bucket('expeditionflow.appspot.com');
         const storageFile = bucket.file(filePath);
 
         const fileBuffer = await file.arrayBuffer();
@@ -270,7 +270,7 @@ export async function uploadStaticFileAction(formData: FormData) {
 // Action to get status of static files
 export async function getStaticFilesStatusAction() {
     try {
-        const bucket = adminApp.storage().bucket('expeditionflow.firebasestorage.app');
+        const bucket = adminApp.storage().bucket('expeditionflow.appspot.com');
         const statuses: Record<string, {name: string, url: string} | null> = {};
         const fileTypes = ['inventory', 'instructions'];
 
@@ -365,12 +365,13 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
 
         // 2. Prepare the events for Trigger.dev
         const events = awbIds.map(awbId => ({
+            name: "generate.sameday.awb",
             payload: { awbId },
         }));
 
         // 3. Send all events to Trigger.dev in a single call
         if (events.length > 0) {
-            await tasks.batchTrigger<typeof generateSamedayAwb>("generate-sameday-awb", events);
+            await tasks.triggerBatch(events);
         }
 
         return { 
@@ -383,3 +384,5 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
+
+    
