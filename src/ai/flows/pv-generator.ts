@@ -66,22 +66,22 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
 
         const result = await response.json();
         
-        // The webhook returns an array with one file object.
-        const driveFile = Array.isArray(result) ? result[0] : null;
-        const docId = driveFile?.id;
+        const docId = result?.id;
+        const webViewLink = result?.webViewLink;
 
-        if (!docId) {
-            return { recipientId: recipient.id, error: 'Webhook response did not include a document ID.' };
+
+        if (!docId || !webViewLink) {
+            return { recipientId: recipient.id, error: 'Webhook response did not include a document ID or webViewLink.' };
         }
-        
-        // Construct the Google Drive URL for embedding/preview
-        const pvUrl = `https://drive.google.com/file/d/${docId}/preview`;
         
         // Update Firestore
         const recipientRef = doc(db, "recipients", recipient.id);
-        await updateDoc(recipientRef, { pvUrl: pvUrl });
+        await updateDoc(recipientRef, { 
+            pvId: docId,
+            pvUrl: webViewLink 
+        });
 
-        return { recipientId: recipient.id, pvUrl: pvUrl };
+        return { recipientId: recipient.id, pvUrl: webViewLink };
 
     } catch (error: any) {
         return { recipientId: recipient.id, error: error.message };

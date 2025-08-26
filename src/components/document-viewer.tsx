@@ -69,9 +69,11 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     
     // Handle Google Drive preview links for PVs
     if (docType === 'gdrive-pdf') {
+         // Transform the webViewLink into an embeddable preview link
+         const embeddableUrl = url.replace("/view?usp=drivesdk", "/preview");
          return (
             <div className="w-full h-[80vh] mt-4 border rounded-md">
-                <iframe src={url} style={{ width: '100%', height: '100%', border: 'none' }} title="Google Drive PDF Preview" />
+                <iframe src={embeddableUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="Google Drive PDF Preview" />
             </div>
         );
     }
