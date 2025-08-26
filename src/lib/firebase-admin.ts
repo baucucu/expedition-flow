@@ -12,7 +12,7 @@ if (!admin.apps.length) {
     const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      storageBucket: 'expeditionflow.firebasestorage.app'
+      storageBucket: 'expeditionflow.appspot.com'
     });
   } else {
     // In a real app, you might want to throw an error or handle this differently.
