@@ -7,18 +7,9 @@ import { createAwb } from "@/services/sameday";
 
 export const generateSamedayAwb = task({
   id: "generate-sameday-awb",
-  // Optional: Configure retries for transient errors
-  retries: {
-    maxAttempts: 3,
-    minTimeoutInMs: 2000,
-    maxTimeoutInMs: 30000,
-    factor: 2,
-  },
-  // The payload schema, ensures type safety
   payload: z.object({
     awbId: z.string(),
   }),
-
   run: async (payload, { ctx }) => {
     const { awbId } = payload;
     logger.log(`Starting AWB generation for awbId: ${awbId}`, { awbId });
