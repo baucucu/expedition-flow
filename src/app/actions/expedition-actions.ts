@@ -2,7 +2,6 @@
 "use server";
 
 import { mapFields } from "@/ai/flows/field-mapper";
-import { generateAwb } from "@/ai/flows/awb-generator";
 import { generateProcesVerbal } from "@/ai/flows/pv-generator";
 import { testSamedayAwbGeneration } from "@/ai/flows/sameday-test-awb-generator";
 import { z } from "zod";
@@ -179,26 +178,6 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
         return { success: false, error: `Failed to save data to the database: ${error.message}` };
     }
 }
-
-// Action for legacy SelfAWB Generation
-const generateAwbActionInputSchema = z.object({
-  shipmentIds: z.array(z.string()),
-});
-
-export async function generateAwbAction(input: { shipmentIds: string[] }) {
-    const validatedInput = generateAwbActionInputSchema.safeParse(input);
-    if (!validatedInput.success) {
-        return { success: false, message: "Invalid input for AWB generation." };
-    }
-    try {
-        const output = await generateAwb(validatedInput.data);
-        return { success: output.success, message: output.message, details: output.details };
-    } catch (error: any) {
-        console.error("Error in generateAwb flow:", error);
-        return { success: false, message: `Failed to generate AWBs due to a server error: ${error.message}` };
-    }
-}
-
 
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
@@ -405,3 +384,5 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
+
+    
