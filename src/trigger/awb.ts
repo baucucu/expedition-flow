@@ -7,8 +7,6 @@ import { createAwb } from "@/services/sameday";
 
 export const generateSamedayAwb = task({
   id: "generate-sameday-awb",
-  // Optional: Set a timeout to prevent tasks from running indefinitely
-  maxDuration: 300, // 5 minutes
   // Optional: Configure retries for transient errors
   retries: {
     maxAttempts: 3,
