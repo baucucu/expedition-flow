@@ -246,7 +246,7 @@ export async function uploadStaticFileAction(formData: FormData) {
         
         const filePath = `static/${fileType}/${file.name}`;
         
-        const bucket = adminApp.storage().bucket('expeditionflow.appspot.com');
+        const bucket = adminApp.storage().bucket();
         const storageFile = bucket.file(filePath);
 
         const fileBuffer = await file.arrayBuffer();
@@ -271,7 +271,7 @@ export async function uploadStaticFileAction(formData: FormData) {
 // Action to get status of static files
 export async function getStaticFilesStatusAction() {
     try {
-        const bucket = adminApp.storage().bucket('expeditionflow.appspot.com');
+        const bucket = adminApp.storage().bucket();
         const statuses: Record<string, {name: string, url: string} | null> = {};
         const fileTypes = ['inventory', 'instructions'];
 
@@ -385,3 +385,5 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
+
+    
