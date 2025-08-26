@@ -21,6 +21,7 @@ import {
   Send,
   FileText,
   FileSignature,
+  Hourglass,
 } from "lucide-react";
 import {
   Sheet,
@@ -42,8 +43,8 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB } from "@/types";
-import { generateAwbAction, generateProcesVerbalAction } from "@/app/actions/expedition-actions";
+import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus } from "@/types";
+import { generateProcesVerbalAction, queueAwbGenerationAction } from "@/app/actions/expedition-actions";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
 
@@ -54,6 +55,14 @@ const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary
   Completed: "default",
   Returned: "destructive",
 };
+
+const awbStatusVariant: { [key in AWBStatus]: "default" | "secondary" | "outline" | "destructive" } = {
+  New: "outline",
+  Queued: "secondary",
+  Generated: "default",
+  Failed: "destructive",
+};
+
 
 type RecipientRow = Recipient & { expeditionId: string; awb?: AWB, expeditionStatus: ExpeditionStatus };
 
@@ -100,7 +109,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [inputValue, setInputValue] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [isGeneratingAwb, setIsGeneratingAwb] = React.useState(false);
+  const [isQueuingAwb, setIsQueuingAwb] = React.useState(false);
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const { toast } = useToast();
 
@@ -134,7 +143,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
-  const handleGenerateAwbs = async () => {
+  const handleQueueAwbs = async () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) {
         toast({
@@ -145,38 +154,38 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         return;
     }
 
-    // Get unique shipment IDs from selected rows that are ready for AWB
-    const shipmentIdsToProcess = [...new Set(
+    const awbIdsToProcess = [
+      ...new Set(
         selectedRows
-            .map(row => row.original)
-            .filter(recipient => recipient.expeditionStatus === 'Ready for AWB')
-            .map(recipient => recipient.expeditionId)
-    )];
+          .map((row) => row.original.awb?.id)
+          .filter((id): id is string => !!id)
+      ),
+    ];
 
 
-    if (shipmentIdsToProcess.length === 0) {
+    if (awbIdsToProcess.length === 0) {
         toast({
             variant: "destructive",
-            title: "No Shipments Ready",
-            description: "None of the selected recipients belong to a shipment that is 'Ready for AWB'.",
+            title: "No valid AWBs found",
+            description: "Could not find AWB information for the selected recipients.",
         });
         return;
     }
 
-    setIsGeneratingAwb(true);
-    const result = await generateAwbAction({ shipmentIds: shipmentIdsToProcess });
-    setIsGeneratingAwb(false);
+    setIsQueuingAwb(true);
+    const result = await queueAwbGenerationAction({ awbIds: awbIdsToProcess });
+    setIsQueuingAwb(false);
     
     if (result.success) {
         toast({
-            title: "AWB Generation Started",
+            title: "AWB Generation Queued",
             description: result.message,
         });
         table.resetRowSelection(); // Clear selection after action
     } else {
         toast({
             variant: "destructive",
-            title: "AWB Generation Failed",
+            title: "Failed to Queue AWB Generation",
             description: result.message,
         });
     }
@@ -278,9 +287,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       },
     },
     {
-        accessorKey: "awb.mainRecipientName",
-        header: "AWB Name",
-        cell: ({ row }) => row.original.awb?.mainRecipientName ?? <span className="text-muted-foreground">N/A</span>,
+        accessorKey: "awb.status",
+        header: "AWB Status",
+        cell: ({ row }) => {
+            const status: AWBStatus = row.original.awb?.status ?? 'New';
+            return (
+              <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
+                {status}
+              </Badge>
+            );
+        },
     },
     {
         id: "documents",
@@ -428,12 +444,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 }
              </Button>
              <Button 
-                onClick={handleGenerateAwbs} 
-                disabled={isGeneratingAwb || selectedRowCount === 0}
+                onClick={handleQueueAwbs} 
+                disabled={isQueuingAwb || selectedRowCount === 0}
             >
-                {isGeneratingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                {isGeneratingAwb 
-                    ? 'Generating...' 
+                {isQueuingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Hourglass className="mr-2 h-4 w-4" />}
+                {isQueuingAwb 
+                    ? 'Queuing...' 
                     : `Generate AWB(s) for ${selectedRowCount} selected`
                 }
             </Button>

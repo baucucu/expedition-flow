@@ -7,9 +7,10 @@ import { generateProcesVerbal } from "@/ai/flows/pv-generator";
 import { testSamedayAwbGeneration } from "@/ai/flows/sameday-test-awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc } from "firebase/firestore";
+import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc, where } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
 import { adminApp } from "@/lib/firebase-admin";
+import { trigger } from "@/trigger/client";
 
 // Action for Field Mapping
 const mapFieldsActionInputSchema = z.object({
@@ -89,6 +90,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
             const awbData: Partial<AWB> = {
                 id: awbId,
                 shipmentId: shipmentId,
+                status: "New",
                 mainRecipientName: firstRow[reverseMapping['awbName']],
                 mainRecipientTelephone: firstRow[reverseMapping['awbTelephone']],
                 parcelCount: firstRow[reverseMapping['parcelCount']],
@@ -178,7 +180,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
     }
 }
 
-// Action for AWB Generation
+// Action for legacy SelfAWB Generation
 const generateAwbActionInputSchema = z.object({
   shipmentIds: z.array(z.string()),
 });
@@ -354,5 +356,52 @@ export async function testSamedayAwbAction() {
     } catch (error: any) {
         console.error("Error in testSamedayAwbGeneration flow:", error);
         return { success: false, error: `Failed to call Sameday API: ${error.message}` };
+    }
+}
+
+// Action for Queuing AWB Generation
+const queueAwbGenerationActionInputSchema = z.object({
+  awbIds: z.array(z.string()),
+});
+
+export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
+    const validatedInput = queueAwbGenerationActionInputSchema.safeParse(input);
+    if (!validatedInput.success) {
+        return { success: false, message: "Invalid input for queueing AWB generation." };
+    }
+
+    const { awbIds } = validatedInput.data;
+
+    try {
+        const batch = writeBatch(db);
+        const events = [];
+
+        // 1. Mark AWBs as 'Queued' in Firestore
+        for (const awbId of awbIds) {
+            const awbRef = doc(db, "awbs", awbId);
+            batch.update(awbRef, { status: "Queued" });
+            
+            // 2. Prepare the event for Trigger.dev
+            events.push({
+                name: "generate.sameday.awb",
+                payload: { awbId },
+            });
+        }
+        
+        await batch.commit();
+
+        // 3. Send all events to Trigger.dev in a single call
+        if (events.length > 0) {
+            await trigger.sendEvents(events);
+        }
+
+        return { 
+            success: true, 
+            message: `Successfully queued ${awbIds.length} AWB generation tasks.`
+        };
+
+    } catch (error: any) {
+        console.error("Error queueing AWB generation:", error);
+        return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
