@@ -9,7 +9,9 @@ import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc, where } from "firebase/firestore";
 import type { Recipient, Expedition, AWB } from "@/types";
 import { adminApp } from "@/lib/firebase-admin";
-import { trigger } from "@/trigger/client";
+import { tasks } from "@trigger.dev/sdk";
+import type { generateSamedayAwb } from "@/trigger/awb";
+
 
 // Action for Field Mapping
 const mapFieldsActionInputSchema = z.object({
@@ -353,25 +355,22 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
 
     try {
         const batch = writeBatch(db);
-        const events = [];
-
+        
         // 1. Mark AWBs as 'Queued' in Firestore
         for (const awbId of awbIds) {
             const awbRef = doc(db, "awbs", awbId);
             batch.update(awbRef, { status: "Queued" });
-            
-            // 2. Prepare the event for Trigger.dev
-            events.push({
-                name: "generate.sameday.awb",
-                payload: { awbId },
-            });
         }
-        
         await batch.commit();
+
+        // 2. Prepare the events for Trigger.dev
+        const events = awbIds.map(awbId => ({
+            payload: { awbId },
+        }));
 
         // 3. Send all events to Trigger.dev in a single call
         if (events.length > 0) {
-            await trigger.sendEvents(events);
+            await tasks.batchTrigger<typeof generateSamedayAwb>("generate-sameday-awb", events);
         }
 
         return { 
@@ -384,5 +383,3 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
-
-    
