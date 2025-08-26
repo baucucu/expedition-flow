@@ -1,4 +1,5 @@
 
+
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV';
 export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed';
 
@@ -12,6 +13,7 @@ export type RecipientStatus =
 export type ExpeditionStatus = 
   | 'New'
   | 'Ready for AWB'
+  | 'AWB Generation Queued'
   | 'AWB Generated'
   | 'AWB Generation Failed'
   | 'Sent to Logistics'
@@ -52,6 +54,8 @@ export interface Recipient {
   postalCode?: string;
 }
 
+export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed';
+
 export interface AWB {
     id: string; // Firestore auto-generated ID
     shipmentId: string;
@@ -60,6 +64,8 @@ export interface AWB {
     mainRecipientTelephone?: string; // Nr_tel_awb
     parcelCount?: number; // parcel_count
     packageSize?: string; // TIP CUTIE
+    status?: AWBStatus;
+    error?: string;
 }
 
 export interface Expedition {
