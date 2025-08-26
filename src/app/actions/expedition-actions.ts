@@ -4,6 +4,7 @@
 import { mapFields } from "@/ai/flows/field-mapper";
 import { generateAwb } from "@/ai/flows/awb-generator";
 import { generateProcesVerbal } from "@/ai/flows/pv-generator";
+import { testSamedayAwbGeneration } from "@/ai/flows/sameday-test-awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc } from "firebase/firestore";
@@ -342,5 +343,16 @@ export async function generateProcesVerbalAction(input: z.infer<typeof generateP
     } catch (error: any) {
         console.error("Error in generateProcesVerbal flow:", error);
         return { success: false, message: `Failed to start PV generation due to a server error: ${error.message}` };
+    }
+}
+
+// Action for testing Sameday AWB generation
+export async function testSamedayAwbAction() {
+    try {
+        const output = await testSamedayAwbGeneration();
+        return { success: true, data: output };
+    } catch (error: any) {
+        console.error("Error in testSamedayAwbGeneration flow:", error);
+        return { success: false, error: `Failed to call Sameday API: ${error.message}` };
     }
 }
