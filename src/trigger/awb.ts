@@ -1,5 +1,5 @@
 
-import { task, logger } from "@trigger.dev/sdk/v3";
+import { task, logger } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
