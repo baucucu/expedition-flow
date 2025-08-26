@@ -1,8 +1,8 @@
 
 import { z } from 'zod';
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
-import type { AWB, Recipient } from "@/types";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import type { AWB } from "@/types";
 
 const SAMEDAY_API_URL = process.env.SAMEDAY_API_URL || 'https://sameday-api.demo.zitec.com/api';
 const SAMEDAY_API_TOKEN = process.env.SAMEDAY_API_TOKEN;
@@ -123,24 +123,16 @@ export async function createAwb(awbId: string): Promise<z.infer<typeof SamedayAw
     }
     const awbData = awbSnap.data() as AWB;
 
-    const recipientsQuery = query(collection(db, "recipients"), where("awbId", "==", awbId));
-    const recipientsSnapshot = await getDocs(recipientsQuery);
-     if (recipientsSnapshot.empty) {
-        throw new Error(`No recipients found for AWB ID ${awbId}.`);
-    }
-    // We assume the first recipient holds the primary address info for the AWB.
-    const recipientData = recipientsSnapshot.docs[0].data() as Recipient;
-
-    // 2. Get County & City IDs
-    const countyId = await getCountyId(recipientData.county || 'Bucuresti'); // Default for safety
-    const cityId = await getCityId(recipientData.city || 'Bucuresti', countyId);
+    // 2. Get County & City IDs from the AWB data
+    const countyId = await getCountyId(awbData.county || 'Bucuresti'); // Default for safety
+    const cityId = await getCityId(awbData.city || 'Bucuresti', countyId);
 
     // 3. Build the request payload
     // Using hardcoded values from your example for now.
     // These should ideally come from configuration or the expedition data.
     const requestData: z.infer<typeof SamedayAwbRequestSchema> = {
         packageType: 0,
-        clientInternalReference: recipientData.id,
+        clientInternalReference: awbData.id,
         cashOnDelivery: 0,
         insuredValue: 0,
         packageNumber: awbData.parcelCount || 1,
@@ -159,11 +151,11 @@ export async function createAwb(awbId: string): Promise<z.infer<typeof SamedayAw
         awbRecipient: {
             county: countyId,
             city: cityId,
-            name: recipientData.name,
-            address: recipientData.address,
-            phoneNumber: recipientData.telephone || '0000000000',
-            postalCode: recipientData.postalCode,
-            email: recipientData.email,
+            name: awbData.mainRecipientName,
+            address: awbData.address,
+            phoneNumber: awbData.mainRecipientTelephone || '0000000000',
+            postalCode: awbData.postalCode,
+            email: awbData.mainRecipientEmail,
             personType: 0,
         },
     };

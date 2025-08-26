@@ -36,7 +36,6 @@ export interface Recipient {
   shipmentId: string; // id_unic_expeditie
   awbId: string; // The ID of the AWB document this recipient belongs to
   name: string; // Nume și prenume
-  address: string;
   status: RecipientStatus;
   documents: {
     'instructiuni pentru confirmarea primirii coletului': Document;
@@ -45,13 +44,10 @@ export interface Recipient {
   pvId?: string; // Google Drive document ID for the Proces Verbal
   pvUrl?: string; // webViewLink for the Google Drive Proces Verbal
   group?: string;
-  county?: string;
-  city?: string;
   schoolName?: string; // from 'location'
   schoolUniqueName?: string; // from 'COD UNIC'
   email?: string;
   telephone?: string; // from 'phone'
-  postalCode?: string;
 }
 
 export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed';
@@ -62,10 +58,17 @@ export interface AWB {
     awbNumber?: string; // The number received from the courier API
     mainRecipientName: string; // Nume_awb
     mainRecipientTelephone?: string; // Nr_tel_awb
+    mainRecipientEmail?: string;
     parcelCount?: number; // parcel_count
     packageSize?: string; // TIP CUTIE
-    status?: AWBStatus;
-    error?: string;
+    status: AWBStatus;
+    error?: string | null;
+
+    // Address fields moved from Recipient
+    address: string;
+    city: string;
+    county: string;
+    postalCode?: string;
 }
 
 export interface Expedition {
@@ -75,5 +78,3 @@ export interface Expedition {
   awbCount: number;
   createdAt: any; // Firestore serverTimestamp
 }
-
-    

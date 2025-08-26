@@ -10,7 +10,6 @@ import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, s
 import type { Recipient, Expedition, AWB } from "@/types";
 import { adminApp } from "@/lib/firebase-admin";
 import { tasks } from "@trigger.dev/sdk";
-import type { generateSamedayAwb } from "@/trigger/awb";
 
 
 // Action for Field Mapping
@@ -94,8 +93,13 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                 status: "New",
                 mainRecipientName: firstRow[reverseMapping['awbName']],
                 mainRecipientTelephone: firstRow[reverseMapping['awbTelephone']],
-                parcelCount: recipientRows.length, // The number of recipients/parcels in this consolidated AWB
+                mainRecipientEmail: firstRow[reverseMapping['email']],
+                parcelCount: recipientRows.length,
                 packageSize: firstRow[reverseMapping['packageSize']],
+                address: firstRow[reverseMapping['address']],
+                city: firstRow[reverseMapping['city']],
+                county: firstRow[reverseMapping['county']],
+                postalCode: firstRow[reverseMapping['postalCode']],
             };
             
             // Clean undefined fields from AWB data
@@ -104,7 +108,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                 if (awbData[K] === undefined) delete awbData[K];
             });
 
-            batch.set(awbRef, awbData);
+            batch.set(awbRef, awbData as AWB);
 
             // Update shipments map
             if (!shipmentsMap.has(shipmentId)) {
@@ -118,21 +122,17 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                 const recipientId = String(row[reverseMapping['recipientId']]);
                 const recipientRef = doc(db, "recipients", recipientId);
 
-                const recipientData: Omit<Recipient, 'items' | 'documents'> & { documents?: any } = {
+                const recipientData: Partial<Omit<Recipient, 'documents'>> & { documents?: any } = {
                     id: recipientId,
                     shipmentId: shipmentId,
                     awbId: awbId,
                     name: row[reverseMapping['name']],
-                    address: row[reverseMapping['address']],
                     status: 'New',
                     group: row[reverseMapping['group']],
-                    county: row[reverseMapping['county']],
-                    city: row[reverseMapping['city']],
                     schoolName: row[reverseMapping['schoolName']],
                     schoolUniqueName: row[reverseMapping['schoolUniqueName']],
                     email: row[reverseMapping['email']],
                     telephone: row[reverseMapping['telephone']],
-                    postalCode: row[reverseMapping['postalCode']],
                 };
 
                 // Add default document structure
@@ -371,7 +371,7 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
 
         // 3. Send all events to Trigger.dev in a single call
         if (events.length > 0) {
-            await tasks.triggerBatch(events);
+            await tasks.batchTrigger(events);
         }
 
         return { 
@@ -384,5 +384,3 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
-
-    
