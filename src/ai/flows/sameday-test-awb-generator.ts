@@ -37,11 +37,9 @@ const testSamedayAwbGenerationFlow = ai.defineFlow(
     try {
         const body = new URLSearchParams();
         body.append('packageType', '0');
-        body.append('clientInternalReference', '1234');
+        body.append('clientInternalReference', '12345');
         body.append('cashOnDelivery', '0');
         body.append('insuredValue', '0');
-        body.append('parcels', JSON.stringify({ "width": "30", "length": "30", "height": "30", "weight": "1" }));
-        body.append('awbRecipient', JSON.stringify({ "name": "Alexandru Raduca", "address": "Ion Brezoianu 60, apt.27", "phoneNumber": "0754832167", "postalCode": "010139", "countyString": "Sector 4", "cityString": "Bucuresti", "email": "alexandru.raduca@gmail.com", "personType": "0" }));
         body.append('packageNumber', '1');
         body.append('pickupPoint', '4241');
         body.append('service', '7');
@@ -50,7 +48,29 @@ const testSamedayAwbGenerationFlow = ai.defineFlow(
         body.append('awbPayment', '1');
         body.append('thirdPartyPickup', '0');
         body.append('packageWeight', '1');
+
+        // optional but sometimes required
+        body.append('orderNumber', '12345-1');
+        body.append('observation', 'A');
+        body.append('priceObservation', 'B');
+        body.append('clientObservation', 'C');
         
+        // Flatten parcels
+        body.append('parcels[0][width]', '30');
+        body.append('parcels[0][length]', '30');
+        body.append('parcels[0][height]', '30');
+        body.append('parcels[0][weight]', '1');
+
+        // Flatten awbRecipient
+        body.append('awbRecipient[county]', '14');
+        body.append('awbRecipient[city]', '5479');
+        body.append('awbRecipient[name]', 'Alexandru Raduca');
+        body.append('awbRecipient[address]', 'Ion Brezoianu 60, apt.27');
+        body.append('awbRecipient[phoneNumber]', '0754832167');
+        body.append('awbRecipient[postalCode]', '077005');
+        body.append('awbRecipient[email]', 'alexandru.raduca@gmail.com');
+        body.append('awbRecipient[personType]', '0');
+
         const response = await fetch(SAMEDAY_API_URL, {
             method: 'POST',
             headers: {
