@@ -97,6 +97,7 @@ export default function Home() {
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => !!r.pvUrl).length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.documents?.['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.documents?.['parcel inventory']?.status === 'Generated').length;
+    const awbGeneratedCount = awbs.filter(awb => !!awb.awbNumber).length;
 
     
     return {
@@ -112,7 +113,7 @@ export default function Home() {
             ]
         },
         awbGenerated: {
-            value: expeditions.filter(e => e.status === 'AWB Generated').length,
+            value: awbGeneratedCount,
             footerText: `${awbGenerationFailedCount} errors`,
             errorCount: awbGenerationFailedCount
         },
@@ -134,7 +135,7 @@ export default function Home() {
             value: allRecipientsWithFullData.filter(r => r.status === 'Completed').length,
         }
     }
-  }, [allRecipientsWithFullData, expeditions]);
+  }, [allRecipientsWithFullData, expeditions, awbs]);
 
   const filteredRecipients = useMemo(() => {
     if (!activeFilter || activeFilter === 'Total') return allRecipientsWithFullData;
@@ -188,9 +189,14 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => r.status === recipientStatus);
     }
 
+    if (activeFilter === 'AWB Generated') {
+        const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awbNumber).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => generatedAwbIds.has(r.awbId));
+    }
+
     const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
     return allRecipientsWithFullData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
-  }, [activeFilter, allRecipientsWithFullData, expeditions]);
+  }, [activeFilter, allRecipientsWithFullData, expeditions, awbs]);
 
   if (authLoading || loading || !user) {
     return (
