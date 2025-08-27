@@ -8,7 +8,7 @@ import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc, where, updateDoc } from "firebase/firestore";
 import { adminApp } from "@/lib/firebase-admin";
-import { triggerClient } from "@/trigger/client";
+import { tasks } from "@trigger.dev/sdk";
 
 
 // Action for Field Mapping
@@ -383,7 +383,7 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
 
         // 3. Send all events to Trigger.dev in a single call
         if (events.length > 0) {
-            await triggerClient.batchTrigger(events);
+            await tasks.batchTrigger(events);
         }
 
         return { 
