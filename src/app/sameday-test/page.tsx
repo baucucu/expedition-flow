@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
 import { Loader2, TestTube2 } from 'lucide-react';
-import { testSamedayAwbAction } from '@/app/actions/expedition-actions';
+import { testSamedayAwbAction } from '@/app/actions/awb-actions';
 
 export default function SamedayTestPage() {
   const [isLoading, setIsLoading] = useState(false);

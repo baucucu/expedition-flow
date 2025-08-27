@@ -13,9 +13,9 @@ import { AppHeader } from '@/components/header';
 import { ArrowLeft, FileUp, Loader2, ChevronsRight, Sparkles } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createExpeditionFromImport } from '@/app/actions/expedition-actions';
-import type { FieldMapperInput } from '@/app/actions/expedition-actions';
-import { mapFieldsAction } from '@/app/actions/expedition-actions';
+import { createExpeditionFromImport } from '@/app/actions/import-actions';
+import type { FieldMapperInput } from '@/app/actions/import-actions';
+import { mapFieldsAction } from '@/app/actions/import-actions';
 
 type ParsedRow = Record<string, string | number>;
 type ColumnMapping = Record<string, string>;

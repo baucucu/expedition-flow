@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
 import { ArrowLeft, FileScan, Loader2, Upload, FileCheck2, AlertCircle, ExternalLink, FileQuestion, RefreshCcw } from 'lucide-react';
-import { updateRecipientDocumentsAction, uploadStaticFileAction, getStaticFilesStatusAction } from '@/app/actions/expedition-actions';
+import { updateRecipientDocumentsAction, uploadStaticFileAction, getStaticFilesStatusAction } from '@/app/actions/document-actions';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 

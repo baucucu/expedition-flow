@@ -44,7 +44,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus } from "@/types";
-import { generateProcesVerbalAction, queueShipmentAwbGenerationAction } from "@/app/actions/expedition-actions";
+import { generateProcesVerbalAction } from "@/app/actions/document-actions";
+import { queueShipmentAwbGenerationAction } from "@/app/actions/awb-actions";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
 
