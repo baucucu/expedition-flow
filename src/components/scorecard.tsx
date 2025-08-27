@@ -67,8 +67,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
       onClick={onClick}
       className={cn(
         "cursor-pointer transition-all hover:shadow-md flex flex-col justify-between",
-        isActive && `ring-2 ${ringClass} shadow-lg`,
-        isMultiKpi && "col-span-2"
+        isActive && `ring-2 ${ringClass} shadow-lg`
       )}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
