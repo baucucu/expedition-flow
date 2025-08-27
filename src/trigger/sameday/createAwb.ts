@@ -11,7 +11,7 @@ const ShipmentSchema = z.object({
     address: z.string(),
     mainRecipientTelephone: z.string().regex(/^\d+$/, "Must be numeric"),
     postalCode: z.string(), // could also regex: /^\d{6}$/
-    status: z.enum(["New", "Pending", "Delivered", "Cancelled"]).default("New"),
+    status: z.enum(["New", "Pending", "Delivered", "Cancelled", "Queued", "AWB_CREATED"]).default("New"),
     id: z.string(),
     parcelCount: z.number(),
     countyId: z.string(), // could be number but sample shows string
