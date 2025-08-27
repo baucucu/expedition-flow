@@ -46,7 +46,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   }
   
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* --- Top Row --- */}
       <Scorecard
         title="Total Shipments"
         value={counts.totalExpeditions.value}
@@ -92,6 +93,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         isActive={isFilterActive('Sent to Logistics', 'EmailFailed')}
         isFooterActive={activeFilter === 'EmailFailed'}
       />
+
+      {/* --- Bottom Row --- */}
       <Scorecard
         title="In Transit"
         value={counts.inTransit.value}
@@ -106,6 +109,13 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         onClick={() => setActiveFilter('Delivered')}
         isActive={activeFilter === 'Delivered'}
       />
+       <Scorecard
+        title="Completed"
+        value={counts.completed.value}
+        icon={CheckCircle2}
+        onClick={() => setActiveFilter('CompletedRecipients')}
+        isActive={activeFilter === 'CompletedRecipients'}
+      />
       <Scorecard
         title="Issues"
         value={counts.issues.value}
@@ -113,13 +123,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         onClick={() => setActiveFilter('Issues')}
         isActive={activeFilter === 'Issues'}
         variant="destructive"
-      />
-      <Scorecard
-        title="Completed"
-        value={counts.completed.value}
-        icon={CheckCircle2}
-        onClick={() => setActiveFilter('CompletedRecipients')}
-        isActive={activeFilter === 'CompletedRecipients'}
       />
     </div>
   );
