@@ -1,6 +1,6 @@
 
 
-export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV';
+export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV' | 'AWB';
 export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed';
 
 export type RecipientStatus = 
@@ -48,6 +48,8 @@ export interface Recipient {
   schoolUniqueName?: string; // from 'COD UNIC'
   email?: string;
   telephone?: string; // from 'phone'
+  awbWebviewUrl?: string;
+  awbPdfFileId?: string;
 }
 
 export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed';

@@ -5,6 +5,7 @@ import {searchCity} from "@/trigger/sameday/searchCity";
 import {createAwb} from "@/trigger/sameday/createAwb";
 import {updateDb} from "@/trigger/sameday/updateDb";
 import {addAwbToDrive} from "@/trigger/sameday/addAwbToDrive";
+import {updateAwbPdfToDb} from "@/trigger/sameday/updateAwbPdfToDb";
 
 type AwbGeneratorPayload = {
   shipmentId: string;
@@ -47,6 +48,14 @@ export const awbGenerator = task({
     })
     const addAwbToDriveResponse = await runs.retrieve(addAwbToDriveRun.id)
     console.log("Received addAwbToDriveResponse: ",addAwbToDriveResponse.output)
+
+    const updateAwbPdfToDbRun = awaitupdateAwbPdfToDb.triggerAndWait({
+      shipmentId: payload.shipmentId,
+      awbNumber: createAwbResponse.output.awbNumber,
+      recipients: addAwbToDriveResponse.output.results
+    })
+    const updateAwbPdfToDbResponse = await runs.retrieve(updateAwbPdfToDbRun.id)
+    console.log("Received updateAwbPdfToDbResponse: ",updateAwbPdfToDbResponse.output)
 
     return true;
   },
