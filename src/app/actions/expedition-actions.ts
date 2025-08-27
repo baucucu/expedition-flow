@@ -357,6 +357,10 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
     }
 
     const { awbsToQueue } = validatedInput.data;
+
+    if (!awbsToQueue || !Array.isArray(awbsToQueue)) {
+        return { success: false, message: "Internal error: awbsToQueue is not a valid array." };
+    }
     
     // Get unique shipment IDs
     const shipmentIds = [...new Set(awbsToQueue.map(item => item.shipmentId))];
@@ -392,5 +396,3 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
-
-    
