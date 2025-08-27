@@ -47,7 +47,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-      {/* --- Top Row --- */}
+      {/* --- Top Row: Preparation & Hand-off --- */}
       <Scorecard
         title="Total Shipments"
         value={counts.totalExpeditions.value}
@@ -61,7 +61,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         title="Docs Generated"
         kpis={counts.docsGenerated.kpis}
         icon={FileCheck2}
-        onClick={() => setActiveFilter('Total')}
+        onClick={() => setActiveFilter('Total')} // Main card click can be neutral
         isActive={isFilterActive('PV') || isFilterActive('Inventory') || isFilterActive('Instructions')}
         onKpiClick={(label) => {
             if (label === 'PVs') setActiveFilter('PV');
@@ -94,7 +94,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         isFooterActive={activeFilter === 'EmailFailed'}
       />
 
-      {/* --- Bottom Row --- */}
+      {/* --- Bottom Row: Tracking & Completion --- */}
       <Scorecard
         title="In Transit"
         value={counts.inTransit.value}
