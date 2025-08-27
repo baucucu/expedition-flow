@@ -4,7 +4,7 @@
 import React from 'react';
 import {
   Box,
-  FilePlus2,
+  FileCheck2,
   Hourglass,
   Send,
   Truck,
@@ -12,24 +12,20 @@ import {
   AlertTriangle,
   CheckCircle2,
   Users,
-  FileText,
-  FileSliders,
-  ClipboardList
 } from 'lucide-react';
-import { Scorecard } from './scorecard';
+import { Scorecard, type Kpi } from './scorecard';
 import type { FilterStatus } from '@/app/page';
 
 interface ScorecardInfo {
-    value: number;
+    value?: number;
+    kpis?: Kpi[];
     footerText?: string;
     errorCount?: number;
 }
 
 export interface ScorecardData {
   totalExpeditions: ScorecardInfo;
-  pvGenerated: ScorecardInfo;
-  inventoryGenerated: ScorecardInfo;
-  instructionsGenerated: ScorecardInfo;
+  docsGenerated: ScorecardInfo;
   awbGenerated: ScorecardInfo;
   sentToLogistics: ScorecardInfo;
   inTransit: ScorecardInfo;
@@ -50,7 +46,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   }
   
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8">
       <Scorecard
         title="Total Shipments"
         value={counts.totalExpeditions.value}
@@ -61,26 +57,17 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         isActive={activeFilter === 'Total'}
       />
        <Scorecard
-        title="PV Generated"
-        value={counts.pvGenerated.value}
-        icon={FileText}
-        onClick={() => setActiveFilter('PV')}
-        isActive={isFilterActive('PV')}
-      />
-       <Scorecard
-        title="Inventory Linked"
-        value={counts.inventoryGenerated.value}
-        icon={FileSliders}
-        onClick={() => setActiveFilter('Inventory')}
-        isActive={isFilterActive('Inventory')}
-      />
-       <Scorecard
-        title="Instructions Linked"
-        value={counts.instructionsGenerated.value}
-        icon={ClipboardList}
-        onClick={() => setActiveFilter('Instructions')}
-        isActive={isFilterActive('Instructions')}
-      />
+        title="Docs Generated"
+        kpis={counts.docsGenerated.kpis}
+        icon={FileCheck2}
+        onClick={() => setActiveFilter('Total')}
+        isActive={isFilterActive('PV') || isFilterActive('Inventory') || isFilterActive('Instructions')}
+        onKpiClick={(label) => {
+            if (label === 'PVs') setActiveFilter('PV');
+            if (label === 'Inventories') setActiveFilter('Inventory');
+            if (label === 'Instructions') setActiveFilter('Instructions');
+        }}
+       />
       <Scorecard
         title="AWB Generated"
         value={counts.awbGenerated.value}

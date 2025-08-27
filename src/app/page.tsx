@@ -104,14 +104,12 @@ export default function Home() {
             value: expeditions.length,
             footerText: `${allRecipientsWithFullData.length} recipients`
         },
-        pvGenerated: {
-            value: pvGeneratedCount,
-        },
-        inventoryGenerated: {
-            value: inventoryGeneratedCount
-        },
-        instructionsGenerated: {
-            value: instructionsGeneratedCount
+        docsGenerated: {
+            kpis: [
+                { value: pvGeneratedCount, label: 'PVs' },
+                { value: inventoryGeneratedCount, label: 'Inventories' },
+                { value: instructionsGeneratedCount, label: 'Instructions' },
+            ]
         },
         awbGenerated: {
             value: expeditions.filter(e => e.status === 'AWB Generated').length,
