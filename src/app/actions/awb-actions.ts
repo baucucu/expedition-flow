@@ -54,14 +54,14 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
 
 
         // 2. Prepare the events for Trigger.dev for each unique shipment
-        const events = shipmentIds.map(shipmentId => ({
-            name: "awb-generator", // Task ID from src/trigger/awb.ts
+        const payloads = shipmentIds.map(shipmentId => ({
             payload: { shipmentId },
         }));
 
         // 3. Send all events to Trigger.dev in a single call
-        if (events.length > 0) {
-            await tasks.batchTrigger(events);
+        if (payloads.length > 0) {
+            // The first argument is the task ID, the second is an array of payloads.
+            await tasks.batchTrigger("awb-generator", payloads);
         }
 
         return { 
