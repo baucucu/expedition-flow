@@ -2961,3 +2961,99 @@
 [debug] [2025-08-27T12:21:47.662Z] >>> [apiv2][body] POST https://firestore.googleapis.com/v1/projects/expeditionflow/databases/(default)/documents:runQuery {"structuredQuery":{"from":[{"collectionId":"awbs","allDescendants":false}],"where":{"compositeFilter":{"op":"AND","filters":[]}},"limit":3},"explainOptions":{"analyze":true},"newTransaction":{"readOnly":{"readTime":"2025-08-27T12:21:47.661Z"}}}
 [debug] [2025-08-27T12:21:48.366Z] <<< [apiv2][status] POST https://firestore.googleapis.com/v1/projects/expeditionflow/databases/(default)/documents:runQuery 200
 [debug] [2025-08-27T12:21:48.368Z] <<< [apiv2][body] POST https://firestore.googleapis.com/v1/projects/expeditionflow/databases/(default)/documents:runQuery [{"transaction":"EVDghhPNCwtWIlkAj0wdw6R2h71AJxCFgOyHeHZk/0a1V7tLgLzCNeRpesuGkj7JwU326yWgNk+pKL2UmPcKXAu9lg6/nLGA/QYR1s6/64IgphY+JuMe1VlNVBAkKUeOPGNAiw=="},{"document":{"name":"projects/expeditionflow/databases/(default)/documents/awbs/3AGgTkjGk6aBy2OO8WMs","fields":{"id":{"stringValue":"3AGgTkjGk6aBy2OO8WMs"},"shipmentId":{"stringValue":"10995"},"mainRecipientName":{"stringValue":"RETEGAN ANDA MARIA"},"mainRecipientTelephone":{"stringValue":"0747081159"},"mainRecipientEmail":{"stringValue":"Anda.retegan@yahoo.com"},"parcelCount":{"integerValue":"4"},"packageSize":{"stringValue":"L"},"address":{"stringValue":"Str Tudor Vladimirescu, nr 143"},"city":{"stringValue":"Alba Iulia"},"county":{"stringValue":"Alba"},"postalCode":{"stringValue":"510189"},"deliveryLogisticLocation":{"stringValue":"AB_ALBAIULIA_A01---2/1---"},"sortingHubId":{"integerValue":"4"},"awbCost":{"doubleValue":22.31},"deliveryLogisticCircle":{"stringValue":"Resedinta"},"pdfLink":{"stringValue":"https://sameday-api.demo.zitec.com/api/awb/download/1EDU241376546"},"awbNumber":{"stringValue":"1EDU241376546"},"pickupLogisticLocation":{"stringValue":"B_BIGBROTHER_A01---3/19---"},"deliveryLogisticLocationId":{"integerValue":"7"},"pickupLogisticLocationId":{"integerValue":"1"},"sortingHub":{"stringValue":"B_HUB_H01"},"parcels":{"arrayValue":{"values":[{"mapValue":{"fields":{"position":{"integerValue":"1"},"awbNumber":{"stringValue":"1EDU241376546001"}}}}]}},"status":{"stringValue":"AWB_CREATED"},"updatedAt":{"timestampValue":"2025-08-27T07:15:21.308Z"}},"createTime":"2025-08-26T12:26:11.016714Z","updateTime":"2025-08-27T07:15:22.086967Z"},"readTime":"2025-08-27T12:21:47.661Z"},{"document":{"name":"projects/expeditionflow/databases/(default)/documents/awbs/qbd6YQlWTNT8mjB6dvhi","fields":{"id":{"stringValue":"qbd6YQlWTNT8mjB6dvhi"},"shipmentId":{"stringValue":"10861"},"status":{"stringValue":"New"},"mainRecipientName":{"stringValue":"Bordeu Georgeta"},"mainRecipientTelephone":{"stringValue":"0786912323"},"mainRecipientEmail":{"stringValue":"Getabordeu@yahoo.com"},"parcelCount":{"integerValue":"2"},"packageSize":{"stringValue":"M"},"address":{"stringValue":"str. Vasile Goldis, nr. 14B"},"city":{"stringValue":"Alba Iulia"},"county":{"stringValue":"Alba"},"postalCode":{"stringValue":"510006"}},"createTime":"2025-08-26T12:26:11.016714Z","updateTime":"2025-08-26T12:26:11.016714Z"},"readTime":"2025-08-27T12:21:47.661Z"},{"document":{"name":"projects/expeditionflow/databases/(default)/documents/awbs/uKQ1ZZgmAPwXLvNISioS","fields":{"id":{"stringValue":"uKQ1ZZgmAPwXLvNISioS"},"shipmentId":{"stringValue":"10689"},"status":{"stringValue":"New"},"mainRecipientName":{"stringValue":"Krizbai Negru Letiția Irina"},"mainRecipientTelephone":{"stringValue":"0751399535"},"mainRecipientEmail":{"stringValue":"krizbainegruirina@gmail.com"},"parcelCount":{"integerValue":"2"},"packageSize":{"stringValue":"M"},"address":{"stringValue":"Strada Energiei, nr. 21"},"city":{"stringValue":"Alba Iulia"},"county":{"stringValue":"Alba"},"postalCode":{"stringValue":"510057"}},"createTime":"2025-08-26T12:26:11.016714Z","updateTime":"2025-08-26T12:26:11.016714Z"},"readTime":"2025-08-27T12:21:47.661Z","explainMetrics":{"planSummary":{"indexesUsed":[{"properties":"(__name__ ASC)","query_scope":"Collection"}]},"executionStats":{"resultsReturned":"3","executionDuration":"0.012596s","readOperations":"3","debugStats":{"documents_scanned":"3","billing_details":{"index_entries_billable":"0","documents_billable":"3","min_query_cost":"0","small_ops":"0"},"index_entries_scanned":"3"}}}}]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-08-27T13:31:51.981Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:51.981Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:51.982Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:51.985Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:51.985Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.020Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.020Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.020Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.021Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.021Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.025Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.025Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.026Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.027Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.027Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.029Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.029Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.030Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.030Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.030Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-08-27T13:31:52.110Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.110Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.110Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.111Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.111Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.113Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.113Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.113Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.114Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.114Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.116Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.116Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.116Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.117Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.117Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.120Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.120Z] Checked if tokens are valid: false, expires at: 1756300197306
+[debug] [2025-08-27T13:31:52.120Z] > refreshing access token with scopes: []
+[debug] [2025-08-27T13:31:52.120Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-27T13:31:52.121Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.166Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.167Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.210Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [none]
+[debug] [2025-08-27T13:31:52.210Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.230Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.230Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.250Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-08-27T13:31:52.251Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.255Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.255Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.264Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [none]
+[debug] [2025-08-27T13:31:52.265Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.271Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.271Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.286Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [none]
+[debug] [2025-08-27T13:31:52.286Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.312Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.313Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.329Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [none]
+[debug] [2025-08-27T13:31:52.329Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.334Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.334Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.345Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-08-27T13:31:52.345Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.360Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.361Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.380Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [none]
+[debug] [2025-08-27T13:31:52.380Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.402Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-27T13:31:52.402Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-27T13:31:52.420Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [none]
+[debug] [2025-08-27T13:31:52.420Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ x-goog-quota-user=projects/expeditionflow
+[debug] [2025-08-27T13:31:52.971Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com 403
+[debug] [2025-08-27T13:31:52.972Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [omitted]
+[debug] [2025-08-27T13:31:53.054Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com 403
+[debug] [2025-08-27T13:31:53.054Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [omitted]
+[debug] [2025-08-27T13:31:53.137Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com 200
+[debug] [2025-08-27T13:31:53.137Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [omitted]
+[debug] [2025-08-27T13:31:53.152Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-08-27T13:31:53.152Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-08-27T13:31:53.234Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com 200
+[debug] [2025-08-27T13:31:53.234Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [omitted]
+[debug] [2025-08-27T13:31:53.243Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-08-27T13:31:53.243Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-08-27T13:31:53.509Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ 200
+[debug] [2025-08-27T13:31:53.511Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [omitted]
+[debug] [2025-08-27T13:31:53.561Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ 200
+[debug] [2025-08-27T13:31:53.561Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-08-27T13:31:53.573Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-08-27T13:31:53.573Z] > authorizing via signed-in user (alexandru.raduca@gmail.com)

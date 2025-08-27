@@ -52,7 +52,7 @@ export interface Recipient {
   awbPdfFileId?: string;
 }
 
-export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed';
+export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed' | 'AWB_CREATED';
 
 export interface AWB {
     id: string; // Firestore auto-generated ID

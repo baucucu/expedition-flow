@@ -44,7 +44,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus } from "@/types";
-import { generateProcesVerbalAction, queueAwbGenerationAction } from "@/app/actions/expedition-actions";
+import { generateProcesVerbalAction, queueShipmentAwbGenerationAction } from "@/app/actions/expedition-actions";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
 
@@ -60,6 +60,7 @@ const awbStatusVariant: { [key in AWBStatus]: "default" | "secondary" | "outline
   New: "outline",
   Queued: "secondary",
   Generated: "default",
+  "AWB_CREATED": "default",
   Failed: "destructive",
 };
 
@@ -149,31 +150,32 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         toast({
             variant: "destructive",
             title: "No Recipients Selected",
-            description: "Please select at least one recipient to generate an AWB for.",
+            description: "Please select at least one recipient to queue for AWB generation.",
         });
         return;
     }
 
-    const awbIdsToProcess = [
+    // From the selected recipients, get the unique shipment IDs
+    const shipmentIdsToProcess = [
       ...new Set(
         selectedRows
-          .map((row) => row.original.awb?.id)
+          .map((row) => row.original.expeditionId)
           .filter((id): id is string => !!id)
       ),
     ];
 
 
-    if (awbIdsToProcess.length === 0) {
+    if (shipmentIdsToProcess.length === 0) {
         toast({
             variant: "destructive",
-            title: "No valid AWBs found",
-            description: "Could not find AWB information for the selected recipients.",
+            title: "No valid shipments found",
+            description: "Could not find shipment information for the selected recipients.",
         });
         return;
     }
 
     setIsQueuingAwb(true);
-    const result = await queueAwbGenerationAction({ awbIds: awbIdsToProcess });
+    const result = await queueShipmentAwbGenerationAction({ shipmentIds: shipmentIdsToProcess });
     setIsQueuingAwb(false);
     
     if (result.success) {

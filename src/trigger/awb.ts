@@ -49,7 +49,7 @@ export const awbGenerator = task({
     const addAwbToDriveResponse = await runs.retrieve(addAwbToDriveRun.id)
     console.log("Received addAwbToDriveResponse: ",addAwbToDriveResponse.output)
 
-    const updateAwbPdfToDbRun = awaitupdateAwbPdfToDb.triggerAndWait({
+    const updateAwbPdfToDbRun = await updateAwbPdfToDb.triggerAndWait({
       shipmentId: payload.shipmentId,
       awbNumber: createAwbResponse.output.awbNumber,
       recipients: addAwbToDriveResponse.output.results

@@ -6,8 +6,7 @@ import { generateProcesVerbal } from "@/ai/flows/pv-generator";
 import { testSamedayAwbGeneration } from "@/ai/flows/sameday-test-awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc, where } from "firebase/firestore";
-import type { Recipient, Expedition, AWB } from "@/types";
+import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc, where, updateDoc } from "firebase/firestore";
 import { adminApp } from "@/lib/firebase-admin";
 import { tasks } from "@trigger.dev/sdk";
 
@@ -33,6 +32,7 @@ export async function mapFieldsAction(input: FieldMapperInput) {
     }
 }
 
+import type { Recipient, Expedition, AWB } from "@/types";
 // Action for Creating Expedition from Import
 const createExpeditionActionInputSchema = z.object({
     data: z.array(z.record(z.string(), z.any())),
@@ -341,33 +341,30 @@ export async function testSamedayAwbAction() {
     }
 }
 
-// Action for Queuing AWB Generation
-const queueAwbGenerationActionInputSchema = z.object({
-  awbIds: z.array(z.string()),
+// Action for Queuing Shipment AWB Generation with Trigger.dev
+const queueShipmentAwbGenerationActionInputSchema = z.object({
+  shipmentIds: z.array(z.string()),
 });
 
-export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
-    const validatedInput = queueAwbGenerationActionInputSchema.safeParse(input);
+export async function queueShipmentAwbGenerationAction(input: { shipmentIds: string[] }) {
+    const validatedInput = queueShipmentAwbGenerationActionInputSchema.safeParse(input);
     if (!validatedInput.success) {
         return { success: false, message: "Invalid input for queueing AWB generation." };
     }
 
-    const { awbIds } = validatedInput.data;
+    const { shipmentIds } = validatedInput.data;
 
     try {
-        const batch = writeBatch(db);
-        
-        // 1. Mark AWBs as 'Queued' in Firestore
-        for (const awbId of awbIds) {
-            const awbRef = doc(db, "awbs", awbId);
-            batch.update(awbRef, { status: "Queued" });
+        // 1. Mark Shipments as 'AWB Generation Queued' in Firestore
+        for (const shipmentId of shipmentIds) {
+            const shipmentRef = doc(db, "shipments", shipmentId);
+            await updateDoc(shipmentRef, { status: "AWB Generation Queued" });
         }
-        await batch.commit();
 
         // 2. Prepare the events for Trigger.dev
-        const events = awbIds.map(awbId => ({
-            name: "generate-sameday-awb",
-            payload: { awbId },
+        const events = shipmentIds.map(shipmentId => ({
+            name: "awb-generator", // Task ID from src/trigger/awb.ts
+            payload: { shipmentId },
         }));
 
         // 3. Send all events to Trigger.dev in a single call
@@ -377,7 +374,7 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
 
         return { 
             success: true, 
-            message: `Successfully queued ${awbIds.length} AWB generation tasks.`
+            message: `Successfully queued ${shipmentIds.length} shipment(s) for AWB generation.`
         };
 
     } catch (error: any) {
@@ -385,5 +382,3 @@ export async function queueAwbGenerationAction(input: { awbIds: string[] }) {
         return { success: false, message: `Failed to queue jobs: ${error.message}` };
     }
 }
-
-    
