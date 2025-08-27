@@ -12,6 +12,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Users,
+  FileText,
+  FileSliders,
+  ClipboardList
 } from 'lucide-react';
 import { Scorecard } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -24,7 +27,9 @@ interface ScorecardInfo {
 
 export interface ScorecardData {
   totalExpeditions: ScorecardInfo;
-  docsGenerated: ScorecardInfo;
+  pvGenerated: ScorecardInfo;
+  inventoryGenerated: ScorecardInfo;
+  instructionsGenerated: ScorecardInfo;
   awbGenerated: ScorecardInfo;
   sentToLogistics: ScorecardInfo;
   inTransit: ScorecardInfo;
@@ -45,7 +50,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   }
   
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8">
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-10">
       <Scorecard
         title="Total Shipments"
         value={counts.totalExpeditions.value}
@@ -55,17 +60,26 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         onClick={() => setActiveFilter('Total')}
         isActive={activeFilter === 'Total'}
       />
-      <Scorecard
-        title="Docs Generated"
-        value={counts.docsGenerated.value}
-        icon={FilePlus2}
-        footerText={counts.docsGenerated.footerText}
-        footerIcon={AlertTriangle}
-        errorCount={counts.docsGenerated.errorCount}
-        onClick={() => setActiveFilter('Documents Generated')}
-        onFooterClick={() => setActiveFilter('DocsFailed')}
-        isActive={isFilterActive('Documents Generated', 'DocsFailed')}
-        isFooterActive={activeFilter === 'DocsFailed'}
+       <Scorecard
+        title="PV Generated"
+        value={counts.pvGenerated.value}
+        icon={FileText}
+        onClick={() => setActiveFilter('PV')}
+        isActive={isFilterActive('PV')}
+      />
+       <Scorecard
+        title="Inventory Linked"
+        value={counts.inventoryGenerated.value}
+        icon={FileSliders}
+        onClick={() => setActiveFilter('Inventory')}
+        isActive={isFilterActive('Inventory')}
+      />
+       <Scorecard
+        title="Instructions Linked"
+        value={counts.instructionsGenerated.value}
+        icon={ClipboardList}
+        onClick={() => setActiveFilter('Instructions')}
+        isActive={isFilterActive('Instructions')}
       />
       <Scorecard
         title="AWB Generated"

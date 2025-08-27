@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'Documents Generated' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -82,14 +82,6 @@ export default function Home() {
   }, [recipients, expeditions, awbs]);
 
   const scorecardCounts: ScorecardData = useMemo(() => {
-    const recipientsWithAllDocsGenerated = allRecipientsWithFullData.filter(r => {
-        const hasStaticDocs = r.documents &&
-            r.documents['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated' &&
-            r.documents['parcel inventory']?.status === 'Generated';
-        const hasPvDoc = !!r.pvUrl;
-        return hasStaticDocs && hasPvDoc;
-    });
-
     const recipientsWithFailedDocs = allRecipientsWithFullData.filter(r => 
         r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
     );
@@ -102,15 +94,24 @@ export default function Home() {
                 + awbGenerationFailedCount
                 + emailSendFailedCount;
     
+    const pvGeneratedCount = allRecipientsWithFullData.filter(r => !!r.pvUrl).length;
+    const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.documents?.['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated').length;
+    const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.documents?.['parcel inventory']?.status === 'Generated').length;
+
+    
     return {
         totalExpeditions: {
             value: expeditions.length,
             footerText: `${allRecipientsWithFullData.length} recipients`
         },
-        docsGenerated: {
-            value: recipientsWithAllDocsGenerated.length,
-            footerText: `${recipientsWithFailedDocs.length} errors`,
-            errorCount: recipientsWithFailedDocs.length
+        pvGenerated: {
+            value: pvGeneratedCount,
+        },
+        inventoryGenerated: {
+            value: inventoryGeneratedCount
+        },
+        instructionsGenerated: {
+            value: instructionsGeneratedCount
         },
         awbGenerated: {
             value: expeditions.filter(e => e.status === 'AWB Generated').length,
@@ -140,6 +141,16 @@ export default function Home() {
   const filteredRecipients = useMemo(() => {
     if (!activeFilter || activeFilter === 'Total') return allRecipientsWithFullData;
     
+    if (activeFilter === 'PV') {
+        return allRecipientsWithFullData.filter(r => !!r.pvUrl);
+    }
+    if (activeFilter === 'Inventory') {
+        return allRecipientsWithFullData.filter(r => r.documents?.['parcel inventory']?.status === 'Generated');
+    }
+    if (activeFilter === 'Instructions') {
+        return allRecipientsWithFullData.filter(r => r.documents?.['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated');
+    }
+
     if (activeFilter === 'DocsFailed') {
         return allRecipientsWithFullData.filter(r => 
             r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
@@ -177,16 +188,6 @@ export default function Home() {
         };
         const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
         return allRecipientsWithFullData.filter(r => r.status === recipientStatus);
-    }
-
-    if (activeFilter === 'Documents Generated') {
-        return allRecipientsWithFullData.filter(r => {
-            const hasStaticDocs = r.documents &&
-                r.documents['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated' &&
-                r.documents['parcel inventory']?.status === 'Generated';
-            const hasPvDoc = !!r.pvUrl;
-            return hasStaticDocs && hasPvDoc;
-        });
     }
 
     const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
