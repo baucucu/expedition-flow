@@ -82,9 +82,13 @@ export default function Home() {
   }, [recipients, expeditions, awbs]);
 
   const scorecardCounts: ScorecardData = useMemo(() => {
-    const recipientsWithAllDocsGenerated = allRecipientsWithFullData.filter(r => 
-        r.documents && Object.values(r.documents).every(d => d.status === 'Generated')
-    );
+    const recipientsWithAllDocsGenerated = allRecipientsWithFullData.filter(r => {
+        const hasStaticDocs = r.documents &&
+            r.documents['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated' &&
+            r.documents['parcel inventory']?.status === 'Generated';
+        const hasPvDoc = !!r.pvUrl;
+        return hasStaticDocs && hasPvDoc;
+    });
 
     const recipientsWithFailedDocs = allRecipientsWithFullData.filter(r => 
         r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
@@ -176,9 +180,13 @@ export default function Home() {
     }
 
     if (activeFilter === 'Documents Generated') {
-        return allRecipientsWithFullData.filter(r => 
-            r.documents && Object.values(r.documents).every(d => d.status === 'Generated')
-        );
+        return allRecipientsWithFullData.filter(r => {
+            const hasStaticDocs = r.documents &&
+                r.documents['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated' &&
+                r.documents['parcel inventory']?.status === 'Generated';
+            const hasPvDoc = !!r.pvUrl;
+            return hasStaticDocs && hasPvDoc;
+        });
     }
 
     const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
