@@ -343,25 +343,35 @@ export async function testSamedayAwbAction() {
 
 // Action for Queuing Shipment AWB Generation with Trigger.dev
 const queueShipmentAwbGenerationActionInputSchema = z.object({
-  shipmentIds: z.array(z.string()),
+  awbsToQueue: z.array(z.object({
+    shipmentId: z.string(),
+    awbId: z.string(),
+  })),
 });
 
-export async function queueShipmentAwbGenerationAction(input: { shipmentIds: string[] }) {
+
+export async function queueShipmentAwbGenerationAction(input: z.infer<typeof queueShipmentAwbGenerationActionInputSchema>) {
     const validatedInput = queueShipmentAwbGenerationActionInputSchema.safeParse(input);
     if (!validatedInput.success) {
         return { success: false, message: "Invalid input for queueing AWB generation." };
     }
 
-    const { shipmentIds } = validatedInput.data;
+    const { awbsToQueue } = validatedInput.data;
+    
+    // Get unique shipment IDs
+    const shipmentIds = [...new Set(awbsToQueue.map(item => item.shipmentId))];
 
     try {
-        // 1. Mark Shipments as 'AWB Generation Queued' in Firestore
-        for (const shipmentId of shipmentIds) {
-            const shipmentRef = doc(db, "shipments", shipmentId);
-            await updateDoc(shipmentRef, { status: "AWB Generation Queued" });
+        // 1. Mark all relevant AWBs as 'Queued' in Firestore in a single batch
+        const batch = writeBatch(db);
+        for (const item of awbsToQueue) {
+            const awbRef = doc(db, "awbs", item.awbId);
+            batch.update(awbRef, { status: "Queued" });
         }
+        await batch.commit();
 
-        // 2. Prepare the events for Trigger.dev
+
+        // 2. Prepare the events for Trigger.dev for each unique shipment
         const events = shipmentIds.map(shipmentId => ({
             name: "awb-generator", // Task ID from src/trigger/awb.ts
             payload: { shipmentId },

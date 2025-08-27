@@ -150,32 +150,34 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         toast({
             variant: "destructive",
             title: "No Recipients Selected",
-            description: "Please select at least one recipient to queue for AWB generation.",
+            description: "Please select one or more recipients.",
         });
         return;
     }
 
-    // From the selected recipients, get the unique shipment IDs
-    const shipmentIdsToProcess = [
-      ...new Set(
-        selectedRows
-          .map((row) => row.original.expeditionId)
-          .filter((id): id is string => !!id)
-      ),
-    ];
+    // Filter out recipients whose AWBs are already generated or queued
+    const awbsToProcess = selectedRows
+      .map((row) => row.original)
+      .filter((recipient) => {
+        const status = recipient.awb?.status;
+        return status !== 'Generated' && status !== 'Queued' && status !== 'AWB_CREATED';
+      })
+      .map(recipient => ({
+          shipmentId: recipient.expeditionId,
+          awbId: recipient.awbId
+      }));
 
-
-    if (shipmentIdsToProcess.length === 0) {
+    if (awbsToProcess.length === 0) {
         toast({
-            variant: "destructive",
-            title: "No valid shipments found",
-            description: "Could not find shipment information for the selected recipients.",
+            title: "Nothing to Queue",
+            description: "All selected recipients already have a generated or queued AWB.",
         });
         return;
     }
+
 
     setIsQueuingAwb(true);
-    const result = await queueShipmentAwbGenerationAction({ shipmentIds: shipmentIdsToProcess });
+    const result = await queueShipmentAwbGenerationAction({ awbsToQueue: awbsToProcess });
     setIsQueuingAwb(false);
     
     if (result.success) {
