@@ -38,8 +38,10 @@ export const createAwb = schemaTask({
         body.append('thirdPartyPickup', '0');
         body.append('packageWeight', '1');
 
+        const timestamp = new Date().toLocaleString("ro-RO", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(",", ":")
+
         // optional but sometimes required
-        body.append('orderNumber', payload.shipmentId);
+        // body.append('orderNumber', `${payload.shipmentId}/${Date.now()}`);
         // body.append('observation', 'A');
         // body.append('priceObservation', 'B');
         // body.append('clientObservation', 'C');
