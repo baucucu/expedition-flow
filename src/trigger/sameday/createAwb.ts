@@ -1,4 +1,4 @@
-import {schemaTask} from "@trigger.dev/sdk"
+import {schemaTask, logger} from "@trigger.dev/sdk"
 import {z} from "zod"
 
 const ShipmentSchema = z.object({
@@ -20,7 +20,7 @@ const ShipmentSchema = z.object({
   });
 
 export const createAwb = schemaTask({
-    id: "create-awb-payload",
+    id: "create-awb",
     schema: ShipmentSchema,
     run: async (payload) => {
         
@@ -75,6 +75,8 @@ export const createAwb = schemaTask({
         body.append('awbRecipient[email]', payload.mainRecipientEmail);
         body.append('awbRecipient[personType]', '0');
 
+        
+
         try {
             const authToken = process.env.SAMEDAY_API_TOKEN;
             const api_url = process.env.SAMEDAY_API_URL;
@@ -85,7 +87,7 @@ export const createAwb = schemaTask({
             if(!api_url) {
                 throw new Error("Sameday API URL is not configured in environment variables.");
             }
-
+            console.log({body})
             const response = await fetch(api_url+"/awb", {
                 method: 'POST',
                 headers: {
@@ -99,7 +101,7 @@ export const createAwb = schemaTask({
             const responseData = await response.json();
     
             if (!response.ok) {
-                console.error("Sameday API Error:", responseData);
+                console.error("Sameday API Error:", {...responseData});
                 throw new Error(`Sameday API request failed with status: ${response.status}.`);
             }
     

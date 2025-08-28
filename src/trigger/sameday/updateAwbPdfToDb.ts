@@ -35,7 +35,7 @@ export const updateAwbPdfToDb = task({
                 throw new Error(`No recipient found with id=${recipientId}`);
             }
           await updateDoc(recipientDoc.ref, {
-                awbPdfFileId: result.response?.awbPdfFileId,
+                awbPdfFileId: result.response?.fileId,
                 awbWebviewUrl: result.response?.webviewUrl
             });
         }
