@@ -25,8 +25,9 @@ export type UploadStaticFileInput = z.infer<typeof UploadStaticFileInputSchema>;
 
 const UploadStaticFileOutputSchema = z.object({
   success: z.boolean(),
-  message: z.string(),
+  message: z.string().optional(),
   url: z.string().optional(),
+  error: z.string().optional(),
 });
 export type UploadStaticFileOutput = z.infer<typeof UploadStaticFileOutputSchema>;
 
@@ -76,10 +77,10 @@ const uploadStaticFileFlow = ai.defineFlow(
         };
 
     } catch (error: any) {
-        console.error('Upload failed:', error);
+        console.error('Upload failed in flow:', error);
         return { 
             success: false, 
-            message: `Upload failed: ${error.message}` 
+            error: `Upload failed: ${error.message}` 
         };
     }
   }
