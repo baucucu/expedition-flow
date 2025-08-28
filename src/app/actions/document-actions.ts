@@ -60,28 +60,19 @@ export async function updateRecipientDocumentsAction() {
 const saveLinkSchema = z.object({
     fileType: z.enum(['inventory', 'instructions']),
     url: z.string().url(),
+    name: z.string(),
+    iconLink: z.string().url().optional(),
 });
 export async function saveStaticDocumentLinksAction(input: z.infer<typeof saveLinkSchema>) {
     const validation = saveLinkSchema.safeParse(input);
     if (!validation.success) {
         return { success: false, error: "Invalid input." };
     }
-    const { fileType, url } = validation.data;
+    const { fileType, url, name, iconLink } = validation.data;
     try {
         const docRef = doc(db, 'static_documents', fileType);
         
-        // Extract file name from URL for display purposes
-        let fileName = "Google Drive File";
-        try {
-            const urlObject = new URL(url);
-            // This is a basic way to get a name, might not be perfect for all link types
-            const pathParts = urlObject.pathname.split('/');
-            const docId = pathParts.find(part => part.length > 20); // Heuristic to find doc ID
-            fileName = docId ? `Doc...${docId.slice(-6)}` : "Google Drive File";
-        } catch {}
-
-
-        await setDoc(docRef, { name: fileName, url: url, type: fileType });
+        await setDoc(docRef, { name, url, iconLink, type: fileType });
         return { success: true, message: "Link saved successfully." };
     } catch (error: any) {
         console.error("Error saving static document link:", error);
@@ -92,7 +83,7 @@ export async function saveStaticDocumentLinksAction(input: z.infer<typeof saveLi
 // Action to get status of static files
 export async function getStaticFilesStatusAction() {
     try {
-        const statuses: Record<string, {name: string, url: string} | null> = {
+        const statuses: Record<string, {name: string, url: string, iconLink?: string} | null> = {
             inventory: null,
             instructions: null,
         };
@@ -107,6 +98,7 @@ export async function getStaticFilesStatusAction() {
                 statuses[type] = {
                     name: data.name || 'Saved Link',
                     url: data.url,
+                    iconLink: data.iconLink,
                 };
             }
         }
