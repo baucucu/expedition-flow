@@ -3,10 +3,8 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, getDocs, query, getDoc } from "firebase/firestore";
-import { adminApp } from "@/lib/firebase-admin";
+import { collection, writeBatch, doc, getDocs, query, setDoc, getDoc } from "firebase/firestore";
 import { generateProcesVerbal } from "@/ai/flows/pv-generator";
-import { uploadStaticFile } from "@/ai/flows/document-content-generator";
 
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
@@ -32,10 +30,9 @@ export async function updateRecipientDocumentsAction() {
         }
         
         if (filesToSyncCount === 0) {
-            return { success: false, error: 'No static files have been uploaded. Nothing to sync.' };
+            return { success: false, error: 'No static file links have been saved. Nothing to sync.' };
         }
 
-        // Get all recipient documents
         const recipientsQuery = query(collection(db, "recipients"));
         const querySnapshot = await getDocs(recipientsQuery);
         const recipients = querySnapshot.docs;
@@ -44,7 +41,6 @@ export async function updateRecipientDocumentsAction() {
             return { success: true, message: "No recipients found to update." };
         }
 
-        // Create a batch to update all recipients
         const batch = writeBatch(db);
         recipients.forEach(docSnap => {
             const recipientRef = doc(db, "recipients", docSnap.id);
@@ -60,70 +56,58 @@ export async function updateRecipientDocumentsAction() {
     }
 }
 
-// Helper function to convert file to data URI
-const fileToDataUri = async (file: File): Promise<string> => {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return `data:${file.type};base64,${buffer.toString('base64')}`;
-}
-
-// Action to upload a static file via a secure Genkit flow
-export async function uploadStaticFileAction(formData: FormData) {
+// Action to save a static file link
+const saveLinkSchema = z.object({
+    fileType: z.enum(['inventory', 'instructions']),
+    url: z.string().url(),
+});
+export async function saveStaticDocumentLinksAction(input: z.infer<typeof saveLinkSchema>) {
+    const validation = saveLinkSchema.safeParse(input);
+    if (!validation.success) {
+        return { success: false, error: "Invalid input." };
+    }
+    const { fileType, url } = validation.data;
     try {
-        const file = formData.get('file') as File;
-        const fileType = formData.get('fileType') as string;
-
-        if (!file || !fileType) {
-            return { success: false, error: 'File or file type not provided.' };
-        }
+        const docRef = doc(db, 'static_documents', fileType);
         
-        const fileDataUri = await fileToDataUri(file);
+        // Extract file name from URL for display purposes
+        let fileName = "Google Drive File";
+        try {
+            const urlObject = new URL(url);
+            // This is a basic way to get a name, might not be perfect for all link types
+            const pathParts = urlObject.pathname.split('/');
+            const docId = pathParts.find(part => part.length > 20); // Heuristic to find doc ID
+            fileName = docId ? `Doc...${docId.slice(-6)}` : "Google Drive File";
+        } catch {}
 
-        // Call the secure Genkit flow
-        const result = await uploadStaticFile({
-            fileDataUri,
-            fileName: file.name,
-            fileType,
-            contentType: file.type
-        });
 
-        return result;
-
+        await setDoc(docRef, { name: fileName, url: url, type: fileType });
+        return { success: true, message: "Link saved successfully." };
     } catch (error: any) {
-        console.error('Upload action failed:', error);
-        return { success: false, error: `Upload action failed: ${error.message}` };
+        console.error("Error saving static document link:", error);
+        return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
 
 // Action to get status of static files
 export async function getStaticFilesStatusAction() {
     try {
-        const bucket = adminApp.storage().bucket();
-        const statuses: Record<string, {name: string, url: string} | null> = {};
+        const statuses: Record<string, {name: string, url: string} | null> = {
+            inventory: null,
+            instructions: null,
+        };
         const fileTypes = ['inventory', 'instructions'];
 
         for (const type of fileTypes) {
             const docRef = doc(db, 'static_documents', type);
             const docSnap = await getDoc(docRef);
 
-            if (docSnap.exists() && docSnap.data().path) {
-                const filePath = docSnap.data().path;
-                const fileName = docSnap.data().name;
-                const file = bucket.file(filePath);
-                
-                const [exists] = await file.exists();
-                if (exists) {
-                    await file.makePublic(); // Ensure it's public
-                    const publicUrl = file.publicUrl();
-                    statuses[type] = {
-                        name: fileName,
-                        url: publicUrl,
-                    };
-                } else {
-                    statuses[type] = null;
-                }
-            } else {
-                statuses[type] = null;
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                statuses[type] = {
+                    name: data.name || 'Saved Link',
+                    url: data.url,
+                };
             }
         }
         return { success: true, data: statuses };

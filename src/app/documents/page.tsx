@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
-import { ArrowLeft, FileScan, Loader2, Upload, FileCheck2, AlertCircle, ExternalLink, FileQuestion, RefreshCcw } from 'lucide-react';
-import { updateRecipientDocumentsAction, uploadStaticFileAction, getStaticFilesStatusAction } from '@/app/actions/document-actions';
+import { ArrowLeft, FileScan, Loader2, Save, ExternalLink, FileQuestion, RefreshCcw, Link } from 'lucide-react';
+import { updateRecipientDocumentsAction, getStaticFilesStatusAction, saveStaticDocumentLinksAction } from '@/app/actions/document-actions';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -19,16 +19,15 @@ export default function ManageDocumentsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isFetchingStatus, setIsFetchingStatus] = useState(true);
 
-  const [inventoryFile, setInventoryFile] = useState<File | null>(null);
-  const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
+  const [inventoryLink, setInventoryLink] = useState('');
+  const [instructionsLink, setInstructionsLink] = useState('');
 
   const [currentFiles, setCurrentFiles] = useState<Record<UploadableFile, FileStatus>>({
     inventory: null,
     instructions: null,
   });
   
-  const [uploadStatus, setUploadStatus] = useState<Record<UploadableFile, 'idle' | 'uploading' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle' });
-  const [uploadError, setUploadError] = useState<Record<UploadableFile, string | null>>({ inventory: null, instructions: null });
+  const [saveStatus, setSaveStatus] = useState<Record<UploadableFile, 'idle' | 'saving' | 'success' | 'error'>>({ inventory: 'idle', instructions: 'idle' });
 
   const router = useRouter();
   const { toast } = useToast();
@@ -38,6 +37,8 @@ export default function ManageDocumentsPage() {
     const result = await getStaticFilesStatusAction();
     if (result.success && result.data) {
         setCurrentFiles(result.data as Record<UploadableFile, FileStatus>);
+        setInventoryLink(result.data.inventory?.url || '');
+        setInstructionsLink(result.data.instructions?.url || '');
     } else {
         toast({ variant: 'destructive', title: 'Could not fetch file statuses', description: result.error });
     }
@@ -48,46 +49,26 @@ export default function ManageDocumentsPage() {
     fetchFileStatus();
   }, [fetchFileStatus]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: UploadableFile) => {
-    const file = e.target.files?.[0] ?? null;
-    
-    setUploadStatus(prev => ({...prev, [fileType]: 'idle'}));
-    setUploadError(prev => ({...prev, [fileType]: null}));
-
-    if (fileType === 'inventory') setInventoryFile(file);
-    else if (fileType === 'instructions') setInstructionsFile(file);
-  };
-
-  const handleUpload = async (fileType: UploadableFile) => {
-    let file: File | null = null;
-    if (fileType === 'inventory') file = inventoryFile;
-    else if (fileType === 'instructions') file = instructionsFile;
-
-    if (!file) {
-      toast({ variant: 'destructive', title: 'No file selected' });
-      return;
+  const handleSaveLink = async (fileType: UploadableFile) => {
+    const url = fileType === 'inventory' ? inventoryLink : instructionsLink;
+    if (!url) {
+        toast({ variant: 'destructive', title: 'No Link Provided', description: 'Please paste a valid Google Drive link.'});
+        return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('fileType', fileType);
-    
-    setUploadStatus(prev => ({...prev, [fileType]: 'uploading'}));
-    setUploadError(prev => ({...prev, [fileType]: null}));
-
-    const result = await uploadStaticFileAction(formData);
+    setSaveStatus(prev => ({ ...prev, [fileType]: 'saving' }));
+    const result = await saveStaticDocumentLinksAction({ fileType, url });
 
     if (result.success) {
-      setUploadStatus(prev => ({...prev, [fileType]: 'success'}));
-      toast({ title: 'Upload Successful', description: result.message });
-      await fetchFileStatus(); // Refresh file status after upload
+        setSaveStatus(prev => ({ ...prev, [fileType]: 'success' }));
+        toast({ title: 'Link Saved', description: result.message });
+        await fetchFileStatus();
     } else {
-      const errorMessage = result.error || 'An unknown error occurred.';
-      setUploadStatus(prev => ({...prev, [fileType]: 'error'}));
-      setUploadError(prev => ({...prev, [fileType]: errorMessage}));
-      toast({ variant: 'destructive', title: 'Upload Failed', description: errorMessage });
+        setSaveStatus(prev => ({ ...prev, [fileType]: 'error' }));
+        toast({ variant: 'destructive', title: 'Failed to Save Link', description: result.error });
     }
   };
+
 
   const handleSyncLinks = async () => {
     setIsSyncing(true);
@@ -101,7 +82,7 @@ export default function ManageDocumentsPage() {
     }
   };
 
-  const isUploading = (fileType: UploadableFile) => uploadStatus[fileType] === 'uploading';
+  const isSaving = (fileType: UploadableFile) => saveStatus[fileType] === 'saving';
 
   const renderFileStatus = (fileType: UploadableFile) => {
     const file = currentFiles[fileType];
@@ -112,7 +93,7 @@ export default function ManageDocumentsPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Checking status...</span>
             </div>
-        ) : file ? (
+        ) : file && file.url ? (
           <div className="flex justify-between items-center">
             <span className="font-medium truncate pr-2">{file.name}</span>
             <Button size="sm" variant="outline" asChild>
@@ -125,24 +106,11 @@ export default function ManageDocumentsPage() {
         ) : (
            <div className="flex items-center space-x-2 text-muted-foreground">
                 <FileQuestion className="h-4 w-4" />
-                <span>No file uploaded yet.</span>
+                <span>No file link saved yet.</span>
             </div>
         )}
       </div>
     );
-  }
-
-  const renderUploadStatus = (fileType: UploadableFile) => {
-    if (uploadStatus[fileType] === 'uploading') {
-        return <div className="flex items-center space-x-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /><span>Uploading...</span></div>
-    }
-    if (uploadStatus[fileType] === 'success') {
-         return <div className="text-sm text-green-600 flex items-center gap-2"><FileCheck2 className="h-4 w-4" /><span>Upload complete.</span></div>
-    }
-    if (uploadStatus[fileType] === 'error') {
-        return <div className="text-sm text-destructive flex items-center gap-2"><AlertCircle className="h-4 w-4" /><span>{uploadError[fileType]}</span></div>
-    }
-    return null;
   }
 
   return (
@@ -163,42 +131,40 @@ export default function ManageDocumentsPage() {
             
             <Card className="lg:col-span-1 flex flex-col">
                  <CardHeader>
-                    <CardTitle>1. Upload Inventory File</CardTitle>
-                    <CardDescription>Upload the inventory file (e.g., .xlsx). This will be linked to all recipients.</CardDescription>
+                    <CardTitle>1. Set Inventory File Link</CardTitle>
+                    <CardDescription>Paste the Google Drive share link for the inventory file (e.g., a Google Sheet).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 flex-grow">
                      {renderFileStatus('inventory')}
                      <div className="space-y-2">
-                        <Label htmlFor="inventory-upload">Upload New Inventory</Label>
-                        <Input id="inventory-upload" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e) => handleFileChange(e, 'inventory')} disabled={isUploading('inventory')} />
+                        <Label htmlFor="inventory-link">Google Drive Link</Label>
+                        <Input id="inventory-link" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." value={inventoryLink} onChange={(e) => setInventoryLink(e.target.value)} disabled={isSaving('inventory')} />
                      </div>
-                    {renderUploadStatus('inventory')}
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={() => handleUpload('inventory')} disabled={!inventoryFile || isUploading('inventory')} className="w-full">
-                        {isUploading('inventory') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        {isUploading('inventory') ? 'Uploading...' : 'Upload Inventory'}
+                    <Button onClick={() => handleSaveLink('inventory')} disabled={isSaving('inventory')} className="w-full">
+                        {isSaving('inventory') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        {isSaving('inventory') ? 'Saving...' : 'Save Inventory Link'}
                     </Button>
                 </CardFooter>
             </Card>
 
             <Card className="lg:col-span-1 flex flex-col">
                  <CardHeader>
-                    <CardTitle>2. Upload Instructions File</CardTitle>
-                    <CardDescription>Upload the instructions file (e.g., .pdf). This will be linked to all recipients.</CardDescription>
+                    <CardTitle>2. Set Instructions File Link</CardTitle>
+                    <CardDescription>Paste the Google Drive share link for the instructions file (e.g., a Google Doc or PDF).</CardDescription>
                 </CardHeader>
                  <CardContent className="space-y-4 flex-grow">
                      {renderFileStatus('instructions')}
                      <div className="space-y-2">
-                        <Label htmlFor="instructions-upload">Upload New Instructions</Label>
-                        <Input id="instructions-upload" type="file" accept=".pdf,application/pdf" onChange={(e) => handleFileChange(e, 'instructions')} disabled={isUploading('instructions')} />
+                        <Label htmlFor="instructions-link">Google Drive Link</Label>
+                        <Input id="instructions-link" type="url" placeholder="https://docs.google.com/document/d/..." value={instructionsLink} onChange={(e) => setInstructionsLink(e.target.value)} disabled={isSaving('instructions')} />
                      </div>
-                    {renderUploadStatus('instructions')}
                 </CardContent>
                 <CardFooter>
-                    <Button onClick={() => handleUpload('instructions')} disabled={!instructionsFile || isUploading('instructions')} className="w-full">
-                        {isUploading('instructions') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                         {isUploading('instructions') ? 'Uploading...' : 'Upload Instructions'}
+                    <Button onClick={() => handleSaveLink('instructions')} disabled={isSaving('instructions')} className="w-full">
+                        {isSaving('instructions') ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                         {isSaving('instructions') ? 'Saving...' : 'Save Instructions Link'}
                     </Button>
                 </CardFooter>
             </Card>
@@ -208,19 +174,19 @@ export default function ManageDocumentsPage() {
                 <CardHeader>
                     <CardTitle>3. Sync Links to Recipients</CardTitle>
                     <CardDescription>
-                        Run this action to link any uploaded static files to all existing recipients in the database.
-                        This will only sync files that have been successfully uploaded.
+                        Run this action to link the saved Google Drive file URLs to all existing recipients in the database.
+                        This will only sync files that have been successfully saved.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                       This process will update all recipient records. If a file is uploaded later, you can run this sync again to add the new link.
+                       This process will update all recipient records. If a link is updated later, you must run this sync again to update the links for all recipients.
                     </p>
                 </CardContent>
                  <CardFooter>
                     <Button onClick={handleSyncLinks} disabled={isSyncing} className="w-full">
-                        {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileScan className="mr-2 h-4 w-4" />}
-                        {isSyncing ? 'Syncing...' : 'Sync Files to All Recipients'}
+                        {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link className="mr-2 h-4 w-4" />}
+                        {isSyncing ? 'Syncing...' : 'Sync Links to All Recipients'}
                     </Button>
                 </CardFooter>
             </Card>

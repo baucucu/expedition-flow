@@ -9,7 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 
 interface DocumentViewerProps {
     url: string;
-    docType: 'pdf' | 'excel' | 'gdrive-pdf';
+    docType: 'pdf' | 'excel' | 'gdrive-pdf' | 'gdrive-excel';
 }
 
 type SheetData = (string | number)[][];
@@ -24,7 +24,10 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(url);
+                // For excel files, we need to fetch them through a CORS proxy if they are not from our origin
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const response = await fetch(`${proxyUrl}${url}`);
+
                 if (!response.ok) {
                     throw new Error(`Failed to fetch file: ${response.statusText}`);
                 }
@@ -35,7 +38,7 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
                 const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 }) as SheetData;
                 setExcelData(jsonData);
             } catch (err: any) {
-                setError(`Could not load or parse the Excel file. Please ensure CORS is configured on the Storage bucket. Error: ${err.message}`);
+                setError(`Could not load or parse the Excel file. Please ensure the link is a direct download link and CORS is handled if needed. Error: ${err.message}`);
             } finally {
                 setLoading(false);
             }
@@ -67,13 +70,12 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
         );
     }
     
-    // Handle Google Drive preview links for PVs
-    if (docType === 'gdrive-pdf') {
+    if (docType === 'gdrive-pdf' || docType === 'gdrive-excel') {
          // Transform the webViewLink into an embeddable preview link
-         const embeddableUrl = url.replace("/view?usp=drivesdk", "/preview");
+         const embeddableUrl = url.replace("/view?usp=sharing", "/preview").replace("/edit?usp=sharing", "/preview");
          return (
             <div className="w-full h-[80vh] mt-4 border rounded-md">
-                <iframe src={embeddableUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="Google Drive PDF Preview" />
+                <iframe src={embeddableUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="Google Drive Preview" />
             </div>
         );
     }

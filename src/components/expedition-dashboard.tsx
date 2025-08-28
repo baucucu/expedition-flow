@@ -564,12 +564,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
                          {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
                         {selectedDocument.recipient.documents?.['parcel inventory']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['parcel inventory'].url!} docType="excel" />
+                            <DocumentViewer url={selectedDocument.recipient.documents['parcel inventory'].url!} docType="gdrive-excel" />
                          ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">
