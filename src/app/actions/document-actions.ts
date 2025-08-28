@@ -3,9 +3,10 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, writeBatch, doc, serverTimestamp, getDocs, query, getDoc, setDoc } from "firebase/firestore";
+import { collection, writeBatch, doc, getDocs, query, getDoc } from "firebase/firestore";
 import { adminApp } from "@/lib/firebase-admin";
 import { generateProcesVerbal } from "@/ai/flows/pv-generator";
+import { uploadStaticFile } from "@/ai/flows/document-content-generator";
 
 // Action for linking static documents
 export async function updateRecipientDocumentsAction() {
@@ -59,7 +60,14 @@ export async function updateRecipientDocumentsAction() {
     }
 }
 
-// Action to upload a static file
+// Helper function to convert file to data URI
+const fileToDataUri = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    return `data:${file.type};base64,${buffer.toString('base64')}`;
+}
+
+// Action to upload a static file via a secure Genkit flow
 export async function uploadStaticFileAction(formData: FormData) {
     try {
         const file = formData.get('file') as File;
@@ -69,27 +77,21 @@ export async function uploadStaticFileAction(formData: FormData) {
             return { success: false, error: 'File or file type not provided.' };
         }
         
-        const filePath = `static/${fileType}/${file.name}`;
-        
-        const bucket = adminApp.storage().bucket();
-        const storageFile = bucket.file(filePath);
+        const fileDataUri = await fileToDataUri(file);
 
-        const fileBuffer = await file.arrayBuffer();
-        await storageFile.save(Buffer.from(fileBuffer), {
-            metadata: { contentType: file.type },
+        // Call the secure Genkit flow
+        const result = await uploadStaticFile({
+            fileDataUri,
+            fileName: file.name,
+            fileType,
+            contentType: file.type
         });
-        
-        await storageFile.makePublic();
 
-        // Save the file path to Firestore
-        const docRef = doc(db, 'static_documents', fileType);
-        await setDoc(docRef, { path: filePath, name: file.name, uploadedAt: serverTimestamp() });
-
-        return { success: true, message: `${file.name} uploaded successfully.` };
+        return result;
 
     } catch (error: any) {
-        console.error('Upload failed:', error);
-        return { success: false, error: `Upload failed: ${error.message}` };
+        console.error('Upload action failed:', error);
+        return { success: false, error: `Upload action failed: ${error.message}` };
     }
 }
 
@@ -109,10 +111,9 @@ export async function getStaticFilesStatusAction() {
                 const fileName = docSnap.data().name;
                 const file = bucket.file(filePath);
                 
-                // We assume the file is public from the upload action.
                 const [exists] = await file.exists();
                 if (exists) {
-                    await file.makePublic();
+                    await file.makePublic(); // Ensure it's public
                     const publicUrl = file.publicUrl();
                     statuses[type] = {
                         name: fileName,
