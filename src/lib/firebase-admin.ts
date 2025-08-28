@@ -6,18 +6,20 @@ import * as admin from 'firebase-admin';
 // Application Default Credentials might not be configured correctly.
 
 if (!admin.apps.length) {
-    const { PROJECT_ID, PRIVATE_KEY, CLIENT_EMAIL } = process.env;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const privateKey = process.env.NEXT_PUBLIC_FIREBASE_PRIVATE_KEY;
+    const clientEmail = process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL;
 
-    if (!PROJECT_ID || !PRIVATE_KEY || !CLIENT_EMAIL) {
+    if (!projectId || !privateKey || !clientEmail) {
         throw new Error(
-            'Missing Firebase Admin SDK credentials. Please ensure PROJECT_ID, PRIVATE_KEY, and CLIENT_EMAIL are set in your environment variables.'
+            'Firebase server-side authentication failed. Please make sure that NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_PRIVATE_KEY, and NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL are set in your .env file.'
         );
     }
     
     const serviceAccount: admin.ServiceAccount = {
-        projectId: PROJECT_ID,
-        privateKey: PRIVATE_KEY.replace(/\\n/g, '\n'),
-        clientEmail: CLIENT_EMAIL,
+        projectId,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
+        clientEmail,
     };
 
     admin.initializeApp({
