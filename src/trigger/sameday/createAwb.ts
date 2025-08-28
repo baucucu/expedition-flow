@@ -26,7 +26,7 @@ export const createAwb = schemaTask({
         
         const body = new URLSearchParams();
         body.append('packageType', '0');
-        body.append('clientInternalReference', payload.shipmentId);
+        // body.append('clientInternalReference', payload.shipmentId);
         body.append('cashOnDelivery', '0');
         body.append('insuredValue', '0');
         body.append('packageNumber', '1');
