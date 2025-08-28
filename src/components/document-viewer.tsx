@@ -14,6 +14,13 @@ interface DocumentViewerProps {
 
 type SheetData = (string | number)[][];
 
+const extractFileIdFromUrl = (url: string): string | null => {
+    const regex = /\/d\/([a-zA-Z0-9_-]{25,})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+};
+
+
 export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -71,8 +78,17 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     }
     
     if (docType === 'gdrive-pdf' || docType === 'gdrive-excel') {
-         // Transform the webViewLink into an embeddable preview link
-         const embeddableUrl = url.replace("/view?usp=sharing", "/preview").replace("/edit?usp=sharing", "/preview");
+        const fileId = extractFileIdFromUrl(url);
+        if (!fileId) {
+             return (
+                <div className="w-full h-[80vh] mt-4 flex flex-col items-center justify-center text-destructive border rounded-md p-4">
+                    <AlertTriangle className="h-8 w-8 mb-4" />
+                    <p className="text-center font-semibold">Invalid Google Drive URL</p>
+                    <p className="text-center text-sm">Could not extract a valid File ID from the provided URL.</p>
+                </div>
+            );
+        }
+         const embeddableUrl = `https://drive.google.com/file/d/${fileId}/preview`;
          return (
             <div className="w-full h-[80vh] mt-4 border rounded-md">
                 <iframe src={embeddableUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="Google Drive Preview" />
