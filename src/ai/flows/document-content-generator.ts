@@ -13,7 +13,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { adminApp } from "@/lib/firebase-admin";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { serverTimestamp, collection, addDoc } from "firebase/firestore";
 
 const UploadStaticFileInputSchema = z.object({
   fileDataUri: z.string().describe("The file content as a Base64 encoded data URI."),
@@ -43,45 +43,43 @@ const uploadStaticFileFlow = ai.defineFlow(
   },
   async ({ fileDataUri, fileName, fileType, contentType }) => {
     try {
-        const bucket = adminApp.storage().bucket();
-        const filePath = `static/${fileType}/${fileName}`;
-        const storageFile = bucket.file(filePath);
+      const bucket = adminApp.storage().bucket();
 
-        // Extract the Base64 part of the data URI
-        const base64EncodedString = fileDataUri.split(',')[1];
-        if (!base64EncodedString) {
-            throw new Error('Invalid data URI format.');
-        }
-        const fileBuffer = Buffer.from(base64EncodedString, 'base64');
-        
-        await storageFile.save(fileBuffer, {
-            metadata: { contentType },
-        });
-        
-        await storageFile.makePublic();
-        const publicUrl = storageFile.publicUrl();
+      // Normalize filename
+      const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `static/${fileType}/${safeFileName}`;
+      const storageFile = bucket.file(filePath);
 
-        // Save the file path to Firestore
-        const docRef = doc(db, 'static_documents', fileType);
-        await setDoc(docRef, { 
-            path: filePath, 
-            name: fileName, 
-            uploadedAt: serverTimestamp(),
-            url: publicUrl 
-        });
+      // Extract Base64 data
+      const base64EncodedString = fileDataUri.split(',')[1];
+      if (!base64EncodedString) throw new Error('Invalid data URI format.');
 
-        return { 
-            success: true, 
-            message: `${fileName} uploaded successfully.`,
-            url: publicUrl,
-        };
+      const fileBuffer = Buffer.from(base64EncodedString, 'base64');
 
-    } catch (error: any) {
-        console.error('Upload failed in flow:', error);
-        return { 
-            success: false, 
-            error: `Upload failed: ${error.message}` 
-        };
+      await storageFile.save(fileBuffer, { metadata: { contentType } });
+
+      // Use signed URL instead of makePublic
+      const [signedUrl] = await storageFile.getSignedUrl({
+        action: 'read',
+        expires: Date.now() + 60 * 60 * 1000, // 1 hour
+      });
+
+      // Save file metadata in Firestore under a collection
+      const colRef = collection(db, 'static_documents', fileType, 'files');
+      await addDoc(colRef, {
+        path: filePath,
+        name: safeFileName,
+        uploadedAt: serverTimestamp(),
+        url: signedUrl,
+      });
+
+      return { success: true, message: `${fileName} uploaded successfully.`, url: signedUrl };
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("Upload failed in flow:", err);
+      return { success: false, error: `Upload failed: ${message}` };
     }
   }
 );
+

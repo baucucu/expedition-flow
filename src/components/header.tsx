@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { LogOut, Box, Plus, File, TestTube2 } from "lucide-react";
+import { LogOut, Box, Plus, File, TestTube2, FlaskConical } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
 
@@ -31,10 +31,16 @@ export const AppHeader = () => {
                     New Expedition
                 </Button>
                 {process.env.NODE_ENV === 'development' && (
-                    <Button variant="outline" size="sm" onClick={() => router.push('/sameday-test')}>
-                        <TestTube2 className="mr-2 h-4 w-4" />
-                        Sameday Test
-                    </Button>
+                    <>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/sameday-test')}>
+                            <TestTube2 className="mr-2 h-4 w-4" />
+                            Sameday Test
+                        </Button>
+                         <Button variant="outline" size="sm" onClick={() => router.push('/admin-test')}>
+                            <FlaskConical className="mr-2 h-4 w-4" />
+                            Admin Test
+                        </Button>
+                    </>
                 )}
                 <Button variant="ghost" size="icon" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4" />
