@@ -17,20 +17,24 @@ export async function updateRecipientDocumentsAction() {
 
         const updateData: Record<string, any> = {};
         let filesToSyncCount = 0;
+        
+        const constructGdriveUrl = (fileId: string) => `https://drive.google.com/file/d/${fileId}/view`;
 
-        if (statuses.data.inventory?.url) {
+        if (statuses.data.inventory?.fileId) {
             updateData['documents.parcel inventory.status'] = 'Generated';
-            updateData['documents.parcel inventory.url'] = statuses.data.inventory.url;
+            updateData['documents.parcel inventory.url'] = constructGdriveUrl(statuses.data.inventory.fileId);
+            updateData['documents.parcel inventory.fileId'] = statuses.data.inventory.fileId;
             filesToSyncCount++;
         }
-        if (statuses.data.instructions?.url) {
+        if (statuses.data.instructions?.fileId) {
             updateData['documents.instructiuni pentru confirmarea primirii coletului.status'] = 'Generated';
-            updateData['documents.instructiuni pentru confirmarea primirii coletului.url'] = statuses.data.instructions.url;
+            updateData['documents.instructiuni pentru confirmarea primirii coletului.url'] = constructGdriveUrl(statuses.data.instructions.fileId);
+            updateData['documents.instructiuni pentru confirmarea primirii coletului.fileId'] = statuses.data.instructions.fileId;
             filesToSyncCount++;
         }
         
         if (filesToSyncCount === 0) {
-            return { success: false, error: 'No static file links have been saved. Nothing to sync.' };
+            return { success: false, error: 'No static file IDs have been saved. Nothing to sync.' };
         }
 
         const recipientsQuery = query(collection(db, "recipients"));
@@ -56,34 +60,34 @@ export async function updateRecipientDocumentsAction() {
     }
 }
 
-// Action to save a static file link
+// Action to save a static file ID
 const saveLinkSchema = z.object({
     fileType: z.enum(['inventory', 'instructions']),
-    url: z.string().url(),
-    name: z.string(),
-    iconLink: z.string().url().optional(),
+    fileId: z.string(),
 });
+
 export async function saveStaticDocumentLinksAction(input: z.infer<typeof saveLinkSchema>) {
     const validation = saveLinkSchema.safeParse(input);
     if (!validation.success) {
         return { success: false, error: "Invalid input." };
     }
-    const { fileType, url, name, iconLink } = validation.data;
+    const { fileType, fileId } = validation.data;
     try {
         const docRef = doc(db, 'static_documents', fileType);
         
-        await setDoc(docRef, { name, url, iconLink, type: fileType });
-        return { success: true, message: "Link saved successfully." };
+        await setDoc(docRef, { fileId, type: fileType });
+        return { success: true, message: "File ID saved successfully." };
     } catch (error: any) {
         console.error("Error saving static document link:", error);
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
 
+
 // Action to get status of static files
 export async function getStaticFilesStatusAction() {
     try {
-        const statuses: Record<string, {name: string, url: string, iconLink?: string} | null> = {
+        const statuses: Record<string, {fileId: string} | null> = {
             inventory: null,
             instructions: null,
         };
@@ -96,9 +100,7 @@ export async function getStaticFilesStatusAction() {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 statuses[type] = {
-                    name: data.name || 'Saved Link',
-                    url: data.url,
-                    iconLink: data.iconLink,
+                    fileId: data.fileId,
                 };
             }
         }

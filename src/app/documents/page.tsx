@@ -7,151 +7,68 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
-import { ArrowLeft, FileQuestion, RefreshCcw, Link, Loader2, Share2, FileSpreadsheet, FileText } from 'lucide-react';
-import Image from 'next/image';
+import { ArrowLeft, FileQuestion, RefreshCcw, Link as LinkIcon, Loader2, FileSpreadsheet, FileText, Save } from 'lucide-react';
 import { updateRecipientDocumentsAction, getStaticFilesStatusAction, saveStaticDocumentLinksAction } from '@/app/actions/document-actions';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-type UploadableFile = 'inventory' | 'instructions';
-type FileStatus = { name: string; url: string, iconLink?: string } | null;
-type PickerFileType = 'spreadsheet' | 'document';
-
-// Extend Window interface to include gapi and google objects
-declare global {
-  interface Window {
-    gapi: any;
-    google: any;
-    tokenClient: any;
-  }
-}
+type FileType = 'inventory' | 'instructions';
+type FileStatus = { fileId: string | null };
 
 export default function ManageDocumentsPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isFetchingStatus, setIsFetchingStatus] = useState(true);
-  const [isPickerReady, setIsPickerReady] = useState(false);
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState<FileType | null>(null);
 
-  const [currentFiles, setCurrentFiles] = useState<Record<UploadableFile, FileStatus>>({
-    inventory: null,
-    instructions: null,
+  const [currentFiles, setCurrentFiles] = useState<Record<FileType, FileStatus>>({
+    inventory: { fileId: null },
+    instructions: { fileId: null },
+  });
+  
+  const [fileIdInputs, setFileIdInputs] = useState<Record<FileType, string>>({
+    inventory: '',
+    instructions: '',
   });
 
   const router = useRouter();
   const { toast } = useToast();
-
-  const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
-  const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
   
   const fetchFileStatus = useCallback(async () => {
     setIsFetchingStatus(true);
     const result = await getStaticFilesStatusAction();
     if (result.success && result.data) {
-      setCurrentFiles(result.data as Record<UploadableFile, FileStatus>);
+      const fetchedData = result.data as Record<FileType, FileStatus>;
+      setCurrentFiles(fetchedData);
+      setFileIdInputs({
+        inventory: fetchedData.inventory?.fileId || '',
+        instructions: fetchedData.instructions?.fileId || '',
+      });
     } else {
       toast({ variant: 'destructive', title: 'Could not fetch file statuses', description: result.error });
     }
     setIsFetchingStatus(false);
   }, [toast]);
 
-  // --- Google Picker API Logic ---
-  const loadGapi = useCallback(() => {
-    const script = document.createElement("script");
-    script.src = "https://apis.google.com/js/api.js";
-    script.async = true;
-    script.defer = true;
-    script.onload = () => window.gapi.load('client:picker', initializePicker);
-    document.body.appendChild(script);
-  }, []);
-
-  const initializePicker = useCallback(() => {
-    window.gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest')
-      .then(() => setIsPickerReady(true))
-      .catch((err: any) => {
-        console.error("Error loading drive client:", err);
-        toast({ variant: 'destructive', title: 'Picker Error', description: 'Could not load Google Drive client.'});
-      });
-  }, [toast]);
-  
-  const loadGis = useCallback(() => {
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-        window.tokenClient = window.google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: '', // defined later
-        });
-    };
-    document.body.appendChild(script);
-  }, [CLIENT_ID]);
-
   useEffect(() => {
     fetchFileStatus();
-    loadGapi();
-    loadGis();
-  }, [fetchFileStatus, loadGapi, loadGis]);
+  }, [fetchFileStatus]);
 
-  const handleAuthClick = (fileType: UploadableFile, pickerFileType: PickerFileType) => {
-    if (!API_KEY || !CLIENT_ID) {
-      toast({ variant: 'destructive', title: 'Configuration Missing', description: 'Google API Key or Client ID is not configured.' });
-      return;
+
+  const handleSaveFileId = async (fileType: FileType) => {
+    const fileId = fileIdInputs[fileType];
+    if (!fileId) {
+        toast({ variant: 'destructive', title: 'Input missing', description: 'Please provide a Google Drive File ID.' });
+        return;
     }
-    if (window.gapi?.client?.getToken() === null) {
-      window.tokenClient.callback = async (resp: any) => {
-        if (resp.error !== undefined) {
-          throw (resp);
-        }
-        createPicker(fileType, pickerFileType);
-      };
-      window.tokenClient.requestAccessToken({prompt: 'consent'});
+    setIsSaving(fileType);
+    const result = await saveStaticDocumentLinksAction({ fileType, fileId });
+    setIsSaving(null);
+    if (result.success) {
+        toast({ title: 'File ID Saved', description: result.message });
+        await fetchFileStatus();
     } else {
-      createPicker(fileType, pickerFileType);
+        toast({ variant: 'destructive', title: 'Failed to Save ID', description: result.error });
     }
-  }
-
-  const createPicker = (fileType: UploadableFile, pickerFileType: PickerFileType) => {
-    if (isPickerOpen) return;
-    setIsPickerOpen(true);
-
-    const view = new window.google.picker.View(window.google.picker.ViewId.DOCS);
-    if(pickerFileType === 'spreadsheet') {
-      view.setMimeTypes("application/vnd.google-apps.spreadsheet");
-    } else {
-      view.setMimeTypes("application/vnd.google-apps.document,application/pdf");
-    }
-
-    const picker = new window.google.picker.PickerBuilder()
-      .setAppId(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!)
-      .setApiKey(API_KEY!)
-      .setOAuthToken(window.gapi.client.getToken().access_token)
-      .addView(view)
-      .addView(new window.google.picker.DocsUploadView())
-      .setDeveloperKey(API_KEY!)
-      .setCallback(async (data: any) => {
-          setIsPickerOpen(false);
-          if (data.action === window.google.picker.Action.PICKED) {
-              const doc = data.docs[0];
-              const fileData = {
-                  fileType: fileType,
-                  url: doc.url,
-                  name: doc.name,
-                  iconLink: doc.iconUrl
-              };
-              
-              const result = await saveStaticDocumentLinksAction(fileData);
-
-              if (result.success) {
-                  toast({ title: 'Link Saved', description: result.message });
-                  await fetchFileStatus();
-              } else {
-                  toast({ variant: 'destructive', title: 'Failed to Save Link', description: result.error });
-              }
-          }
-      })
-      .build();
-    picker.setVisible(true);
   }
 
   const handleSyncLinks = async () => {
@@ -165,10 +82,15 @@ export default function ManageDocumentsPage() {
       toast({ variant: 'destructive', title: 'Sync Failed', description: result.error });
     }
   };
+  
+  const handleInputChange = (fileType: FileType, value: string) => {
+      setFileIdInputs(prev => ({...prev, [fileType]: value}));
+  }
 
-  const renderFileStatus = (fileType: UploadableFile, pickerFileType: PickerFileType, icon: React.ReactNode, title: string, description: string) => {
+  const renderFileStatusCard = (fileType: FileType, icon: React.ReactNode, title: string, description: string) => {
     const file = currentFiles[fileType];
-    const isPickerLoading = !isPickerReady || isPickerOpen;
+    const isCurrentlySaving = isSaving === fileType;
+
     return (
        <Card className="lg:col-span-1 flex flex-col">
           <CardHeader>
@@ -176,31 +98,38 @@ export default function ManageDocumentsPage() {
               <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-grow">
-              <div className="p-3 bg-muted/50 rounded-lg text-sm min-h-[60px] flex items-center">
+              <div className="space-y-2">
+                <Label htmlFor={`${fileType}-id-input`}>Google Drive File ID</Label>
+                <Input 
+                    id={`${fileType}-id-input`}
+                    placeholder="Paste your File ID here"
+                    value={fileIdInputs[fileType]}
+                    onChange={(e) => handleInputChange(fileType, e.target.value)}
+                    disabled={isFetchingStatus}
+                />
+              </div>
+               <div className="p-3 bg-muted/50 rounded-lg text-sm min-h-[60px] flex items-center">
                 {isFetchingStatus ? (
                     <div className="flex items-center space-x-2 text-muted-foreground w-full">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span>Checking status...</span>
                     </div>
-                ) : file && file.url ? (
+                ) : file && file.fileId ? (
                   <div className="flex justify-between items-center w-full">
-                    <div className="flex items-center gap-2 truncate">
-                      {file.iconLink && <Image src={file.iconLink} alt="file icon" width={16} height={16} />}
-                      <span className="font-medium truncate pr-2">{file.name}</span>
-                    </div>
+                    <span className="font-medium truncate pr-2 text-green-700">File ID is saved.</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2 text-muted-foreground w-full">
                         <FileQuestion className="h-4 w-4" />
-                        <span>No file link saved yet.</span>
+                        <span>No file ID saved yet.</span>
                     </div>
                 )}
               </div>
           </CardContent>
           <CardFooter>
-              <Button onClick={() => handleAuthClick(fileType, pickerFileType)} disabled={isPickerLoading} className="w-full">
-                   {isPickerLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
-                   Choose from Google Drive
+              <Button onClick={() => handleSaveFileId(fileType)} disabled={isCurrentlySaving || isFetchingStatus} className="w-full">
+                   {isCurrentlySaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                   {isCurrentlySaving ? 'Saving...' : 'Save File ID'}
               </Button>
           </CardFooter>
       </Card>
@@ -222,26 +151,26 @@ export default function ManageDocumentsPage() {
         </div>
         
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto">
-            {renderFileStatus('inventory', 'spreadsheet', <FileSpreadsheet />, '1. Set Inventory File', 'Choose the inventory file (Google Sheet) from your Google Drive.')}
-            {renderFileStatus('instructions', 'document', <FileText />, '2. Set Instructions File', 'Choose the instructions file (Google Doc or PDF) from your Google Drive.')}
+            {renderFileStatusCard('inventory', <FileSpreadsheet />, '1. Set Inventory File', 'Provide the Google Drive File ID for the inventory sheet.')}
+            {renderFileStatusCard('instructions', <FileText />, '2. Set Instructions File', 'Provide the Google Drive File ID for the instructions document.')}
 
             <Card className="md:col-span-2">
                 <CardHeader>
-                    <CardTitle>3. Sync Links to Recipients</CardTitle>
+                    <CardTitle>3. Sync File IDs to Recipients</CardTitle>
                     <CardDescription>
-                        Run this action to link the saved Google Drive file URLs to all existing recipients in the database.
-                        This will only sync files that have been successfully saved.
+                        Run this action to link the saved Google Drive files to all existing recipients in the database.
+                        This will only sync files that have a saved File ID.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                       This process will update all recipient records. If a link is updated later, you must run this sync again to update the links for all recipients.
+                       This process will update all recipient records. If a File ID is updated later, you must run this sync again to update the links for all recipients.
                     </p>
                 </CardContent>
                  <CardFooter>
                     <Button onClick={handleSyncLinks} disabled={isSyncing} className="w-full">
-                        {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link className="mr-2 h-4 w-4" />}
-                        {isSyncing ? 'Syncing...' : 'Sync Links to All Recipients'}
+                        {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
+                        {isSyncing ? 'Syncing...' : 'Sync to All Recipients'}
                     </Button>
                 </CardFooter>
             </Card>
