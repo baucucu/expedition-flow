@@ -247,20 +247,26 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
-  const handleQueueAwbs = async () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    if (selectedRows.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "No Recipients Selected",
-            description: "Please select one or more recipients.",
-        });
-        return;
+  const getSelectedRecipients = () => {
+    const selectedIds = new Set(Object.keys(rowSelection));
+    if (selectedIds.size === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Recipients Selected",
+        description: "Please select one or more recipients.",
+      });
+      return [];
     }
+    return initialData.filter(row => selectedIds.has(row.id));
+  };
+
+
+  const handleQueueAwbs = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
 
     // Filter out recipients whose AWBs are already generated or queued
-    const awbsToProcess = selectedRows
-      .map((row) => row.original)
+    const awbsToProcess = selectedRecipients
       .filter((recipient) => {
         const status = recipient.awb?.status;
         return status !== 'Generated' && status !== 'Queued' && status !== 'AWB_CREATED';
@@ -299,13 +305,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const handleGeneratePvs = async () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    if (selectedRows.length === 0) {
-        toast({ variant: "destructive", title: "No Recipients Selected" });
-        return;
-    }
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
 
-    const recipientIdsToProcess = selectedRows.map(row => row.original.id);
+    const recipientIdsToProcess = selectedRecipients.map(recipient => recipient.id);
 
     setIsGeneratingPv(true);
     const result = await generateProcesVerbalAction(recipientIdsToProcess);
@@ -725,7 +728,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
                          {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
@@ -749,3 +752,5 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    
