@@ -113,25 +113,13 @@ export async function getStaticFilesStatusAction() {
 }
 
 // Action for PV Generation
-export async function generateProcesVerbalAction(recipientIds: string[]) {
-    if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
+export async function generateProcesVerbalAction(recipients: {id: string, name: string, shipmentId: string}[]) {
+    if (!Array.isArray(recipients) || recipients.length === 0) {
         return { success: false, message: "Invalid input for PV generation." };
     }
 
     try {
-        const recipientsToProcess = [];
-        for (const id of recipientIds) {
-            const docRef = doc(db, "recipients", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                recipientsToProcess.push({ id: docSnap.id, name: data.name, shipmentId: data.shipmentId });
-            } else {
-                console.warn(`Recipient with ID ${id} not found.`);
-            }
-        }
-
-        const result = await generateProcesVerbal({ recipients: recipientsToProcess });
+        const result = await generateProcesVerbal({ recipients });
         return result;
     } catch (error: any) {
         console.error("Error in generateProcesVerbal flow:", error);

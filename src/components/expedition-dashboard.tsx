@@ -305,13 +305,25 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const handleGeneratePvs = async () => {
-    console.log("handleGeneratePvs triggered");
-    const selectedRecipients = getSelectedRecipients();
-    console.log({selectedRecipients, count: selectedRecipients.length});
-    if (selectedRecipients.length === 0) return;
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    console.log("handleGeneratePvs triggered for", selectedRows.length, "recipients");
+    if (selectedRows.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Recipients Selected",
+            description: "Please select one or more recipients.",
+        });
+        return;
+    }
+
+    const recipientsToProcess = selectedRows.map(row => ({
+        id: row.original.id,
+        name: row.original.name,
+        shipmentId: row.original.shipmentId,
+    }));
 
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction({ recipients: selectedRecipients });
+    const result = await generateProcesVerbalAction(recipientsToProcess);
     setIsGeneratingPv(false);
     
     if (result.success) {
@@ -752,6 +764,3 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
-
-    
-    
