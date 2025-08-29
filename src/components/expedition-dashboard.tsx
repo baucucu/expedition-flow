@@ -247,9 +247,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
-  const getSelectedRecipients = () => {
-    const selectedIds = new Set(Object.keys(rowSelection));
-    if (selectedIds.size === 0) {
+  const getSelectedRecipients = React.useCallback(() => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
       toast({
         variant: "destructive",
         title: "No Recipients Selected",
@@ -257,8 +257,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       });
       return [];
     }
-    return initialData.filter(row => selectedIds.has(row.id));
-  };
+    return selectedRows.map(row => row.original);
+  }, [rowSelection, initialData, toast]);
 
 
   const handleQueueAwbs = async () => {
@@ -305,13 +305,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const handleGeneratePvs = async () => {
+    console.log("handleGeneratePvs triggered");
     const selectedRecipients = getSelectedRecipients();
+    console.log({selectedRecipients, count: selectedRecipients.length});
     if (selectedRecipients.length === 0) return;
 
-    const recipientIdsToProcess = selectedRecipients.map(recipient => recipient.id);
-
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction(recipientIdsToProcess);
+    const result = await generateProcesVerbalAction({ recipients: selectedRecipients });
     setIsGeneratingPv(false);
     
     if (result.success) {
@@ -753,4 +753,5 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   );
 };
 
+    
     

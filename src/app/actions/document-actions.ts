@@ -125,7 +125,7 @@ export async function generateProcesVerbalAction(recipientIds: string[]) {
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                recipientsToProcess.push({ id: docSnap.id, name: data.name });
+                recipientsToProcess.push({ id: docSnap.id, name: data.name, shipmentId: data.shipmentId });
             } else {
                 console.warn(`Recipient with ID ${id} not found.`);
             }

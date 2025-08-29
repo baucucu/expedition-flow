@@ -16,6 +16,7 @@ import { generateProcesVerbalTask } from '@/trigger/pv-generator';
 const PVRecipientSchema = z.object({
   id: z.string(),
   name: z.string(),
+  shipmentId: z.string()
 });
 
 const ProcesVerbalGeneratorInputSchema = z.object({
@@ -60,7 +61,8 @@ const generateProcesVerbalFlow = ai.defineFlow(
             name: "generate.proces.verbal", // Event name, can be anything
             payload: { 
                 id: recipient.id,
-                name: recipient.name
+                name: recipient.name,
+                shipmentId: recipient.shipmentId
             },
         }));
 
