@@ -27,6 +27,7 @@ const queueShipmentAwbGenerationActionInputSchema = z.object({
   })),
 });
 
+const CHUNK_SIZE = 500;
 
 export async function queueShipmentAwbGenerationAction(input: z.infer<typeof queueShipmentAwbGenerationActionInputSchema>) {
     const validatedInput = queueShipmentAwbGenerationActionInputSchema.safeParse(input);
@@ -58,10 +59,13 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
             payload: { shipmentId },
         }));
 
-        // 3. Send all events to Trigger.dev in a single call
+        // 3. Send all events to Trigger.dev in chunks
         if (payloads.length > 0) {
-            // The first argument is the task ID, the second is an array of payloads.
-            await tasks.batchTrigger("awb-generator", payloads);
+            for (let i = 0; i < payloads.length; i += CHUNK_SIZE) {
+                const chunk = payloads.slice(i, i + CHUNK_SIZE);
+                // The first argument is the task ID, the second is an array of payloads.
+                await tasks.batchTrigger("awb-generator", chunk);
+            }
         }
 
         return { 
