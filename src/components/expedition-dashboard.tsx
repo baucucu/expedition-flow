@@ -297,12 +297,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         return;
     }
 
-    const recipientsToProcess = selectedRows
-        .map(row => row.original)
-        .map(({ id, name }) => ({ id, name }));
+    const recipientIdsToProcess = selectedRows.map(row => row.original.id);
 
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction({ recipients: recipientsToProcess });
+    const result = await generateProcesVerbalAction(recipientIdsToProcess);
     setIsGeneratingPv(false);
     
     if (result.success) {
