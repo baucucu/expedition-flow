@@ -248,120 +248,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
-  const getSelectedRecipients = React.useCallback(() => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    if (selectedRows.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No Recipients Selected",
-        description: "Please select one or more recipients.",
-      });
-      return [];
-    }
-    return selectedRows.map(row => row.original);
-  }, [table, toast]);
-
-
-  const handleQueueAwbs = async () => {
-    const selectedRecipients = getSelectedRecipients();
-    if (selectedRecipients.length === 0) return;
-
-    // Filter out recipients whose AWBs are already generated or queued
-    const awbsToProcess = selectedRecipients
-      .filter((recipient) => {
-        const status = recipient.awb?.status;
-        return status !== 'Generated' && status !== 'Queued' && status !== 'AWB_CREATED';
-      })
-      .map(recipient => ({
-          shipmentId: recipient.expeditionId,
-          awbId: recipient.awbId
-      }));
-
-    if (awbsToProcess.length === 0) {
-        toast({
-            title: "Nothing to Queue",
-            description: "All selected recipients already have a generated or queued AWB.",
-        });
-        return;
-    }
-
-
-    setIsQueuingAwb(true);
-    const result = await queueShipmentAwbGenerationAction({ awbsToQueue: awbsToProcess });
-    setIsQueuingAwb(false);
-    
-    if (result.success) {
-        toast({
-            title: "AWB Generation Queued",
-            description: result.message,
-        });
-        table.resetRowSelection(); // Clear selection after action
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Failed to Queue AWB Generation",
-            description: result.message,
-        });
-    }
-  }
-
-  const handleGeneratePvs = async () => {
-    const selectedRecipients = getSelectedRecipients();
-    if (selectedRecipients.length === 0) return;
-
-    const recipientsToProcess = selectedRecipients.map(row => ({
-        id: row.id,
-        name: row.name,
-        shipmentId: row.shipmentId,
-    }));
-    
-    console.log("handleGeneratePvs triggered for", recipientsToProcess.length, "recipients");
-
-    setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction({ recipients: recipientsToProcess });
-    setIsGeneratingPv(false);
-    
-    if (result.success) {
-        toast({
-            title: "PV Generation Succeeded",
-            description: result.message,
-        });
-        table.resetRowSelection();
-    } else {
-        toast({
-            variant: "destructive",
-            title: "PV Generation Failed",
-            description: result.message,
-        });
-    }
-  };
-
-  const handleSendEmails = async () => {
-    const selectedRecipients = getSelectedRecipients();
-    if (selectedRecipients.length === 0) return;
-
-    const recipientIds = selectedRecipients.map(r => r.id);
-
-    setIsSendingEmail(true);
-    const result = await sendEmailToLogisticsAction({ recipientIds });
-    setIsSendingEmail(false);
-
-    if (result.success) {
-        toast({
-            title: "Email Process Queued",
-            description: result.message
-        });
-        table.resetRowSelection();
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Failed to Queue Emails",
-            description: result.message,
-        });
-    }
-  }
-
-
   const columns: ColumnDef<RecipientRow>[] = [
     {
         id: "select",
@@ -599,6 +485,119 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     },
     enableRowSelection: true,
   });
+
+  const getSelectedRecipients = React.useCallback(() => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Recipients Selected",
+        description: "Please select one or more recipients.",
+      });
+      return [];
+    }
+    return selectedRows.map(row => row.original);
+  }, [table, toast]);
+
+
+  const handleQueueAwbs = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
+
+    // Filter out recipients whose AWBs are already generated or queued
+    const awbsToProcess = selectedRecipients
+      .filter((recipient) => {
+        const status = recipient.awb?.status;
+        return status !== 'Generated' && status !== 'Queued' && status !== 'AWB_CREATED';
+      })
+      .map(recipient => ({
+          shipmentId: recipient.expeditionId,
+          awbId: recipient.awbId
+      }));
+
+    if (awbsToProcess.length === 0) {
+        toast({
+            title: "Nothing to Queue",
+            description: "All selected recipients already have a generated or queued AWB.",
+        });
+        return;
+    }
+
+
+    setIsQueuingAwb(true);
+    const result = await queueShipmentAwbGenerationAction({ awbsToQueue: awbsToProcess });
+    setIsQueuingAwb(false);
+    
+    if (result.success) {
+        toast({
+            title: "AWB Generation Queued",
+            description: result.message,
+        });
+        table.resetRowSelection(); // Clear selection after action
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Failed to Queue AWB Generation",
+            description: result.message,
+        });
+    }
+  }
+
+  const handleGeneratePvs = async () => {
+    console.log("handleGeneratePvs triggered");
+    const selectedRecipients = getSelectedRecipients();
+    console.log(`Selected recipients count: ${selectedRecipients.length}`);
+    if (selectedRecipients.length === 0) return;
+
+    const recipientsToProcess = selectedRecipients.map(row => ({
+        id: row.id,
+        name: row.name,
+        shipmentId: row.shipmentId,
+    }));
+    
+    setIsGeneratingPv(true);
+    const result = await generateProcesVerbalAction(recipientsToProcess);
+    setIsGeneratingPv(false);
+    
+    if (result.success) {
+        toast({
+            title: "PV Generation Succeeded",
+            description: result.message,
+        });
+        table.resetRowSelection();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "PV Generation Failed",
+            description: result.message,
+        });
+    }
+  };
+
+  const handleSendEmails = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
+
+    const recipientIds = selectedRecipients.map(r => r.id);
+
+    setIsSendingEmail(true);
+    const result = await sendEmailToLogisticsAction({ recipientIds });
+    setIsSendingEmail(false);
+
+    if (result.success) {
+        toast({
+            title: "Email Process Queued",
+            description: result.message
+        });
+        table.resetRowSelection();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Failed to Queue Emails",
+            description: result.message,
+        });
+    }
+  }
   
   const selectedRowCount = Object.keys(rowSelection).length;
 
