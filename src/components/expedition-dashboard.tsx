@@ -135,7 +135,7 @@ function DataTableColumnFilter<TData, TValue>({
   return (
      <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="-ml-3 h-8">
+        <Button variant="outline" size="sm" className="h-8 border-dashed flex items-center">
             <span>{title}</span>
             {selectedValues?.size > 0 && (
                 <>
