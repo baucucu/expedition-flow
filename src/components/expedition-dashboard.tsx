@@ -25,7 +25,6 @@ import {
   Hourglass,
   ChevronDown,
   Filter,
-  Check,
   FileCheck,
 } from "lucide-react";
 import {
@@ -66,6 +65,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
+import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -230,6 +230,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isQueuingAwb, setIsQueuingAwb] = React.useState(false);
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
+  const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
   const { toast } = useToast();
 
@@ -258,7 +259,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       return [];
     }
     return selectedRows.map(row => row.original);
-  }, [rowSelection, initialData, toast]);
+  }, [table, toast]);
 
 
   const handleQueueAwbs = async () => {
@@ -305,25 +306,19 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const handleGeneratePvs = async () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
-    console.log("handleGeneratePvs triggered for", selectedRows.length, "recipients");
-    if (selectedRows.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "No Recipients Selected",
-            description: "Please select one or more recipients.",
-        });
-        return;
-    }
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
 
-    const recipientsToProcess = selectedRows.map(row => ({
-        id: row.original.id,
-        name: row.original.name,
-        shipmentId: row.original.shipmentId,
+    const recipientsToProcess = selectedRecipients.map(row => ({
+        id: row.id,
+        name: row.name,
+        shipmentId: row.shipmentId,
     }));
+    
+    console.log("handleGeneratePvs triggered for", recipientsToProcess.length, "recipients");
 
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction(recipientsToProcess);
+    const result = await generateProcesVerbalAction({ recipients: recipientsToProcess });
     setIsGeneratingPv(false);
     
     if (result.success) {
@@ -340,6 +335,32 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         });
     }
   };
+
+  const handleSendEmails = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
+
+    const recipientIds = selectedRecipients.map(r => r.id);
+
+    setIsSendingEmail(true);
+    const result = await sendEmailToLogisticsAction({ recipientIds });
+    setIsSendingEmail(false);
+
+    if (result.success) {
+        toast({
+            title: "Email Process Queued",
+            description: result.message
+        });
+        table.resetRowSelection();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Failed to Queue Emails",
+            description: result.message,
+        });
+    }
+  }
+
 
   const columns: ColumnDef<RecipientRow>[] = [
     {
@@ -617,6 +638,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </DropdownMenuContent>
                 </DropdownMenu>
 
+                <Button 
+                    onClick={handleSendEmails} 
+                    disabled={isSendingEmail || selectedRowCount === 0}
+                >
+                    {isSendingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    {isSendingEmail 
+                        ? 'Queuing...' 
+                        : `Send Email for ${selectedRowCount} selected`
+                    }
+                </Button>
                 <Button 
                     variant="outline"
                     onClick={handleGeneratePvs}

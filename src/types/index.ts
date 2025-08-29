@@ -1,8 +1,4 @@
 
-
-
-
-
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV' | 'AWB';
 export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed';
 
