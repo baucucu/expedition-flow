@@ -34,7 +34,7 @@ export const addAwbToDrive = task({
           const res = await fetch(webhookUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ awbNumber, recipientId }),
+            body: JSON.stringify({ awbNumber, recipientId, shipmentId }),
           });
 
           if (!res.ok) {
