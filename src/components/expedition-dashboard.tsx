@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Filter,
   Check,
+  FileCheck,
 } from "lucide-react";
 import {
   Sheet,
@@ -42,6 +43,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button";
@@ -227,13 +230,18 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isQueuingAwb, setIsQueuingAwb] = React.useState(false);
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
+  const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
   const { toast } = useToast();
 
   React.useEffect(() => {
-    setData(initialData);
-    console.log("Initial Data changed, rowSelection:", rowSelection);
-    // Do not reset selection when data/filters change from the parent scorecards
-  }, [initialData]);
+    let filteredData = initialData;
+    if (pvFilter === 'has_pv') {
+      filteredData = filteredData.filter(row => !!row.pvUrl);
+    } else if (pvFilter === 'no_pv') {
+      filteredData = filteredData.filter(row => !row.pvUrl);
+    }
+    setData(filteredData);
+  }, [initialData, pvFilter]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType) => {
     setSelectedDocument({ recipient, docType });
@@ -526,10 +534,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onRowSelectionChange: (updater) => {
- setRowSelection(updater);
-      console.log("Row selection changed:", updater);
- },    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, columnId, filterValue) => {
         const search = filterValue.toLowerCase();
         
@@ -570,27 +575,55 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 onChange={(event) => setGlobalFilter(event.target.value)}
                 className="max-w-sm"
             />
-             <Button 
-                variant="outline"
-                onClick={handleGeneratePvs}
-                disabled={isGeneratingPv || selectedRowCount === 0}
-             >
-                {isGeneratingPv ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
-                {isGeneratingPv
-                    ? 'Generating...'
-                    : `Generate PV for ${selectedRowCount} selected`
-                }
-             </Button>
-             <Button 
-                onClick={handleQueueAwbs} 
-                disabled={isQueuingAwb || selectedRowCount === 0}
-            >
-                {isQueuingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Hourglass className="mr-2 h-4 w-4" />}
-                {isQueuingAwb 
-                    ? 'Queuing...' 
-                    : `Generate AWB(s) for ${selectedRowCount} selected`
-                }
-            </Button>
+             <div className="flex items-center gap-2 ml-auto">
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-8 border-dashed flex items-center">
+                            <FileCheck className="mr-2 h-4 w-4" />
+                            PV Status
+                            {pvFilter !== 'all' && (
+                                <>
+                                    <Separator orientation="vertical" className="mx-2 h-4" />
+                                    <Badge variant="secondary" className="rounded-sm px-1 font-normal">
+                                        {pvFilter === 'has_pv' ? 'Has PV' : 'No PV'}
+                                    </Badge>
+                                </>
+                            )}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Filter by PV Status</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuRadioGroup value={pvFilter} onValueChange={(value) => setPvFilter(value as any)}>
+                            <DropdownMenuRadioItem value="all">All</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="has_pv">Has PV</DropdownMenuRadioItem>
+                            <DropdownMenuRadioItem value="no_pv">No PV</DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button 
+                    variant="outline"
+                    onClick={handleGeneratePvs}
+                    disabled={isGeneratingPv || selectedRowCount === 0}
+                >
+                    {isGeneratingPv ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
+                    {isGeneratingPv
+                        ? 'Generating...'
+                        : `Generate PV for ${selectedRowCount} selected`
+                    }
+                </Button>
+                <Button 
+                    onClick={handleQueueAwbs} 
+                    disabled={isQueuingAwb || selectedRowCount === 0}
+                >
+                    {isQueuingAwb ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Hourglass className="mr-2 h-4 w-4" />}
+                    {isQueuingAwb 
+                        ? 'Queuing...' 
+                        : `Generate AWB(s) for ${selectedRowCount} selected`
+                    }
+                </Button>
+             </div>
         </div>
       <div className="rounded-md border">
         <Table>
@@ -692,7 +725,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
                          {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="gdrive-pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
