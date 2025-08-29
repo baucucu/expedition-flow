@@ -25,6 +25,7 @@ import {
   Hourglass,
   ChevronDown,
   Filter,
+  Check,
 } from "lucide-react";
 import {
   Sheet,
@@ -63,6 +64,7 @@ import { queueShipmentAwbGenerationAction } from "@/app/actions/awb-actions";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
 import { cn } from "@/lib/utils";
+import { Separator } from "./ui/separator";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
