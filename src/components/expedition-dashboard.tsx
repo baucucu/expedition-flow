@@ -9,6 +9,8 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -22,6 +24,7 @@ import {
   FileSignature,
   Hourglass,
   ChevronDown,
+  Filter,
 } from "lucide-react";
 import {
   Sheet,
@@ -32,11 +35,15 @@ import {
 } from "@/components/ui/sheet";
 import {
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +62,7 @@ import { generateProcesVerbalAction } from "@/app/actions/document-actions";
 import { queueShipmentAwbGenerationAction } from "@/app/actions/awb-actions";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "./document-viewer";
+import { cn } from "@/lib/utils";
 
 const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -64,13 +72,17 @@ const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary
   Returned: "destructive",
 };
 
+const recipientStatuses: RecipientStatus[] = ['New', 'Documents Generated', 'Delivered', 'Completed', 'Returned'];
+
 const awbStatusVariant: { [key in AWBStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
   Queued: "secondary",
   Generated: "default",
-  "AWB_CREATED": "default",
+  AWB_CREATED: "default",
   Failed: "destructive",
 };
+
+const awbStatuses: AWBStatus[] = ['New', 'Queued', 'Generated', 'AWB_CREATED', 'Failed'];
 
 
 type RecipientRow = Recipient & { expeditionId: string; awb?: AWB, expeditionStatus: ExpeditionStatus };
@@ -103,6 +115,120 @@ const DocumentPlaceholder = ({ title }: { title: string }) => (
     </div>
 )
 
+interface DataTableColumnHeaderProps<TData, TValue>
+  extends React.HTMLAttributes<HTMLDivElement> {
+  column: any
+  title: string
+  options?: { label: string; value: string }[]
+}
+
+function DataTableColumnFilter<TData, TValue>({
+  column,
+  title,
+  options
+}: DataTableColumnHeaderProps<TData, TValue>) {
+  
+  const selectedValues = new Set(column.getFilterValue() as string[]);
+
+  return (
+     <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="-ml-3 h-8">
+            <span>{title}</span>
+            {selectedValues?.size > 0 && (
+                <>
+                <Separator orientation="vertical" className="mx-2 h-4" />
+                <Badge
+                  variant="secondary"
+                  className="rounded-sm px-1 font-normal lg:hidden"
+                >
+                  {selectedValues.size}
+                </Badge>
+                <div className="hidden space-x-1 lg:flex">
+                  {selectedValues.size > 2 ? (
+                    <Badge
+                      variant="secondary"
+                      className="rounded-sm px-1 font-normal"
+                    >
+                      {selectedValues.size} selected
+                    </Badge>
+                  ) : (
+                    options
+                      ?.filter((option) => selectedValues.has(option.value))
+                      .map((option) => (
+                        <Badge
+                          variant="secondary"
+                          key={option.value}
+                          className="rounded-sm px-1 font-normal"
+                        >
+                          {option.label}
+                        </Badge>
+                      ))
+                  )}
+                </div>
+              </>
+            )}
+             <Filter className="ml-2 h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[200px] p-0" align="start">
+         <Command>
+          <CommandInput placeholder={title} />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup>
+              {options?.map((option) => {
+                const isSelected = selectedValues.has(option.value)
+                return (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => {
+                      if (isSelected) {
+                        selectedValues.delete(option.value)
+                      } else {
+                        selectedValues.add(option.value)
+                      }
+                      const filterValues = Array.from(selectedValues)
+                      column.setFilterValue(
+                        filterValues.length ? filterValues : undefined
+                      )
+                    }}
+                  >
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50 [&_svg]:invisible"
+                      )}
+                    >
+                      <Check className={cn("h-4 w-4")} />
+                    </div>
+                    <span>{option.label}</span>
+                  </CommandItem>
+                )
+              })}
+            </CommandGroup>
+            {selectedValues.size > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={() => column.setFilterValue(undefined)}
+                    className="justify-center text-center"
+                  >
+                    Clear filters
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+     </Popover>
+  )
+}
+
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
@@ -121,7 +247,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   React.useEffect(() => {
     setData(initialData);
-    setRowSelection({}); // Reset selection when data/filters change
+    // Do not reset selection when data/filters change from the parent scorecards
   }, [initialData]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType) => {
@@ -213,26 +339,17 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     {
         id: "select",
         header: ({ table }) => {
-            const isAllFilteredSelected = table.getIsAllRowsSelected();
-            const isSomeFilteredSelected = table.getIsSomeRowsSelected();
+            const isAllFilteredSelected = table.getIsAllPageRowsSelected();
+            const isSomeFilteredSelected = table.getIsSomePageRowsSelected();
 
             return (
                 <div className="flex items-center gap-2">
                     <Checkbox
                         checked={isAllFilteredSelected}
                         onCheckedChange={(value) => {
-                            const allFilteredIds = table.getFilteredRowModel().rows.reduce((acc, row) => {
-                                acc[row.original.id] = true;
-                                return acc;
-                            }, {} as Record<string, boolean>);
-                            
-                            if (value) {
-                                setRowSelection(allFilteredIds);
-                            } else {
-                                table.resetRowSelection();
-                            }
+                            table.toggleAllPageRowsSelected(!!value);
                         }}
-                        aria-label="Select all filtered rows"
+                        aria-label="Select all on page"
                         data-state={isSomeFilteredSelected && !isAllFilteredSelected ? "indeterminate" : (isAllFilteredSelected ? "checked" : "unchecked")}
                     />
                     <DropdownMenu>
@@ -312,7 +429,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     },
     {
       accessorKey: "status",
-      header: "Recipient Status",
+      header: ({ column }) => (
+        <DataTableColumnFilter 
+            column={column} 
+            title="Recipient Status" 
+            options={recipientStatuses.map(s => ({ value: s, label: s}))}
+        />
+      ),
       cell: ({ row }) => {
         const status: RecipientStatus = row.getValue("status");
         return (
@@ -321,10 +444,19 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
           </Badge>
         );
       },
+      filterFn: (row, id, value) => {
+        return value.includes(row.getValue(id))
+      },
     },
     {
         accessorKey: "awb.status",
-        header: "AWB Status",
+        header: ({ column }) => (
+           <DataTableColumnFilter 
+            column={column} 
+            title="AWB Status" 
+            options={awbStatuses.map(s => ({ value: s, label: s}))}
+           />
+        ),
         cell: ({ row }) => {
             const status: AWBStatus = row.original.awb?.status ?? 'New';
             return (
@@ -332,6 +464,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 {status}
               </Badge>
             );
+        },
+        filterFn: (row, id, value) => {
+            const status = row.original.awb?.status ?? 'New';
+            return value.includes(status)
         },
     },
     {
@@ -403,6 +539,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
@@ -568,7 +706,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
                          {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
