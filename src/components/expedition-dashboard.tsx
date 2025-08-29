@@ -231,6 +231,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   React.useEffect(() => {
     setData(initialData);
+    console.log("Initial Data changed, rowSelection:", rowSelection);
     // Do not reset selection when data/filters change from the parent scorecards
   }, [initialData]);
   
@@ -527,7 +528,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: (updater) => {
+ setRowSelection(updater);
+      console.log("Row selection changed:", updater);
+ },    onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, columnId, filterValue) => {
         const search = filterValue.toLowerCase();
         

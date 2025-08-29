@@ -133,6 +133,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
 
                 // Add default document structure
                 recipientData.documents = {
+                    'proces verbal de receptie': { status: 'Not Generated' },
                     'instructiuni pentru confirmarea primirii coletului': { status: 'Not Generated' },
                     'parcel inventory': { status: 'Not Generated' },
                 };

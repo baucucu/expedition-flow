@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A flow for generating "Proces Verbal" documents by calling an n8n webhook.
+ * @fileOverview A flow for generating "Proces Verbal" documents by batch-triggering a Trigger.dev task.
  * 
  * - generateProcesVerbal - A function that triggers the PV generation for multiple recipients.
  * - ProcesVerbalGeneratorInput - The input type for the function.
@@ -11,9 +11,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { db } from "@/lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
-import type { Recipient } from "@/types";
 import { generateProcesVerbalTask } from '@/trigger/pv-generator';
 
 const PVRecipientSchema = z.object({
@@ -30,10 +27,7 @@ const ProcesVerbalGeneratorOutputSchema = z.object({
     success: z.boolean(),
     message: z.string(),
     details: z.object({
-        total: z.number(),
-        successCount: z.number(),
-        failCount: z.number(),
-        errors: z.array(z.string()).optional(),
+        triggeredJobs: z.number(),
     }).optional(),
 });
 export type ProcesVerbalGeneratorOutput = z.infer<typeof ProcesVerbalGeneratorOutputSchema>;
@@ -42,54 +36,7 @@ export async function generateProcesVerbal(input: ProcesVerbalGeneratorInput): P
   return generateProcesVerbalFlow(input);
 }
 
-const N8N_WEBHOOK_URL = process.env.N8N_PV_WEBHOOK_URL;
-
-async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Promise<{ recipientId: string; pvUrl?: string; error?: string }> {
-    if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL_HERE') {
-         return { recipientId: recipient.id, error: 'n8n webhook URL is not configured.' };
-    }
-    
-    try {
-        const response = await fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: recipient.name,
-                recipient_id: recipient.id,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            return { recipientId: recipient.id, error: `Webhook failed with status ${response.status}: ${errorText}` };
-        }
-
-        const result = await response.json();
-        
-        const docId = result?.id;
-        const webViewLink = result?.webViewLink;
-
-
-        if (!docId || !webViewLink) {
-            return { recipientId: recipient.id, error: 'Webhook response did not include a document ID or webViewLink.' };
-        }
-        
-        // Update Firestore
-        const recipientRef = doc(db, "recipients", recipient.id);
-        await updateDoc(recipientRef, { 
-            pvId: docId,
-            pvUrl: webViewLink 
-        });
-
-        return { recipientId: recipient.id, pvUrl: webViewLink };
-
-    } catch (error: any) {
-        return { recipientId: recipient.id, error: error.message };
-    }
-}
-
 const BATCH_SIZE = 500;
-
 
 const generateProcesVerbalFlow = ai.defineFlow(
   {
@@ -99,45 +46,34 @@ const generateProcesVerbalFlow = ai.defineFlow(
   },
   async ({ recipients }) => {
     
-    if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL_HERE') {
+    if (!process.env.N8N_PV_WEBHOOK_URL) {
       return { success: false, message: "Proces Verbal webhook URL is not configured in environment variables." };
     }
-      
-    let successCount = 0;
-    let failCount = 0;
-    const errors: string[] = [];
+    
+    let totalTriggered = 0;
 
     for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
         const chunk = recipients.slice(i, i + BATCH_SIZE);
         
-        const taskPromises = chunk.map(recipient => 
-            generateProcesVerbalTask.trigger(recipient)
-        );
-        
-        const results = await Promise.allSettled(taskPromises);
+        // Prepare the events for Trigger.dev for each recipient in the chunk
+        const events = chunk.map(recipient => ({
+            name: "generate.proces.verbal", // Event name, can be anything
+            payload: { 
+                id: recipient.id,
+                name: recipient.name
+            },
+        }));
 
-        for (const result of results) {
-            if (result.status === 'fulfilled' && result.value.pvUrl) {
-                successCount++;
-            } else {
-                let errorMessage = `Task failed for recipient.`;
-                if (result.status === 'fulfilled' && result.value.error) {
-                    errorMessage = `Recipient ${result.value.recipientId}: ${result.value.error}`;
-                }
-                failCount++;
-                errors.push(`Recipient ${result.recipientId}: ${result.error}`);
-            }
-        }
+        // The first argument is the task, the second is an array of event payloads.
+        await generateProcesVerbalTask.batchTrigger(events);
+        totalTriggered += chunk.length;
     }
 
     return {
-        success: failCount === 0,
-        message: `PV generation process completed. Success: ${successCount}, Failed: ${failCount}.`,
+        success: true,
+        message: `Successfully queued PV generation for ${totalTriggered} recipient(s).`,
         details: {
-            total: recipients.length,
-            successCount,
-            failCount,
-            errors
+            triggeredJobs: totalTriggered,
         }
     };
   }

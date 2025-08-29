@@ -113,21 +113,26 @@ export async function getStaticFilesStatusAction() {
 }
 
 // Action for PV Generation
-const generatePvActionInputSchema = z.object({
-  recipients: z.array(z.object({
-      id: z.string(),
-      name: z.string(),
-  })),
-});
-
-export async function generateProcesVerbalAction(input: z.infer<typeof generatePvActionInputSchema>) {
-    const validatedInput = generatePvActionInputSchema.safeParse(input);
-    if (!validatedInput.success) {
+export async function generateProcesVerbalAction(recipientIds: string[]) {
+    if (!Array.isArray(recipientIds) || recipientIds.length === 0) {
         return { success: false, message: "Invalid input for PV generation." };
     }
+
     try {
-        const result = await generateProcesVerbal(validatedInput.data);
-        return result; // Directly return the result from the flow
+        const recipientsToProcess = [];
+        for (const id of recipientIds) {
+            const docRef = doc(db, "recipients", id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                recipientsToProcess.push({ id: docSnap.id, name: data.name });
+            } else {
+                console.warn(`Recipient with ID ${id} not found.`);
+            }
+        }
+
+        const result = await generateProcesVerbal({ recipients: recipientsToProcess });
+        return result;
     } catch (error: any) {
         console.error("Error in generateProcesVerbal flow:", error);
         return { success: false, message: `Failed to start PV generation due to a server error: ${error.message}` };
