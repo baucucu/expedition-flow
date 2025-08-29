@@ -56,6 +56,7 @@ export const sendEmailTask = task({
         // 4. Construct the webhook payload
         const webhookPayload = {
             shipmentId: shipmentId,
+            awbNumber: awbData.awbNumber,
             awbDocumentId: recipients[0]?.awbPdfFileId, // Assume all recipients in shipment have same AWB PDF
             awbNumberOfParcels: awbData.parcelCount,
             inventoryDocumentId: inventoryDocumentId,
