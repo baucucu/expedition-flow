@@ -22,6 +22,7 @@ import {
   FileText,
   FileSignature,
   Hourglass,
+  ChevronDown,
 } from "lucide-react";
 import {
   Sheet,
@@ -30,6 +31,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -230,14 +238,43 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     {
         id: "select",
         header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
+            <div className="flex items-center gap-2">
+                 <Checkbox
+                    checked={
+                        table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && "indeterminate")
+                    }
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all on this page"
+                />
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <ChevronDown className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                        <DropdownMenuItem onSelect={() => table.toggleAllPageRowsSelected(true)}>
+                            Select All on Page
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                            onSelect={() => {
+                                const allFilteredIds = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                                    acc[row.original.id] = true;
+                                    return acc;
+                                }, {} as Record<string, boolean>);
+                                setRowSelection(allFilteredIds);
+                            }}
+                        >
+                            Select All Matching Filters
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => table.resetRowSelection()}>
+                            Deselect All
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         ),
         cell: ({ row }) => (
           <Checkbox
@@ -406,6 +443,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       rowSelection,
       globalFilter,
     },
+    enableRowSelection: true,
   });
   
   const selectedRowCount = Object.keys(rowSelection).length;
@@ -588,3 +626,5 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    

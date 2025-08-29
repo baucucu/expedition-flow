@@ -14,6 +14,7 @@ import { z } from 'genkit';
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import type { Recipient } from "@/types";
+import { generateProcesVerbalTask } from '@/trigger/pv-generator';
 
 const PVRecipientSchema = z.object({
   id: z.string(),
@@ -42,7 +43,6 @@ export async function generateProcesVerbal(input: ProcesVerbalGeneratorInput): P
 }
 
 const N8N_WEBHOOK_URL = process.env.N8N_PV_WEBHOOK_URL;
-const CONCURRENT_LIMIT = 20;
 
 async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Promise<{ recipientId: string; pvUrl?: string; error?: string }> {
     if (!N8N_WEBHOOK_URL || N8N_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL_HERE') {
@@ -88,6 +88,8 @@ async function callN8nWebhook(recipient: z.infer<typeof PVRecipientSchema>): Pro
     }
 }
 
+const BATCH_SIZE = 500;
+
 
 const generateProcesVerbalFlow = ai.defineFlow(
   {
@@ -105,17 +107,23 @@ const generateProcesVerbalFlow = ai.defineFlow(
     let failCount = 0;
     const errors: string[] = [];
 
-    // Process recipients in chunks of CONCURRENT_LIMIT
-    for (let i = 0; i < recipients.length; i += CONCURRENT_LIMIT) {
-        const chunk = recipients.slice(i, i + CONCURRENT_LIMIT);
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+        const chunk = recipients.slice(i, i + BATCH_SIZE);
         
-        const promises = chunk.map(recipient => callN8nWebhook(recipient));
-        const results = await Promise.all(promises);
+        const taskPromises = chunk.map(recipient => 
+            generateProcesVerbalTask.trigger(recipient)
+        );
+        
+        const results = await Promise.allSettled(taskPromises);
 
         for (const result of results) {
-            if (result.pvUrl) {
+            if (result.status === 'fulfilled' && result.value.pvUrl) {
                 successCount++;
             } else {
+                let errorMessage = `Task failed for recipient.`;
+                if (result.status === 'fulfilled' && result.value.error) {
+                    errorMessage = `Recipient ${result.value.recipientId}: ${result.value.error}`;
+                }
                 failCount++;
                 errors.push(`Recipient ${result.recipientId}: ${result.error}`);
             }
