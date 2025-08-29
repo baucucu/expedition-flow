@@ -16,7 +16,6 @@ import {
 } from "@tanstack/react-table";
 import {
   Mail,
-  X as XIcon,
   Loader2,
   Send,
   FileText,
@@ -116,39 +115,15 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [data, setData] = React.useState<RecipientRow[]>(initialData);
   const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
   const [globalFilter, setGlobalFilter] = React.useState('');
-  const [keywords, setKeywords] = React.useState<string[]>([]);
-  const [inputValue, setInputValue] = React.useState('');
-  const inputRef = React.useRef<HTMLInputElement>(null);
   const [isQueuingAwb, setIsQueuingAwb] = React.useState(false);
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
     setData(initialData);
-    setRowSelection({}); // Reset selection when data changes
+    setRowSelection({}); // Reset selection when data/filters change
   }, [initialData]);
-
-  React.useEffect(() => {
-    setGlobalFilter(keywords.join(' '));
-  }, [keywords]);
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && inputValue.trim() !== '') {
-        if (!keywords.includes(inputValue.trim())) {
-            setKeywords([...keywords, inputValue.trim()]);
-        }
-        setInputValue('');
-        event.preventDefault();
-    } else if (event.key === 'Backspace' && inputValue === '' && keywords.length > 0) {
-        removeKeyword(keywords[keywords.length - 1]);
-    }
-  };
-
-  const removeKeyword = (keywordToRemove: string) => {
-    setKeywords(keywords.filter(keyword => keyword !== keywordToRemove));
-  };
-
-
+  
   const handleOpenDocument = (recipient: RecipientRow, docType: DocumentType) => {
     setSelectedDocument({ recipient, docType });
   }
@@ -237,45 +212,59 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const columns: ColumnDef<RecipientRow>[] = [
     {
         id: "select",
-        header: ({ table }) => (
-            <div className="flex items-center gap-2">
-                 <Checkbox
-                    checked={
-                        table.getIsAllPageRowsSelected() ||
-                        (table.getIsSomePageRowsSelected() && "indeterminate")
-                    }
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                    aria-label="Select all on this page"
-                />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ChevronDown className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                        <DropdownMenuItem onSelect={() => table.toggleAllPageRowsSelected(true)}>
-                            Select All on Page
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                            onSelect={() => {
-                                const allFilteredIds = table.getFilteredRowModel().rows.reduce((acc, row) => {
-                                    acc[row.original.id] = true;
-                                    return acc;
-                                }, {} as Record<string, boolean>);
+        header: ({ table }) => {
+            const isAllFilteredSelected = table.getIsAllRowsSelected();
+            const isSomeFilteredSelected = table.getIsSomeRowsSelected();
+
+            return (
+                <div className="flex items-center gap-2">
+                    <Checkbox
+                        checked={isAllFilteredSelected}
+                        onCheckedChange={(value) => {
+                            const allFilteredIds = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                                acc[row.original.id] = true;
+                                return acc;
+                            }, {} as Record<string, boolean>);
+                            
+                            if (value) {
                                 setRowSelection(allFilteredIds);
-                            }}
-                        >
-                            Select All Matching Filters
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => table.resetRowSelection()}>
-                            Deselect All
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
-        ),
+                            } else {
+                                table.resetRowSelection();
+                            }
+                        }}
+                        aria-label="Select all filtered rows"
+                        data-state={isSomeFilteredSelected && !isAllFilteredSelected ? "indeterminate" : (isAllFilteredSelected ? "checked" : "unchecked")}
+                    />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                             <DropdownMenuItem onSelect={() => table.toggleAllPageRowsSelected(true)}>
+                                Select Page
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onSelect={() => {
+                                    const allFilteredIds = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                                        acc[row.original.id] = true;
+                                        return acc;
+                                    }, {} as Record<string, boolean>);
+                                    setRowSelection(allFilteredIds);
+                                }}
+                            >
+                                Select All Filtered
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => table.resetRowSelection()}>
+                                Deselect All
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            );
+        },
         cell: ({ row }) => (
           <Checkbox
             checked={row.getIsSelected()}
@@ -419,7 +408,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, columnId, filterValue) => {
         const search = filterValue.toLowerCase();
-        const keywords = search.split(' ');
         
         const rowValues = [
             row.original.id,
@@ -430,11 +418,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             row.original.awb?.county,
             row.original.schoolName,
             row.original.status,
+            row.original.awb?.status,
             row.original.awb?.mainRecipientName,
             row.original.awb?.id
         ].filter(Boolean).join(' ').toLowerCase();
 
-        return keywords.every(keyword => rowValues.includes(keyword));
+        return rowValues.includes(search);
     },
     state: {
       sorting,
@@ -451,35 +440,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   return (
     <div className="w-full">
         <div className="flex items-center py-4 gap-4">
-            <div 
-                className="flex w-full items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 flex-1"
-                onClick={() => inputRef.current?.focus()}
-            >
-                <div className="flex flex-wrap gap-1">
-                    {keywords.map((keyword, index) => (
-                        <Badge key={index} variant="secondary" className="pl-2 pr-1">
-                            {keyword}
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeKeyword(keyword);
-                                }} 
-                                className="ml-1 rounded-full p-0.5 hover:bg-background/50"
-                            >
-                                <XIcon className="h-3 w-3" />
-                            </button>
-                        </Badge>
-                    ))}
-                </div>
-                <Input
-                    ref={inputRef}
-                    placeholder={keywords.length === 0 ? "Search by any text and press Enter..." : ""}
-                    value={inputValue}
-                    onChange={(event) => setInputValue(event.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="h-auto flex-1 border-none bg-transparent p-1 shadow-none focus-visible:ring-0"
-                />
-            </div>
+             <Input
+                placeholder="Search all columns..."
+                value={globalFilter ?? ''}
+                onChange={(event) => setGlobalFilter(event.target.value)}
+                className="max-w-sm"
+            />
              <Button 
                 variant="outline"
                 onClick={handleGeneratePvs}
@@ -602,7 +568,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
                          {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="gdrive-pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
@@ -626,5 +592,3 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
-
-    
