@@ -114,6 +114,7 @@ export async function getStaticFilesStatusAction() {
 
 // Action for PV Generation
 export async function generateProcesVerbalAction(recipients: {id: string, name: string, shipmentId: string}[]) {
+    
     if (!Array.isArray(recipients) || recipients.length === 0) {
         return { success: false, message: "Invalid input for PV generation." };
     }

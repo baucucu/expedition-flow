@@ -130,6 +130,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const handleGeneratePvs = async () => {
     const selectedRecipients = getSelectedRecipients();
+    console.log("selectedRecipients: ",selectedRecipients);
     if (selectedRecipients.length === 0) return;
 
     const recipientsToProcess = selectedRecipients.map(row => ({
@@ -137,9 +138,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         name: row.name,
         shipmentId: row.shipmentId,
     }));
-    
+    console.log("recipientsToProcess: ",recipientsToProcess);
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction({recipients: recipientsToProcess});
+    const result = await generateProcesVerbalAction(recipientsToProcess);
     setIsGeneratingPv(false);
     
     if (result.success) {
