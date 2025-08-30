@@ -1,18 +1,16 @@
+import * as admin from "firebase-admin";
 
-import * as admin from 'firebase-admin';
-
-// This configuration uses a service account to authenticate the Firebase Admin SDK.
-// It's a more explicit and reliable method, especially in environments where
-// Application Default Credentials might not be configured correctly.
-
+// Only initialize once
 if (!admin.apps.length) {
-    
-      admin.initializeApp({
-        credential: admin.credential.cert("/expeditionflow-firebase-adminsdk-fbsvc-1406ca54d0.json"),
-        storageBucket: "expeditionflow.appspot.com",
-      });
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
+  });
 }
 
-const adminApp = admin;
-
-export { adminApp };
+export const db = admin.firestore();
+export const auth = admin.auth();
