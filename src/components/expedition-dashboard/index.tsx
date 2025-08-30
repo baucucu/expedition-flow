@@ -275,7 +275,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="AWB">
                         {selectedDocument.recipient.awbUrl ? (
-                           <DocumentViewer url={selectedDocument.recipient.awbUrl} docType="gdrive-pdf" />
+                           <>
+                            {/* <p className="text-xs text-muted-foreground mb-2">AWB URL: {selectedDocument.recipient.awb?.awbUrl}</p> */}
+                            {/* <p className="text-xs text-muted-foreground mb-2">recipient data: {JSON.stringify(selectedDocument.recipient?.awb)}</p> */}
+                            <DocumentViewer url={selectedDocument.recipient.awb?.awbUrl || ""} docType="gdrive-pdf" />
+                           </>
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">

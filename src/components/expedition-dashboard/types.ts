@@ -1,4 +1,3 @@
-
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus } from "@/types";
 
 export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {

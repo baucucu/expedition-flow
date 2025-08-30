@@ -135,7 +135,7 @@ export const columns = (
            <DataTableColumnFilter
             column={column} 
             title="AWB Status" 
-            options={awbStatuses.map(s => ({ value: s, label: s}))}
+            options={awbStatuses.map(s => ({ value: s, label:s}))}
            />
         ),
         cell: ({ row }) => {

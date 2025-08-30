@@ -77,6 +77,7 @@ export interface AWB {
     packageSize?: string; // TIP CUTIE
     status: AWBStatus;
     error?: string | null;
+    awbUrl?: string;
     awb_data?: {
       awbNumber: string;
       awbCost: number;
