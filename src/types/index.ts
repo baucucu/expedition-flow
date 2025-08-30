@@ -38,13 +38,20 @@ export interface Recipient {
   awbId: string; // The ID of the AWB document this recipient belongs to
   name: string; // Nume și prenume
   status: RecipientStatus;
-  documents: {
-    'proces verbal de receptie': Document;
-    'instructiuni pentru confirmarea primirii coletului': Document;
-    'parcel inventory': Document;
-  };
-  pvId?: string; // Google Drive document ID for the Proces Verbal
-  pvUrl?: string; // webViewLink for the Google Drive Proces Verbal
+  
+  // Document fields
+  pvStatus?: DocumentStatus;
+  pvId?: string; 
+  pvUrl?: string; 
+  
+  inventoryStatus?: DocumentStatus;
+  inventoryUrl?: string;
+  inventoryFileId?: string;
+
+  instructionsStatus?: DocumentStatus;
+  instructionsUrl?: string;
+  instructionsFileId?: string;
+
   group?: string;
   schoolName?: string; // from 'location'
   schoolUniqueName?: string; // from 'COD UNIC'

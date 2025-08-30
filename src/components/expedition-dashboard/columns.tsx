@@ -156,12 +156,11 @@ export const columns = (
         header: "Documents",
         cell: ({ row }) => {
             const recipient = row.original;
-            const docTypes: DocumentType[] = ['instructiuni pentru confirmarea primirii coletului', 'parcel inventory'];
             const emailSent = ['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(recipient.expeditionStatus);
 
             return (
                 <div className="flex gap-2">
-                    {recipient.pvUrl && (
+                    {recipient.pvStatus === 'Generated' && (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
@@ -171,21 +170,24 @@ export const columns = (
                             {docShortNames['PV']}
                         </Badge>
                     )}
-                    {recipient.documents && docTypes.map(docType => {
-                        const doc = recipient.documents[docType as keyof typeof recipient.documents];
-                        const isGenerated = doc?.status === 'Generated';
-                        if (!isGenerated) return null;
-                        return (
-                            <Badge
-                                key={docType}
-                                variant={"secondary"}
-                                className={"cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"}
-                                onClick={() => handleOpenDocument(recipient, docType)}
-                            >
-                                {docShortNames[docType]}
-                            </Badge>
-                        );
-                    })}
+                    {recipient.instructionsStatus === 'Generated' && (
+                         <Badge
+                            variant={"secondary"}
+                            className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => handleOpenDocument(recipient, 'instructiuni pentru confirmarea primirii coletului')}
+                        >
+                            {docShortNames['instructiuni pentru confirmarea primirii coletului']}
+                        </Badge>
+                    )}
+                    {recipient.inventoryStatus === 'Generated' && (
+                         <Badge
+                            variant={"secondary"}
+                            className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => handleOpenDocument(recipient, 'parcel inventory')}
+                        >
+                            {docShortNames['parcel inventory']}
+                        </Badge>
+                    )}
                     {recipient.awbWebviewUrl && (
                          <Badge
                             variant={"secondary"}

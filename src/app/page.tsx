@@ -83,7 +83,7 @@ export default function Home() {
 
   const scorecardCounts: ScorecardData = useMemo(() => {
     const recipientsWithFailedDocs = allRecipientsWithFullData.filter(r => 
-        r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
+        r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed'
     );
 
     const awbGenerationFailedCount = expeditions.filter(e => e.status === 'AWB Generation Failed').length;
@@ -94,9 +94,9 @@ export default function Home() {
                 + awbGenerationFailedCount
                 + emailSendFailedCount;
     
-    const pvGeneratedCount = allRecipientsWithFullData.filter(r => !!r.pvUrl).length;
-    const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.documents?.['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated').length;
-    const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.documents?.['parcel inventory']?.status === 'Generated').length;
+    const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
+    const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
+    const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awbNumber).length;
 
     
@@ -141,18 +141,18 @@ export default function Home() {
     if (!activeFilter || activeFilter === 'Total') return allRecipientsWithFullData;
     
     if (activeFilter === 'PV') {
-        return allRecipientsWithFullData.filter(r => !!r.pvUrl);
+        return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     }
     if (activeFilter === 'Inventory') {
-        return allRecipientsWithFullData.filter(r => r.documents?.['parcel inventory']?.status === 'Generated');
+        return allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated');
     }
     if (activeFilter === 'Instructions') {
-        return allRecipientsWithFullData.filter(r => r.documents?.['instructiuni pentru confirmarea primirii coletului']?.status === 'Generated');
+        return allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated');
     }
 
     if (activeFilter === 'DocsFailed') {
-        return allRecipientsWithFullData.filter(r => 
-            r.documents && Object.values(r.documents).some(d => d.status === 'Failed')
+         return allRecipientsWithFullData.filter(r => 
+            r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed'
         );
     }
 
@@ -172,7 +172,7 @@ export default function Home() {
             .map(e => e.id);
         
         const issueRecipientIds = allRecipientsWithFullData
-            .filter(r => r.documents && Object.values(r.documents).some(d => d.status === 'Failed'))
+            .filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed')
             .map(r => r.id);
         
         return allRecipientsWithFullData.filter(r => issueExpeditionIds.includes(r.expeditionId!) || issueRecipientIds.includes(r.id));

@@ -118,7 +118,7 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                 const recipientId = String(row[reverseMapping['recipientId']]);
                 const recipientRef = doc(db, "recipients", recipientId);
 
-                const recipientData: Partial<Omit<Recipient, 'documents'>> & { documents?: any } = {
+                const recipientData: Partial<Recipient> = {
                     id: recipientId,
                     shipmentId: shipmentId,
                     awbId: awbId,
@@ -129,14 +129,11 @@ export async function createExpeditionFromImport(input: {data: any[], mapping: R
                     schoolUniqueName: row[reverseMapping['schoolUniqueName']],
                     email: row[reverseMapping['email']],
                     telephone: row[reverseMapping['telephone']],
+                    pvStatus: 'Not Generated',
+                    inventoryStatus: 'Not Generated',
+                    instructionsStatus: 'Not Generated',
                 };
 
-                // Add default document structure
-                recipientData.documents = {
-                    'proces verbal de receptie': { status: 'Not Generated' },
-                    'instructiuni pentru confirmarea primirii coletului': { status: 'Not Generated' },
-                    'parcel inventory': { status: 'Not Generated' },
-                };
 
                 // Clean undefined fields from Recipient data
                 Object.keys(recipientData).forEach(key => {

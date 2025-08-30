@@ -59,9 +59,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   React.useEffect(() => {
     let filteredData = initialData;
     if (pvFilter === 'has_pv') {
-      filteredData = filteredData.filter(row => !!row.pvUrl);
+      filteredData = filteredData.filter(row => row.pvStatus === 'Generated');
     } else if (pvFilter === 'no_pv') {
-      filteredData = filteredData.filter(row => !row.pvUrl);
+      filteredData = filteredData.filter(row => row.pvStatus !== 'Generated');
     }
     setData(filteredData);
   }, [initialData, pvFilter]);
@@ -84,7 +84,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
-    getRowId: (row) => row.id, // Add this line
+    getRowId: (row) => row.id,
     globalFilterFn: (row, columnId, filterValue) => {
         const search = filterValue.toLowerCase();
         
@@ -115,31 +115,23 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   });
 
   const getSelectedRecipients = React.useCallback(() => {
-    const selectedIds = new Set(Object.keys(rowSelection));
-    if (selectedIds.size === 0) {
-        const selectedRows = table.getFilteredSelectedRowModel().rows;
-        if (selectedRows.length === 0) {
-            toast({
-                variant: "destructive",
-                title: "No Recipients Selected",
-                description: "Please select one or more recipients.",
-            });
-            return [];
-        }
-        return selectedRows.map(row => row.original);
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+     if (selectedRows.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No Recipients Selected",
+            description: "Please select one or more recipients.",
+        });
+        return [];
     }
-    
-    const allFilteredRows = table.getFilteredRowModel().rows;
-    const selectedRecipients = allFilteredRows
-        .map(row => row.original)
-        .filter(recipient => selectedIds.has(recipient.id));
-
-    return selectedRecipients;
-  }, [table, rowSelection, toast]);
+    return selectedRows.map(row => row.original);
+  }, [table, toast]);
 
   const handleGeneratePvs = async () => {
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
+
+    console.log(`Generating PVs for ${selectedRecipients.length} recipients.`);
 
     const recipientsToProcess = selectedRecipients.map(row => ({
         id: row.id,
@@ -260,9 +252,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="PV" disabled={!selectedDocument.recipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
-                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={!selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url}>Instructiuni</TabsTrigger>
-                        <TabsTrigger value="parcel inventory" disabled={!selectedDocument.recipient.documents?.['parcel inventory']?.url}>Inventory</TabsTrigger>
+                        <TabsTrigger value="PV" disabled={selectedDocument.recipient.pvStatus !== 'Generated'}>Proces Verbal (PV)</TabsTrigger>
+                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructiuni</TabsTrigger>
+                        <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awbWebviewUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
@@ -272,13 +264,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
                     </TabsContent>
                     <TabsContent value="instructiuni pentru confirmarea primirii coletului">
-                         {selectedDocument.recipient.documents?.['instructiuni pentru confirmarea primirii coletului']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['instructiuni pentru confirmarea primirii coletului'].url!} docType="gdrive-pdf" />
+                         {selectedDocument.recipient.instructionsUrl ? (
+                            <DocumentViewer url={selectedDocument.recipient.instructionsUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="parcel inventory">
-                        {selectedDocument.recipient.documents?.['parcel inventory']?.url ? (
-                            <DocumentViewer url={selectedDocument.recipient.documents['parcel inventory'].url!} docType="gdrive-excel" />
+                        {selectedDocument.recipient.inventoryUrl ? (
+                            <DocumentViewer url={selectedDocument.recipient.inventoryUrl} docType="gdrive-excel" />
                          ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">

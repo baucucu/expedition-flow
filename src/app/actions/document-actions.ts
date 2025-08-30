@@ -21,15 +21,15 @@ export async function updateRecipientDocumentsAction() {
         const constructGdriveUrl = (fileId: string) => `https://drive.google.com/file/d/${fileId}/view`;
 
         if (statuses.data.inventory?.fileId) {
-            updateData['documents.parcel inventory.status'] = 'Generated';
-            updateData['documents.parcel inventory.url'] = constructGdriveUrl(statuses.data.inventory.fileId);
-            updateData['documents.parcel inventory.fileId'] = statuses.data.inventory.fileId;
+            updateData['inventoryStatus'] = 'Generated';
+            updateData['inventoryUrl'] = constructGdriveUrl(statuses.data.inventory.fileId);
+            updateData['inventoryFileId'] = statuses.data.inventory.fileId;
             filesToSyncCount++;
         }
         if (statuses.data.instructions?.fileId) {
-            updateData['documents.instructiuni pentru confirmarea primirii coletului.status'] = 'Generated';
-            updateData['documents.instructiuni pentru confirmarea primirii coletului.url'] = constructGdriveUrl(statuses.data.instructions.fileId);
-            updateData['documents.instructiuni pentru confirmarea primirii coletului.fileId'] = statuses.data.instructions.fileId;
+            updateData['instructionsStatus'] = 'Generated';
+            updateData['instructionsUrl'] = constructGdriveUrl(statuses.data.instructions.fileId);
+            updateData['instructionsFileId'] = statuses.data.instructions.fileId;
             filesToSyncCount++;
         }
         
