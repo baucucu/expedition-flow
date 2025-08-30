@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Expedition, ExpeditionStatus, Recipient, AWB } from "@/types";
-import { ExpeditionDashboard } from "@/components/expedition-dashboard";
+import { ExpeditionDashboard } from "@/components/expedition-dashboard/index";
 import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
 import { Box } from "lucide-react";

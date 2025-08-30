@@ -65,7 +65,7 @@ const generateProcesVerbalFlow = ai.defineFlow(
                 shipmentId: recipient.shipmentId
             },
         }));
-
+        console.log("Starting pv generation for ", events.length, " recipients")
         // The first argument is the task, the second is an array of event payloads.
         await generateProcesVerbalTask.batchTrigger(events);
         totalTriggered += chunk.length;

@@ -42,7 +42,7 @@ export const createAwb = schemaTask({
 
         // optional but sometimes required
         // body.append('orderNumber', `${payload.shipmentId}/${Date.now()}`);
-        // body.append('observation', 'A');
+        body.append('observation', 'Comanda: '+payload.shipmentId);
         // body.append('priceObservation', 'B');
         // body.append('clientObservation', 'C');
         if(payload.packageSize === "S") {
