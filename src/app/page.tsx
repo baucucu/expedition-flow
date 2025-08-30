@@ -97,7 +97,7 @@ export default function Home() {
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
-    const awbGeneratedCount = awbs.filter(awb => !!awb.awbNumber).length;
+    const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
 
     
     return {
@@ -190,7 +190,7 @@ export default function Home() {
     }
 
     if (activeFilter === 'AWB Generated') {
-        const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awbNumber).map(awb => awb.id));
+        const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber).map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => generatedAwbIds.has(r.awbId));
     }
 

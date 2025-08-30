@@ -13,7 +13,7 @@ const ShipmentSchema = z.object({
     postalCode: z.string(), // could also regex: /^\d{6}$/
     status: z.enum(["New", "Pending", "Delivered", "Cancelled", "Queued", "AWB_CREATED"]).default("New"),
     id: z.string(),
-    parcelCount: z.number(),
+    parcelCount: z.string(),
     countyId: z.string(), // could be number but sample shows string
     cityId: z.string(),
     name: z.string(),

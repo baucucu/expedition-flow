@@ -74,6 +74,19 @@ export interface AWB {
     packageSize?: string; // TIP CUTIE
     status: AWBStatus;
     error?: string | null;
+    awb_data?: {
+      awbNumber: string;
+      awbCost: number;
+      parcels: { position: number; awbNumber: string }[];
+      pdfLink: string;
+      pickupLogisticLocation: string;
+      deliveryLogisticLocation: string;
+      deliveryLogisticCircle: string;
+      sortingHub: string;
+      sortingHubId: number;
+      deliveryLogisticLocationId: number;
+      pickupLogisticLocationId: number;
+    };
 
     // Address fields moved from Recipient
     address: string;
