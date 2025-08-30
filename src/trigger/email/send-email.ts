@@ -12,7 +12,7 @@ const SendEmailPayloadSchema = z.object({
 const N8N_EMAIL_WEBHOOK_URL = process.env.N8N_EMAIL_WEBHOOK_URL || "https://n8n.appy.agency/webhook/send-email";
 
 export const sendEmailTask = task({
-  id: "email-sending",
+  id: "send-email",
   run: async (payload: z.infer<typeof SendEmailPayloadSchema>, { ctx }) => {
     logger.info(`Starting email sending task for shipment: ${payload.shipmentId}`);
     const { shipmentId } = payload;

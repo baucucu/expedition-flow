@@ -47,7 +47,7 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
             for (let i = 0; i < payloads.length; i += CHUNK_SIZE) {
                 const chunk = payloads.slice(i, i + CHUNK_SIZE);
                 // The first argument is the task ID, the second is an array of payloads.
-                await tasks.batchTrigger("send-email-orchestrator", chunk);
+                await tasks.batchTrigger("send-email", chunk);
             }
         }
 
