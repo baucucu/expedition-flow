@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Expedition, ExpeditionStatus, Recipient, AWB } from "@/types";
+import type { Expedition, ExpeditionStatus, Recipient, AWB, DocumentStatus } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard/index";
 import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
@@ -73,7 +73,7 @@ export default function Home() {
         const expedition = expeditionsMap.get(rec.shipmentId!);
         const awb = awbsMap.get(rec.awbId);
         
-        let awbStatus: 'Generated' | 'Failed' | 'Not Generated' = 'Not Generated';
+        let awbStatus: DocumentStatus = 'Not Generated';
         if (awb?.status === 'Generated' || awb?.status === 'AWB_CREATED') {
             awbStatus = 'Generated';
         } else if (awb?.status === 'Failed') {

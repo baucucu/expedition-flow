@@ -132,8 +132,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
 
-    console.log(`Generating PVs for ${selectedRecipients.length} recipients.`);
-
     const recipientsToProcess = selectedRecipients.map(row => ({
         id: row.id,
         name: row.name,
@@ -141,7 +139,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }));
     
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction(recipientsToProcess);
+    const result = await generateProcesVerbalAction({recipients: recipientsToProcess});
     setIsGeneratingPv(false);
     
     if (result.success) {

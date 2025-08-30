@@ -22,7 +22,13 @@ export const awbStatusVariant: { [key in AWBStatus]: "default" | "secondary" | "
 export const awbStatuses: AWBStatus[] = ['New', 'Queued', 'Generated', 'AWB_CREATED', 'Failed'];
 
 
-export type RecipientRow = Recipient & { expeditionId: string; awb?: AWB, expeditionStatus: ExpeditionStatus };
+export type RecipientRow = Recipient & { 
+    expeditionId: string; 
+    awb?: AWB, 
+    expeditionStatus: ExpeditionStatus,
+    awbUrl?: string;
+    awbStatus?: DocumentStatus;
+};
 
 export interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
