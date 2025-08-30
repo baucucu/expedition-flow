@@ -72,11 +72,21 @@ export default function Home() {
     return recipients.map(rec => {
         const expedition = expeditionsMap.get(rec.shipmentId!);
         const awb = awbsMap.get(rec.awbId);
+        
+        let awbStatus: 'Generated' | 'Failed' | 'Not Generated' = 'Not Generated';
+        if (awb?.status === 'Generated' || awb?.status === 'AWB_CREATED') {
+            awbStatus = 'Generated';
+        } else if (awb?.status === 'Failed') {
+            awbStatus = 'Failed';
+        }
+
         return {
             ...rec,
             expeditionId: expedition?.id || rec.shipmentId,
             expeditionStatus: expedition?.status || 'New',
-            awb: awb
+            awb: awb,
+            awbUrl: awb?.awb_data?.pdfLink,
+            awbStatus: awbStatus
         };
     });
   }, [recipients, expeditions, awbs]);

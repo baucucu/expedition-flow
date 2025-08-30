@@ -115,17 +115,18 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   });
 
   const getSelectedRecipients = React.useCallback(() => {
-    const selectedRowKeys = Object.keys(rowSelection);
-     if (selectedRowKeys.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "No Recipients Selected",
-            description: "Please select one or more recipients.",
-        });
-        return [];
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
+      toast({
+          variant: "destructive",
+          title: "No Recipients Selected",
+          description: "Please select one or more recipients.",
+      });
+      return [];
     }
-    return initialData.filter(row => selectedRowKeys.includes(row.id));
-  }, [rowSelection, initialData, toast]);
+    return selectedRows.map(row => row.original);
+  }, [table, toast]);
+
 
   const handleGeneratePvs = async () => {
     const selectedRecipients = getSelectedRecipients();
@@ -140,7 +141,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }));
     
     setIsGeneratingPv(true);
-    const result = await generateProcesVerbalAction({recipients: recipientsToProcess});
+    const result = await generateProcesVerbalAction(recipientsToProcess);
     setIsGeneratingPv(false);
     
     if (result.success) {
@@ -255,7 +256,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="PV" disabled={selectedDocument.recipient.pvStatus !== 'Generated'}>Proces Verbal (PV)</TabsTrigger>
                         <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructiuni</TabsTrigger>
                         <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
-                        <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awb?.awb_data?.pdfLink}>AWB</TabsTrigger>
+                        <TabsTrigger value="AWB" disabled={selectedDocument.recipient.awbStatus !== 'Generated'}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
@@ -274,8 +275,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                          ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">
-                        {selectedDocument.recipient.awb?.awb_data?.pdfLink ? (
-                           <DocumentViewer url={selectedDocument.recipient.awb.awb_data.pdfLink} docType="gdrive-pdf" />
+                        {selectedDocument.recipient.awbUrl ? (
+                           <DocumentViewer url={selectedDocument.recipient.awbUrl} docType="gdrive-pdf" />
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">

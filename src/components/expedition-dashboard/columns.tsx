@@ -188,7 +188,7 @@ export const columns = (
                             {docShortNames['parcel inventory']}
                         </Badge>
                     )}
-                    {recipient.awb?.awb_data?.pdfLink && (
+                    {recipient.awbUrl && (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"

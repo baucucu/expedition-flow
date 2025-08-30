@@ -51,6 +51,9 @@ export interface Recipient {
   instructionsStatus?: DocumentStatus;
   instructionsUrl?: string;
   instructionsFileId?: string;
+  
+  awbStatus?: DocumentStatus;
+  awbUrl?: string;
 
   group?: string;
   schoolName?: string; // from 'location'
