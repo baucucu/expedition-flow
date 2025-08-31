@@ -41,6 +41,7 @@ export const sendEmailTask = task({
             recipientId: r.id,
             name: r.name,
             pvDocumentId: r.pvId,
+            pvUrl: r.pvUrl,
         }));
 
         // 3. Fetch static document IDs
@@ -57,7 +58,7 @@ export const sendEmailTask = task({
         const webhookPayload = {
             shipmentId: shipmentId,
             awbNumber: awbData.awb_data?.awbNumber,
-            awbDocumentId: awbData.awb_data?.pdfLink, // Using pdfLink from awb_data
+            awbDocumentId: awbData.awbFileId,
             awbNumberOfParcels: awbData.parcelCount,
             inventoryDocumentId: inventoryDocumentId,
             instructionsDocumentId: instructionsDocumentId,

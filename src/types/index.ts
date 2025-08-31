@@ -78,6 +78,7 @@ export interface AWB {
     status: AWBStatus;
     error?: string | null;
     awbUrl?: string;
+    awbFileId?: string; // The GDrive file ID for the AWB PDF
     awb_data?: {
       awbNumber: string;
       awbCost: number;
@@ -105,4 +106,14 @@ export interface Expedition {
   recipientCount: number;
   awbCount: number;
   createdAt: any; // Firestore serverTimestamp
+}
+
+export interface Shipment {
+    id: string;
+    awbDocumentId: string;
+    awbNumberOfParcels: number;
+    inventoryDocumentId: string;
+    instructionsDocumentId: string;
+    status: ExpeditionStatus;
+    // Add any other fields from your shipments collection that might be needed
 }
