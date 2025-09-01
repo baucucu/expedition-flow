@@ -95,7 +95,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             row.original.awb?.address,
             row.original.awb?.city,
             row.original.awb?.county,
-            row.original.awb?.mainRecipientTelephone,
+            row.original.telephone,
             row.original.schoolName,
             row.original.status,
             row.original.awb?.status,
@@ -137,6 +137,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         id: row.id,
         name: row.name,
         shipmentId: row.shipmentId,
+        uuid: row.uuid
     }));
     
     setIsGeneratingPv(true);

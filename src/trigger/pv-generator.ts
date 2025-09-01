@@ -1,8 +1,9 @@
+
 import { task, logger } from "@trigger.dev/sdk"; 
 
 const N8N_PV_WEBHOOK_URL = process.env.N8N_PV_WEBHOOK_URL;
 
-const callN8nWebhook = async (recipient: { id: string; name: string, shipmentId: string }): Promise<{ recipientId: string; pvUrl?: string; error?: string }> => {
+const callN8nWebhook = async (recipient: { id: string; name: string, shipmentId: string, uuid?: string }): Promise<{ recipientId: string; pvUrl?: string; error?: string }> => {
   if (!N8N_PV_WEBHOOK_URL || N8N_PV_WEBHOOK_URL === 'YOUR_N8N_WEBHOOK_URL_HERE') {
      const errorMessage = "n8n webhook URL is not configured.";
      logger.error(errorMessage);
@@ -18,6 +19,7 @@ const callN8nWebhook = async (recipient: { id: string; name: string, shipmentId:
         name: recipient.name,
         recipient_id: recipient.id,
         shipment_id: recipient.shipmentId,
+        uuid: recipient.uuid,
       }),
     });
 
@@ -43,10 +45,10 @@ export const generateProcesVerbalTask = task({
     machine: {
       preset: "large-1x", // 4 vCPU, 8 GB RAM
     },
-    run: async (payload: {id: string, name: string, shipmentId: string}, { ctx }) => {
-      const { id, name, shipmentId } = payload;
+    run: async (payload: {id: string, name: string, shipmentId: string, uuid?:string}, { ctx }) => {
+      const { id, name, shipmentId, uuid } = payload;
       logger.info(`Starting PV generation for recipient ${id} - ${name} in shipment ${shipmentId}`);
-      const result = await callN8nWebhook({ id, name, shipmentId });
+      const result = await callN8nWebhook({ id, name, shipmentId, uuid });
       if(result.error) {
         logger.error(`Failed to generate PV for recipient ${id}`, { error: result.error });
       } else {
