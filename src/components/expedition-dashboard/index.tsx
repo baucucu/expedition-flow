@@ -92,6 +92,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         
         const rowValues = [
             row.original.numericId,
+            row.original.uuid,
             row.original.expeditionId,
             row.original.name,
             row.original.awb?.address,
