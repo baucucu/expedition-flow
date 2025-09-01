@@ -13,9 +13,9 @@ const SearchCountyOutputSchema = z.object({
 
 export const searchCounty = schemaTask({
   id: "search-sameday-county",
-  machine: {
-    preset: "large-1x", // 4 vCPU, 8 GB RAM
-  },
+  // machine: {
+  //   preset: "large-1x", // 4 vCPU, 8 GB RAM
+  // },
   schema: SearchCountyInputSchema,
   run: async (payload: z.infer<typeof SearchCountyInputSchema>): Promise<z.infer<typeof SearchCountyOutputSchema>> => {
     const { countyName } = payload;

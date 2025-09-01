@@ -42,8 +42,11 @@ const callN8nWebhook = async (recipient: { id: string; name: string, shipmentId:
 
 export const generateProcesVerbalTask = task({
     id: "generate-proces-verbal",
-    machine: {
-      preset: "large-1x", // 4 vCPU, 8 GB RAM
+    // machine: {
+    //   preset: "large-1x", // 4 vCPU, 8 GB RAM
+    // },
+    queue: {
+      concurrencyLimit: 1,
     },
     run: async (payload: {id: string, name: string, shipmentId: string, uuid?:string}, { ctx }) => {
       const { id, name, shipmentId, uuid } = payload;

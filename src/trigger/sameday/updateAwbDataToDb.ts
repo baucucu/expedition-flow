@@ -20,9 +20,9 @@ const UpdateAwbPayloadSchema = z.object({
 
 export const updateAwbDataToDb = task({
   id: "update-awb-data-to-db",
-  machine: {
-    preset: "large-1x", // 4 vCPU, 8 GB RAM
-  },
+  // machine: {
+  //   preset: "large-1x", // 4 vCPU, 8 GB RAM
+  // },
   run: async (payload: z.infer<typeof UpdateAwbPayloadSchema>) => {
     logger.info("Updating database via n8n webhook");
     const { shipmentId, awbData } = payload;

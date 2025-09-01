@@ -8,9 +8,9 @@ export const getAwbData = schemaTask({
   schema: z.object({
     shipmentId: z.string(),
   }),
-  machine: {
-    preset: "large-1x", // 4 vCPU, 8 GB RAM
-  },
+  // machine: {
+  //   preset: "large-1x", // 4 vCPU, 8 GB RAM
+  // },
   run: async (payload) => {
     const { shipmentId } = payload;
 
