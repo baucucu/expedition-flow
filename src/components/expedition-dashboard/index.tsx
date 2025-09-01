@@ -38,6 +38,8 @@ import { columns } from "@/components/expedition-dashboard/columns";
 import { Toolbar } from "@/components/expedition-dashboard/toolbar";
 import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
+import { Button } from "../ui/button";
+import { ExternalLink } from "lucide-react";
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
@@ -258,7 +260,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Instructions" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
                         <TabsTrigger value="Inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={selectedDocument.recipient.awbStatus !== 'Generated'}>AWB</TabsTrigger>
-                        <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
+                        <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
                          {selectedDocument.recipient.pvUrl ? (
@@ -286,7 +288,22 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">
-                        <DocumentPlaceholder title={`Email to Logistics for AWB: ${selectedDocument.recipient.awb?.awb_data?.awbNumber}`} />
+                        {selectedDocument.recipient.emailId ? (
+                             <div className="mt-4 flex flex-col items-center justify-center gap-4 text-center p-8 border rounded-lg">
+                                <h3 className="font-semibold">Email Sent to Logistics</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    The email for AWB <span className="font-mono">{selectedDocument.recipient.awb?.awbNumber}</span> has been sent.
+                                </p>
+                                <Button asChild>
+                                    <a href={`https://mail.google.com/mail/u/0/#inbox/${selectedDocument.recipient.emailId}`} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        View in Gmail
+                                    </a>
+                                </Button>
+                             </div>
+                         ) : (
+                            <DocumentPlaceholder title={`Email has not been sent for this AWB.`} />
+                         )}
                     </TabsContent>
                 </Tabs>
             </>

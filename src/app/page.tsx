@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Expedition, ExpeditionStatus, Recipient, AWB, DocumentStatus } from "@/types";
+import type { Expedition, ExpeditionStatus, Recipient, AWB, DocumentStatus, EmailStatus } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard/index";
 import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -86,7 +86,9 @@ export default function Home() {
             expeditionStatus: expedition?.status || 'New',
             awb: awb,
             awbUrl: awb?.awb_data?.pdfLink,
-            awbStatus: awbStatus
+            awbStatus: awbStatus,
+            emailStatus: awb?.emailStatus,
+            emailId: awb?.emailId
         };
     });
   }, [recipients, expeditions, awbs]);
@@ -96,8 +98,10 @@ export default function Home() {
         r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed'
     );
 
-    const awbGenerationFailedCount = expeditions.filter(e => e.status === 'AWB Generation Failed').length;
-    const emailSendFailedCount = expeditions.filter(e => e.status === 'Email Send Failed').length;
+    const awbGenerationFailedCount = awbs.filter(e => e.status === 'Failed').length;
+    
+    const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
+    const emailSentCount = awbs.filter(awb => awb.emailStatus === 'Sent').length;
 
     const issuesCount = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length 
                 + recipientsWithFailedDocs.length
@@ -129,7 +133,7 @@ export default function Home() {
             errorCount: awbGenerationFailedCount
         },
         sentToLogistics: {
-            value: expeditions.filter(e => e.status === 'Sent to Logistics').length,
+            value: emailSentCount,
             footerText: `${emailSendFailedCount} errors`,
             errorCount: emailSendFailedCount
         },
@@ -168,25 +172,38 @@ export default function Home() {
     }
 
     if (activeFilter === 'AwbFailed') {
-        const expeditionIds = expeditions.filter(e => e.status === 'AWB Generation Failed').map(e => e.id);
-        return allRecipientsWithFullData.filter(r => expeditionIds.includes(r.expeditionId!));
+        const failedAwbIds = new Set(awbs.filter(awb => awb.status === 'Failed').map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => failedAwbIds.has(r.awbId));
     }
 
     if (activeFilter === 'EmailFailed') {
-        const expeditionIds = expeditions.filter(e => e.status === 'Email Send Failed').map(e => e.id);
-        return allRecipientsWithFullData.filter(r => expeditionIds.includes(r.expeditionId!));
+        const failedEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Failed').map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => failedEmailAwbIds.has(r.awbId));
+    }
+    
+    if (activeFilter === 'Sent') {
+        const sentEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Sent').map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => sentEmailAwbIds.has(r.awbId));
     }
 
     if (activeFilter === 'Issues') {
         const issueExpeditionIds = expeditions
-            .filter(e => ['Canceled', 'Lost or Damaged', 'AWB Generation Failed', 'Email Send Failed'].includes(e.status))
+            .filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status))
             .map(e => e.id);
         
         const issueRecipientIds = allRecipientsWithFullData
             .filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed')
             .map(r => r.id);
         
-        return allRecipientsWithFullData.filter(r => issueExpeditionIds.includes(r.expeditionId!) || issueRecipientIds.includes(r.id));
+        const failedAwbIds = new Set(awbs.filter(awb => awb.status === 'Failed').map(awb => awb.id));
+        const failedEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Failed').map(awb => awb.id));
+
+        return allRecipientsWithFullData.filter(r => 
+            issueExpeditionIds.includes(r.expeditionId!) || 
+            issueRecipientIds.includes(r.id) ||
+            failedAwbIds.has(r.awbId) ||
+            failedEmailAwbIds.has(r.awbId)
+        );
     }
 
     if (['NewRecipient', 'Delivered', 'Returned'].includes(activeFilter)) {

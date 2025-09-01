@@ -1,5 +1,5 @@
 
-import type { Recipient, DocumentType as AppDocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus } from "@/types";
+import type { Recipient, DocumentType as AppDocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus, EmailStatus } from "@/types";
 
 export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -28,6 +28,8 @@ export type RecipientRow = Recipient & {
     expeditionStatus: ExpeditionStatus,
     awbUrl?: string;
     awbStatus?: DocumentStatus;
+    emailStatus?: EmailStatus;
+    emailId?: string;
 };
 
 export interface ExpeditionDashboardProps {

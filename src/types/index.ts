@@ -68,6 +68,7 @@ export interface Recipient {
 }
 
 export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed' | 'AWB_CREATED';
+export type EmailStatus = 'Sent' | 'Failed' | 'Not Sent';
 
 export interface AWB {
     id: string; // Firestore auto-generated ID
@@ -82,6 +83,8 @@ export interface AWB {
     error?: string | null;
     awbUrl?: string;
     awbFileId?: string; // The GDrive file ID for the AWB PDF
+    emailStatus?: EmailStatus;
+    emailId?: string;
     awb_data?: {
       awbNumber: string;
       awbCost: number;

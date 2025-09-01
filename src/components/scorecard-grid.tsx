@@ -88,9 +88,9 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         footerText={counts.sentToLogistics.footerText}
         footerIcon={AlertTriangle}
         errorCount={counts.sentToLogistics.errorCount}
-        onClick={() => setActiveFilter('Sent to Logistics')}
+        onClick={() => setActiveFilter('Sent')}
         onFooterClick={() => setActiveFilter('EmailFailed')}
-        isActive={isFilterActive('Sent to Logistics', 'EmailFailed')}
+        isActive={isFilterActive('Sent', 'EmailFailed')}
         isFooterActive={activeFilter === 'EmailFailed'}
       />
 

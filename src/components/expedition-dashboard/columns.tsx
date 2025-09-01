@@ -179,7 +179,7 @@ export const columns = (
         header: "Documents",
         cell: ({ row }) => {
             const recipient = row.original;
-            const emailSent = ['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(recipient.expeditionStatus);
+            const emailSent = recipient.emailId;
 
             return (
                 <div className="flex gap-2">
