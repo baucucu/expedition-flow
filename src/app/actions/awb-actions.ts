@@ -1,23 +1,11 @@
 
 "use server";
 
-import { testSamedayAwbGeneration } from "@/ai/flows/sameday-test-awb-generator";
 import { z } from "zod";
 import { db } from "@/lib/firebase";
 import { writeBatch, doc } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 
-
-// Action for testing Sameday AWB generation
-export async function testSamedayAwbAction() {
-    try {
-        const output = await testSamedayAwbGeneration();
-        return { success: true, data: output };
-    } catch (error: any) {
-        console.error("Error in testSamedayAwbGeneration flow:", error);
-        return { success: false, error: `Failed to call Sameday API: ${error.message}` };
-    }
-}
 
 // Action for Queuing Shipment AWB Generation with Trigger.dev
 const queueShipmentAwbGenerationActionInputSchema = z.object({
