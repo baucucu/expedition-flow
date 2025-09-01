@@ -3,9 +3,9 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, getDoc } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
-import type { Recipient, Shipment } from "@/types";
+import type { Recipient, Shipment, AWB } from "@/types";
 
 const sendEmailToLogisticsActionInputSchema = z.object({
   recipientIds: z.array(z.string()),
@@ -26,59 +26,75 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
     }
 
     try {
-        // 1. Fetch the recipient documents for the given IDs to find their shipment IDs.
+        // 1. Fetch initial recipients to get unique shipment IDs
         const recipientsFromInputQuery = query(collection(db, "recipients"), where("id", "in", recipientIds));
         const recipientsFromInputSnapshot = await getDocs(recipientsFromInputQuery);
-        
         if (recipientsFromInputSnapshot.empty) {
-            return { success: false, message: "Could not find any of the selected recipients in the database." };
+            return { success: false, message: "Could not find any of the selected recipients." };
         }
-        
         const inputRecipients = recipientsFromInputSnapshot.docs.map(doc => doc.data() as Recipient);
         const uniqueShipmentIds = [...new Set(inputRecipients.map(r => r.shipmentId))];
 
-        // 2. Fetch the full shipment documents for each unique shipment ID.
+        // 2. Fetch all related data in chunks
         const shipmentsMap = new Map<string, Shipment>();
+        const allShipmentRecipientsMap = new Map<string, Recipient[]>();
+        const awbsMap = new Map<string, AWB>();
+
         for (let i = 0; i < uniqueShipmentIds.length; i += CHUNK_SIZE) {
             const chunk = uniqueShipmentIds.slice(i, i + CHUNK_SIZE);
-            if (chunk.length > 0) {
-                const shipmentsQuery = query(collection(db, "shipments"), where(documentId(), "in", chunk));
-                const shipmentsSnapshot = await getDocs(shipmentsQuery);
-                shipmentsSnapshot.forEach(doc => {
-                    shipmentsMap.set(doc.id, { id: doc.id, ...doc.data() } as Shipment);
-                });
-            }
-        }
-        
-        // 3. For each unique shipment, fetch ALL of its associated recipients.
-        const allShipmentRecipientsMap = new Map<string, Recipient[]>();
-        for (const shipmentId of uniqueShipmentIds) {
-            const allRecipientsQuery = query(collection(db, "recipients"), where("shipmentId", "==", shipmentId));
-            const allRecipientsSnapshot = await getDocs(allRecipientsQuery);
-            if (!allRecipientsSnapshot.empty) {
-                allShipmentRecipientsMap.set(shipmentId, allRecipientsSnapshot.docs.map(doc => doc.data() as Recipient));
+            if (chunk.length === 0) continue;
+
+            // Fetch shipments for the chunk
+            const shipmentsQuery = query(collection(db, "shipments"), where(documentId(), "in", chunk));
+            const shipmentsSnapshot = await getDocs(shipmentsQuery);
+            shipmentsSnapshot.forEach(doc => shipmentsMap.set(doc.id, { id: doc.id, ...doc.data() } as Shipment));
+            
+            // Fetch AWBs for the chunk
+            const awbsQuery = query(collection(db, "awbs"), where("shipmentId", "in", chunk));
+            const awbsSnapshot = await getDocs(awbsQuery);
+            awbsSnapshot.forEach(doc => {
+                const awb = doc.data() as AWB;
+                awbsMap.set(awb.shipmentId, awb);
+            });
+
+            // Fetch all recipients for each shipment in the chunk
+            for (const shipmentId of chunk) {
+                const allRecipientsQuery = query(collection(db, "recipients"), where("shipmentId", "==", shipmentId));
+                const allRecipientsSnapshot = await getDocs(allRecipientsQuery);
+                if (!allRecipientsSnapshot.empty) {
+                    allShipmentRecipientsMap.set(shipmentId, allRecipientsSnapshot.docs.map(doc => doc.data() as Recipient));
+                }
             }
         }
 
-        // 4. Prepare the final payloads for Trigger.dev.
+        // 3. Fetch static document IDs once
+        const inventoryDocRef = doc(db, "static_documents", "inventory");
+        const instructionsDocRef = doc(db, "static_documents", "instructions");
+        const [inventoryDocSnap, instructionsDocSnap] = await Promise.all([getDoc(inventoryDocRef), getDoc(instructionsDocRef)]);
+        const inventoryDocumentId = inventoryDocSnap.exists() ? inventoryDocSnap.data().fileId : null;
+        const instructionsDocumentId = instructionsDocSnap.exists() ? instructionsDocSnap.data().fileId : null;
+        
+        // 4. Prepare the final, self-contained payloads for Trigger.dev
         const payloads = [];
         for (const shipmentId of uniqueShipmentIds) {
             const shipment = shipmentsMap.get(shipmentId);
             const allRecipientsForShipment = allShipmentRecipientsMap.get(shipmentId);
+            const awbData = awbsMap.get(shipmentId);
 
-            if (shipment && allRecipientsForShipment) {
+            if (shipment && allRecipientsForShipment && awbData) {
                 payloads.push({
                     payload: {
                         shipmentId: shipment.id,
-                        awbDocumentId: shipment.awbDocumentId,
-                        awbNumberOfParcels: shipment.awbNumberOfParcels,
-                        inventoryDocumentId: shipment.inventoryDocumentId,
-                        instructionsDocumentId: shipment.instructionsDocumentId,
+                        awbNumber: awbData.awb_data?.awbNumber,
+                        awbDocumentId: awbData.awbFileId,
+                        awbNumberOfParcels: awbData.parcelCount,
+                        inventoryDocumentId: inventoryDocumentId,
+                        instructionsDocumentId: instructionsDocumentId,
                         recipients: allRecipientsForShipment.map(r => ({
                             recipientId: r.id,
                             name: r.name,
-                            pvDocumentId: r.pvId || "",
-                            pvUrl: r.pvUrl || "",
+                            pvDocumentId: r.pvId || null,
+                            pvUrl: r.pvUrl || null,
                         })),
                     },
                 });
