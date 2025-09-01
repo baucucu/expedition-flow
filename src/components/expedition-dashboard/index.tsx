@@ -89,7 +89,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         const search = filterValue.toLowerCase();
         
         const rowValues = [
-            row.original.id,
+            row.original.numericId,
             row.original.expeditionId,
             row.original.name,
             row.original.awb?.address,

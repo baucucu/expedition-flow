@@ -74,9 +74,9 @@ export const columns = (
         enableHiding: false,
     },
     {
-        accessorKey: "id",
+        accessorKey: "numericId",
         header: "Recipient ID",
-        cell: ({ row }) => <div>{row.getValue("id")}</div>,
+        cell: ({ row }) => <div>{row.getValue("numericId")}</div>,
     },
     {
         accessorKey: "expeditionId",
@@ -109,9 +109,9 @@ export const columns = (
       cell: ({ row }) => <div>{row.original.awb?.county ?? 'N/A'}</div>,
     },
     {
-      accessorKey: "awb.mainRecipientTelephone",
+      accessorKey: "telephone",
       header: "Telephone",
-      cell: ({ row }) => <div>{row.original.awb?.mainRecipientTelephone ?? 'N/A'}</div>,
+      cell: ({ row }) => <div>{row.original.telephone}</div>,
     },
     {
       accessorKey: "status",
