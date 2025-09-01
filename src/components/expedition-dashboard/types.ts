@@ -46,7 +46,7 @@ export const docShortNames: Record<DocType, string> = {
     'PV': 'PV',
     'Instructions': 'Instructions',
     'Inventory': 'Inventory',
-    'PV Semnat': 'PV Signed'
+    'PV Semnat': 'PV semnat'
 }
 
 export type SelectedDocument = {

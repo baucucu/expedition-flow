@@ -195,11 +195,10 @@ export const columns = (
                     )}
                      {recipient.pvSemnatUrl && (
                          <Badge
-                            variant={"default"}
-                            className="cursor-pointer font-normal bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+                            variant={"secondary"}
+                            className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
                             onClick={() => handleOpenDocument(recipient, 'PV Semnat')}
                         >
-                            <FileCheck2 className="w-3 h-3" />
                             {docShortNames['PV Semnat']}
                         </Badge>
                     )}
