@@ -79,9 +79,9 @@ export const columns = (
         cell: ({ row }) => <div>{row.getValue("numericId")}</div>,
     },
     {
-        accessorKey: "uuid",
-        header: "UUID",
-        cell: ({ row }) => <div className="font-mono text-xs w-28 truncate">{row.getValue("uuid")}</div>,
+        accessorKey: "id",
+        header: "Document ID",
+        cell: ({ row }) => <div className="font-mono text-xs w-28 truncate">{row.getValue("id")}</div>,
     },
     {
         accessorKey: "expeditionId",
