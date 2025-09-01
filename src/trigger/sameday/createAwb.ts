@@ -22,6 +22,9 @@ const ShipmentSchema = z.object({
 export const createAwb = schemaTask({
     id: "create-awb",
     schema: ShipmentSchema,
+    machine: {
+        preset: "large-1x", // 4 vCPU, 8 GB RAM
+    },
     run: async (payload) => {
         
         const body = new URLSearchParams();

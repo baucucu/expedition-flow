@@ -68,7 +68,7 @@ const testSamedayAwbGenerationFlow = ai.defineFlow(
         body.append('awbRecipient[address]', 'Ion Brezoianu 60, apt.27');
         body.append('awbRecipient[phoneNumber]', '0754832167');
         body.append('awbRecipient[postalCode]', '077005');
-        body.append('awbRecipient[email]', 'alexandru.raduca@gmail.com');
+        body.append('awbRecipient[email]', process.env.EMAIL_DEPOZIT || "alexandru.raduca@gmail.com");
         body.append('awbRecipient[personType]', '0');
 
         const response = await fetch(SAMEDAY_API_URL, {

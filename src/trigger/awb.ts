@@ -11,6 +11,9 @@ type AwbGeneratorPayload = {
 
 export const awbGenerator = task({
   id: "awb-generator",
+  machine: {
+    preset: "large-1x", // 4 vCPU, 8 GB RAM
+  },
   run: async (payload: {"shipmentId": string}) => {
     // 1. Get AWB data
     const awbDataRun = await getAwbData.triggerAndWait({shipmentId: payload.shipmentId})

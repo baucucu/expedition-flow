@@ -40,6 +40,9 @@ const callN8nWebhook = async (recipient: { id: string; name: string, shipmentId:
 
 export const generateProcesVerbalTask = task({
     id: "generate-proces-verbal",
+    machine: {
+      preset: "large-1x", // 4 vCPU, 8 GB RAM
+    },
     run: async (payload: {id: string, name: string, shipmentId: string}, { ctx }) => {
       const { id, name, shipmentId } = payload;
       logger.info(`Starting PV generation for recipient ${id} - ${name} in shipment ${shipmentId}`);
