@@ -4,4 +4,7 @@
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
-  maxInstances: 1
+  maxInstances: 2
+  concurrency: 100
+  cpu: 4
+  memoryMiB: 4096

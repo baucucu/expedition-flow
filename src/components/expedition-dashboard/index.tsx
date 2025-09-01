@@ -95,6 +95,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             row.original.awb?.address,
             row.original.awb?.city,
             row.original.awb?.county,
+            row.original.awb?.mainRecipientTelephone,
             row.original.schoolName,
             row.original.status,
             row.original.awb?.status,
@@ -130,7 +131,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const handleGeneratePvs = async () => {
     const selectedRecipients = getSelectedRecipients();
-    console.log("selectedRecipients: ",selectedRecipients);
     if (selectedRecipients.length === 0) return;
 
     const recipientsToProcess = selectedRecipients.map(row => ({
@@ -138,7 +138,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         name: row.name,
         shipmentId: row.shipmentId,
     }));
-    console.log("recipientsToProcess: ",recipientsToProcess);
+    
     setIsGeneratingPv(true);
     const result = await generateProcesVerbalAction(recipientsToProcess);
     setIsGeneratingPv(false);
@@ -253,8 +253,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
                         <TabsTrigger value="PV" disabled={selectedDocument.recipient.pvStatus !== 'Generated'}>Proces Verbal (PV)</TabsTrigger>
-                        <TabsTrigger value="instructiuni pentru confirmarea primirii coletului" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructiuni</TabsTrigger>
-                        <TabsTrigger value="parcel inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
+                        <TabsTrigger value="Instructions" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
+                        <TabsTrigger value="Inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={selectedDocument.recipient.awbStatus !== 'Generated'}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!['Sent to Logistics', 'In Transit', 'Canceled', 'Lost or Damaged'].includes(selectedDocument.recipient.expeditionStatus)}>Email</TabsTrigger>
                     </TabsList>
@@ -263,23 +263,19 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
                     </TabsContent>
-                    <TabsContent value="instructiuni pentru confirmarea primirii coletului">
+                    <TabsContent value="Instructions">
                          {selectedDocument.recipient.instructionsUrl ? (
                             <DocumentViewer url={selectedDocument.recipient.instructionsUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
-                    <TabsContent value="parcel inventory">
+                    <TabsContent value="Inventory">
                         {selectedDocument.recipient.inventoryUrl ? (
                             <DocumentViewer url={selectedDocument.recipient.inventoryUrl} docType="gdrive-excel" />
                          ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">
                         {selectedDocument.recipient.awbUrl ? (
-                           <>
-                            {/* <p className="text-xs text-muted-foreground mb-2">AWB URL: {selectedDocument.recipient.awb?.awbUrl}</p> */}
-                            {/* <p className="text-xs text-muted-foreground mb-2">recipient data: {JSON.stringify(selectedDocument.recipient?.awb)}</p> */}
-                            <DocumentViewer url={selectedDocument.recipient.awb?.awbUrl || ""} docType="gdrive-pdf" />
-                           </>
+                            <DocumentViewer url={selectedDocument.recipient.awbUrl} docType="gdrive-pdf" />
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">

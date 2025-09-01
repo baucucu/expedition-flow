@@ -109,6 +109,11 @@ export const columns = (
       cell: ({ row }) => <div>{row.original.awb?.county ?? 'N/A'}</div>,
     },
     {
+      accessorKey: "awb.mainRecipientTelephone",
+      header: "Telephone",
+      cell: ({ row }) => <div>{row.original.awb?.mainRecipientTelephone ?? 'N/A'}</div>,
+    },
+    {
       accessorKey: "status",
       header: ({ column }) => (
         <DataTableColumnFilter
@@ -192,18 +197,18 @@ export const columns = (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                            onClick={() => handleOpenDocument(recipient, 'instructiuni pentru confirmarea primirii coletului')}
+                            onClick={() => handleOpenDocument(recipient, 'Instructions')}
                         >
-                            {docShortNames['instructiuni pentru confirmarea primirii coletului']}
+                            {docShortNames['Instructions']}
                         </Badge>
                     )}
                     {recipient.inventoryStatus === 'Generated' && (
                          <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                            onClick={() => handleOpenDocument(recipient, 'parcel inventory')}
+                            onClick={() => handleOpenDocument(recipient, 'Inventory')}
                         >
-                            {docShortNames['parcel inventory']}
+                            {docShortNames['Inventory']}
                         </Badge>
                     )}
                     {recipient.awbUrl && (
@@ -219,7 +224,7 @@ export const columns = (
                         <Badge
                             variant={"secondary"}
                             className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                            onClick={() => handleOpenDocument(recipient, 'Email' as DocumentType)}
+                            onClick={() => handleOpenDocument(recipient, 'Email')}
                         >
                             <Mail className="w-3 h-3" />
                             {docShortNames['Email']}

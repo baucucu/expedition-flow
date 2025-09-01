@@ -1,3 +1,4 @@
+
 import type { Recipient, DocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus } from "@/types";
 
 export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
@@ -34,15 +35,17 @@ export interface ExpeditionDashboardProps {
     expeditions: Expedition[];
 }
 
-export type DocType = DocumentType | 'Email' | 'AWB' | 'PV';
+export type DocType = DocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory';
 
 export const docShortNames: Record<DocType, string> = {
     'proces verbal de receptie': 'PV',
-    'instructiuni pentru confirmarea primirii coletului': 'Instr.',
-    'parcel inventory': 'Inv.',
+    'instructiuni pentru confirmarea primirii coletului': 'Instructions',
+    'parcel inventory': 'Inventory',
     'AWB': 'AWB',
     'Email': 'Email',
-    'PV': 'PV'
+    'PV': 'PV',
+    'Instructions': 'Instructions',
+    'Inventory': 'Inventory'
 }
 
 export type SelectedDocument = {

@@ -33,9 +33,9 @@ export const createAwb = schemaTask({
         body.append('cashOnDelivery', '0');
         body.append('insuredValue', '0');
         body.append('packageNumber', '1');
-        body.append('pickupPoint', '4241');
         body.append('service', '7');
-        body.append('contactPerson', '4833');
+        body.append('pickupPoint', process.env.SAMEDAY_PICKUP || '4241');
+        body.append('contactPerson', process.env.SAMEDAY_CONTACT || '4833');
         body.append('deliveryInterval', '1');
         body.append('awbPayment', '1');
         body.append('thirdPartyPickup', '0');
