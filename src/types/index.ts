@@ -1,6 +1,6 @@
 
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV' | 'AWB' | 'Email';
-export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed';
+export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed' | 'Complet';
 
 export type RecipientStatus = 
   | 'New'
@@ -45,6 +45,7 @@ export interface Recipient {
   pvStatus?: DocumentStatus;
   pvId?: string; 
   pvUrl?: string; 
+  pvSemnatUrl?: string;
   
   inventoryStatus?: DocumentStatus;
   inventoryUrl?: string;

@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'CompletedRecipients' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -108,6 +108,7 @@ export default function Home() {
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
+    const completedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet').length;
 
     
     return {
@@ -142,7 +143,7 @@ export default function Home() {
             value: issuesCount,
         },
         completed: {
-            value: allRecipientsWithFullData.filter(r => r.status === 'Completed').length,
+            value: completedCount,
         }
     }
   }, [allRecipientsWithFullData, expeditions, awbs]);
@@ -188,15 +189,18 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => issueExpeditionIds.includes(r.expeditionId!) || issueRecipientIds.includes(r.id));
     }
 
-    if (['NewRecipient', 'CompletedRecipients', 'Delivered', 'Returned'].includes(activeFilter)) {
+    if (['NewRecipient', 'Delivered', 'Returned'].includes(activeFilter)) {
         const statusMap = {
             'NewRecipient': 'New',
-            'CompletedRecipients': 'Completed',
             'Delivered': 'Delivered',
             'Returned': 'Returned'
         };
         const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
         return allRecipientsWithFullData.filter(r => r.status === recipientStatus);
+    }
+    
+    if (activeFilter === 'Completed') {
+        return allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet');
     }
 
     if (activeFilter === 'AWB Generated') {
@@ -255,5 +259,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

@@ -246,7 +246,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
           {selectedDocument && (
             <>
                 <SheetHeader>
-                    <SheetTitle>Documents for Recipient: {selectedDocument.recipient.name} ({selectedDocument.recipient.id})</SheetTitle>
+                    <SheetTitle>Documents for Recipient: {selectedDocument.recipient.name} ({selectedDocument.recipient.numericId})</SheetTitle>
                     <SheetDescription>
                         Part of shipment {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb?.mainRecipientName || 'N/A'}.
                     </SheetDescription>
@@ -254,6 +254,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
                         <TabsTrigger value="PV" disabled={selectedDocument.recipient.pvStatus !== 'Generated'}>Proces Verbal (PV)</TabsTrigger>
+                        <TabsTrigger value="PV Semnat" disabled={!selectedDocument.recipient.pvSemnatUrl}>PV Semnat</TabsTrigger>
                         <TabsTrigger value="Instructions" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
                         <TabsTrigger value="Inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={selectedDocument.recipient.awbStatus !== 'Generated'}>AWB</TabsTrigger>
@@ -263,6 +264,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                          {selectedDocument.recipient.pvUrl ? (
                             <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
+                    </TabsContent>
+                    <TabsContent value="PV Semnat">
+                         {selectedDocument.recipient.pvSemnatUrl ? (
+                            <DocumentViewer url={selectedDocument.recipient.pvSemnatUrl} docType="gdrive-pdf" />
+                         ) : <DocumentPlaceholder title="PV Semnat (Signed) not available" />}
                     </TabsContent>
                     <TabsContent value="Instructions">
                          {selectedDocument.recipient.instructionsUrl ? (

@@ -6,7 +6,7 @@ import { RecipientRow, recipientStatuses, recipientStatusVariant, awbStatuses, a
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, FileText, Mail } from "lucide-react";
+import { ChevronDown, FileText, Mail, FileCheck2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { DocumentType, RecipientStatus, AWBStatus } from "@/types";
@@ -191,6 +191,16 @@ export const columns = (
                         >
                             <FileText className="w-3 h-3" />
                             {docShortNames['PV']}
+                        </Badge>
+                    )}
+                     {recipient.pvSemnatUrl && (
+                         <Badge
+                            variant={"default"}
+                            className="cursor-pointer font-normal bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+                            onClick={() => handleOpenDocument(recipient, 'PV Semnat')}
+                        >
+                            <FileCheck2 className="w-3 h-3" />
+                            {docShortNames['PV Semnat']}
                         </Badge>
                     )}
                     {recipient.instructionsStatus === 'Generated' && (

@@ -113,8 +113,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         title="Completed"
         value={counts.completed.value}
         icon={CheckCircle2}
-        onClick={() => setActiveFilter('CompletedRecipients')}
-        isActive={activeFilter === 'CompletedRecipients'}
+        onClick={() => setActiveFilter('Completed')}
+        isActive={activeFilter === 'Completed'}
       />
       <Scorecard
         title="Issues"
