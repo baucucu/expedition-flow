@@ -151,6 +151,24 @@ export const columns = (
             return value.includes(status)
         },
     },
+     {
+      accessorKey: "awb.parcelCount",
+      header: ({ column }) => (
+        <DataTableColumnFilter
+            column={column} 
+            title="Parcel Count" 
+            options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
+        />
+      ),
+      cell: ({ row }) => {
+        const parcelCount = row.original.awb?.parcelCount;
+        return <div>{parcelCount ?? 'N/A'}</div>;
+      },
+      filterFn: (row, id, value) => {
+          const parcelCount = row.original.awb?.parcelCount;
+          return value.includes(String(parcelCount));
+      },
+    },
     {
         id: "documents",
         header: "Documents",
