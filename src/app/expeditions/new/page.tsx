@@ -146,7 +146,7 @@ export default function NewExpeditionPage() {
             const workbook = xlsx.read(data, { type: 'binary' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const jsonData = xlsx.utils.sheet_to_json(worksheet) as ParsedRow[];
+            const jsonData = xlsx.utils.sheet_to_json(worksheet, { raw: false }) as ParsedRow[];
             setParsedData(jsonData);
             toast({
                 title: "File Parsed Successfully",
@@ -328,3 +328,4 @@ export default function NewExpeditionPage() {
     </div>
   );
 }
+
