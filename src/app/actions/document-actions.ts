@@ -120,6 +120,13 @@ export async function generateProcesVerbalAction(recipients: {id: string, name: 
     }
 
     try {
+        const batch = writeBatch(db);
+        recipients.forEach(recipient => {
+            const recipientRef = doc(db, "recipients", recipient.id);
+            batch.update(recipientRef, { pvStatus: 'Queued' });
+        });
+        await batch.commit();
+
         console.log("starting generateProcesVerbal: ", recipients)
         const result = await generateProcesVerbal({ recipients });
         return result;
