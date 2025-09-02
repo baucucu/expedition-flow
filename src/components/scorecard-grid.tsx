@@ -51,8 +51,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         title="Total Shipments"
         value={counts.totalExpeditions.value}
         icon={Box}
-        footerText={counts.totalExpeditions.footerText}
-        footerIcon={Users}
         onClick={() => setActiveFilter('Total')}
         isActive={activeFilter === 'Total'}
       />
@@ -61,9 +59,10 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         kpis={counts.docsGenerated.kpis}
         icon={FileCheck2}
         onClick={() => setActiveFilter('Total')} // Main card click can be neutral
-        isActive={isFilterActive('PV', 'Inventory', 'Instructions')}
+        isActive={isFilterActive('PV', 'PVQueued', 'Inventory', 'Instructions')}
         onKpiClick={(label) => {
             if (label === 'PVs') setActiveFilter('PV');
+            if (label === 'Queued') setActiveFilter('PVQueued');
             if (label === 'Inventories') setActiveFilter('Inventory');
             if (label === 'Instructions') setActiveFilter('Instructions');
         }}
@@ -85,13 +84,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         title="Sent to Logistics"
         value={counts.sentToLogistics.value}
         icon={Send}
-        footerText={counts.sentToLogistics.footerText}
-        footerIcon={AlertTriangle}
-        errorCount={counts.sentToLogistics.errorCount}
         onClick={() => setActiveFilter('Sent')}
-        onFooterClick={() => setActiveFilter('EmailFailed')}
         isActive={isFilterActive('Sent', 'EmailFailed')}
-        isFooterActive={activeFilter === 'EmailFailed'}
       />
 
       {/* --- Bottom Row: Tracking & Completion --- */}

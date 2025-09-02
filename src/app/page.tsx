@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | 'AwbNew' | 'AwbQueued' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'PVQueued' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | 'AwbNew' | 'AwbQueued' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -111,6 +111,7 @@ export default function Home() {
                 + emailSendFailedCount;
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
+    const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
@@ -125,6 +126,7 @@ export default function Home() {
         docsGenerated: {
             kpis: [
                 { value: pvGeneratedCount, label: 'PVs' },
+                { value: pvQueuedCount, label: 'Queued' },
                 { value: inventoryGeneratedCount, label: 'Inventories' },
                 { value: instructionsGeneratedCount, label: 'Instructions' },
             ]
@@ -162,6 +164,9 @@ export default function Home() {
     
     if (activeFilter === 'PV') {
         return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
+    }
+    if (activeFilter === 'PVQueued') {
+        return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
     }
     if (activeFilter === 'Inventory') {
         return allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated');
