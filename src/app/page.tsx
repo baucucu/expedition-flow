@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'PVQueued' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | 'AwbNew' | 'AwbQueued' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | 'AwbNew' | 'AwbQueued' | 'Recipients' | 'Shipments' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -112,6 +112,7 @@ export default function Home() {
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
+    const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated').length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
@@ -119,16 +120,19 @@ export default function Home() {
 
     
     return {
-        totalExpeditions: {
-            value: expeditions.length,
-            footerText: `${allRecipientsWithFullData.length} recipients`
-        },
-        docsGenerated: {
+        overview: {
             kpis: [
-                { value: pvGeneratedCount, label: 'PVs' },
-                { value: pvQueuedCount, label: 'Queued' },
+                { value: allRecipientsWithFullData.length, label: 'Recipients' },
+                { value: expeditions.length, label: 'Shipments' },
                 { value: inventoryGeneratedCount, label: 'Inventories' },
                 { value: instructionsGeneratedCount, label: 'Instructions' },
+            ]
+        },
+        pvStatus: {
+            kpis: [
+                { value: pvNewCount, label: 'New' },
+                { value: pvQueuedCount, label: 'Queued' },
+                { value: pvGeneratedCount, label: 'Generated' },
             ]
         },
         awbGenerated: {
@@ -160,13 +164,16 @@ export default function Home() {
   }, [allRecipientsWithFullData, expeditions, awbs]);
 
   const filteredRecipients = useMemo(() => {
-    if (!activeFilter || activeFilter === 'Total') return allRecipientsWithFullData;
+    if (!activeFilter || activeFilter === 'Total' || activeFilter === 'Recipients' || activeFilter === 'Shipments') return allRecipientsWithFullData;
     
-    if (activeFilter === 'PV') {
+    if (activeFilter === 'PVGenerated') {
         return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     }
     if (activeFilter === 'PVQueued') {
         return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
+    }
+    if(activeFilter === 'PVNew') {
+        return allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated');
     }
     if (activeFilter === 'Inventory') {
         return allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated');

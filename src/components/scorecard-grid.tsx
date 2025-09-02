@@ -10,7 +10,6 @@ import {
   PackageCheck,
   AlertTriangle,
   CheckCircle2,
-  Users,
 } from 'lucide-react';
 import { Scorecard, type Kpi } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -23,8 +22,8 @@ interface ScorecardInfo {
 }
 
 export interface ScorecardData {
-  totalExpeditions: ScorecardInfo;
-  docsGenerated: ScorecardInfo;
+  overview: ScorecardInfo;
+  pvStatus: ScorecardInfo;
   awbGenerated: ScorecardInfo;
   sentToLogistics: ScorecardInfo;
   inTransit: ScorecardInfo;
@@ -48,23 +47,28 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {/* --- Top Row: Preparation & Hand-off --- */}
       <Scorecard
-        title="Total Shipments"
-        value={counts.totalExpeditions.value}
+        title="Overview"
+        kpis={counts.overview.kpis}
         icon={Box}
         onClick={() => setActiveFilter('Total')}
-        isActive={activeFilter === 'Total'}
-      />
-       <Scorecard
-        title="Docs Generated"
-        kpis={counts.docsGenerated.kpis}
-        icon={FileCheck2}
-        onClick={() => setActiveFilter('Total')} // Main card click can be neutral
-        isActive={isFilterActive('PV', 'PVQueued', 'Inventory', 'Instructions')}
+        isActive={isFilterActive('Recipients', 'Shipments', 'Inventory', 'Instructions')}
         onKpiClick={(label) => {
-            if (label === 'PVs') setActiveFilter('PV');
-            if (label === 'Queued') setActiveFilter('PVQueued');
+            if (label === 'Recipients') setActiveFilter('Recipients');
+            if (label === 'Shipments') setActiveFilter('Shipments');
             if (label === 'Inventories') setActiveFilter('Inventory');
             if (label === 'Instructions') setActiveFilter('Instructions');
+        }}
+      />
+       <Scorecard
+        title="PV Status"
+        kpis={counts.pvStatus.kpis}
+        icon={FileCheck2}
+        onClick={() => setActiveFilter('Total')} // Main card click can be neutral
+        isActive={isFilterActive('PVNew', 'PVQueued', 'PVGenerated')}
+        onKpiClick={(label) => {
+            if (label === 'New') setActiveFilter('PVNew');
+            if (label === 'Queued') setActiveFilter('PVQueued');
+            if (label === 'Generated') setActiveFilter('PVGenerated');
         }}
        />
       <Scorecard
