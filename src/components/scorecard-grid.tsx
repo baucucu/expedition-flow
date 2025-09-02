@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from 'react';
@@ -41,8 +40,8 @@ interface ScorecardGridProps {
 }
 
 export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilter, setActiveFilter }) => {
-  const isFilterActive = (mainFilter: FilterStatus, errorFilter?: FilterStatus) => {
-    return activeFilter === mainFilter || activeFilter === errorFilter;
+  const isFilterActive = (mainFilter: FilterStatus, ...additionalFilters: FilterStatus[]) => {
+    return [mainFilter, ...additionalFilters].includes(activeFilter);
   }
   
   return (
@@ -62,7 +61,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         kpis={counts.docsGenerated.kpis}
         icon={FileCheck2}
         onClick={() => setActiveFilter('Total')} // Main card click can be neutral
-        isActive={isFilterActive('PV') || isFilterActive('Inventory') || isFilterActive('Instructions')}
+        isActive={isFilterActive('PV', 'Inventory', 'Instructions')}
         onKpiClick={(label) => {
             if (label === 'PVs') setActiveFilter('PV');
             if (label === 'Inventories') setActiveFilter('Inventory');
@@ -72,14 +71,15 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       <Scorecard
         title="AWB Generated"
         value={counts.awbGenerated.value}
+        kpis={counts.awbGenerated.kpis}
         icon={Hourglass}
-        footerText={counts.awbGenerated.footerText}
-        footerIcon={AlertTriangle}
-        errorCount={counts.awbGenerated.errorCount}
         onClick={() => setActiveFilter('AWB Generated')}
-        onFooterClick={() => setActiveFilter('AwbFailed')}
-        isActive={isFilterActive('AWB Generated', 'AwbFailed')}
-        isFooterActive={activeFilter === 'AwbFailed'}
+        onKpiClick={(label) => {
+            if (label === 'failed') setActiveFilter('AwbFailed');
+            if (label === 'new') setActiveFilter('AwbNew');
+            if (label === 'queued') setActiveFilter('AwbQueued');
+        }}
+        isActive={isFilterActive('AWB Generated', 'AwbFailed', 'AwbNew', 'AwbQueued')}
       />
       <Scorecard
         title="Sent to Logistics"

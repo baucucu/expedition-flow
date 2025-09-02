@@ -125,6 +125,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       globalFilter,
     },
     enableRowSelection: true,
+    initialState: {
+      pagination: {
+          pageSize: 50,
+      },
+    },
   });
 
   const getSelectedRecipients = React.useCallback(() => {

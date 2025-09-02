@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | 'AwbNew' | 'AwbQueued' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -98,6 +98,8 @@ export default function Home() {
         r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed'
     );
 
+    const awbNewCount = awbs.filter(e => e.status === 'New').length;
+    const awbQueuedCount = awbs.filter(e => e.status === 'Queued').length;
     const awbGenerationFailedCount = awbs.filter(e => e.status === 'Failed').length;
     
     const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
@@ -129,8 +131,11 @@ export default function Home() {
         },
         awbGenerated: {
             value: awbGeneratedCount,
-            footerText: `${awbGenerationFailedCount} errors`,
-            errorCount: awbGenerationFailedCount
+            kpis: [
+                { value: awbNewCount, label: 'new' },
+                { value: awbQueuedCount, label: 'queued' },
+                { value: awbGenerationFailedCount, label: 'failed', color: 'bg-destructive' },
+            ]
         },
         sentToLogistics: {
             value: emailSentCount,
@@ -171,9 +176,15 @@ export default function Home() {
         );
     }
 
-    if (activeFilter === 'AwbFailed') {
-        const failedAwbIds = new Set(awbs.filter(awb => awb.status === 'Failed').map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => failedAwbIds.has(r.awbId));
+    if (['AwbFailed', 'AwbNew', 'AwbQueued'].includes(activeFilter)) {
+        const statusMap = {
+            'AwbFailed': 'Failed',
+            'AwbNew': 'New',
+            'AwbQueued': 'Queued'
+        };
+        const awbStatus = statusMap[activeFilter as keyof typeof statusMap];
+        const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => targetAwbIds.has(r.awbId));
     }
 
     if (activeFilter === 'EmailFailed') {
