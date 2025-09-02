@@ -95,10 +95,11 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         kpis={counts.logisticsStatus.kpis}
         icon={Send}
         onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('EmailNew', 'EmailQueued', 'Sent')}
-        activeKpiLabel={getActiveKpiLabel({ 'EmailNew': 'New', 'EmailQueued': 'Queued', 'Sent': 'Sent' })}
+        isActive={isFilterActive('LogisticsNotReady', 'LogisticsReady', 'EmailQueued', 'Sent')}
+        activeKpiLabel={getActiveKpiLabel({ 'LogisticsNotReady': 'Not Ready', 'LogisticsReady': 'Ready', 'EmailQueued': 'Queued', 'Sent': 'Sent' })}
         onKpiClick={(label) => {
-            if (label === 'New') setActiveFilter('EmailNew');
+            if (label === 'Not Ready') setActiveFilter('LogisticsNotReady');
+            if (label === 'Ready') setActiveFilter('LogisticsReady');
             if (label === 'Queued') setActiveFilter('EmailQueued');
             if (label === 'Sent') setActiveFilter('Sent');
         }}
