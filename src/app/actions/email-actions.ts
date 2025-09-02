@@ -34,7 +34,7 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
         }
         const inputRecipients = recipientsFromInputSnapshot.docs.map(doc => doc.data() as Recipient);
         const uniqueShipmentIds = [...new Set(inputRecipients.map(r => r.shipmentId))];
-
+        console.log("unique shipments selected: ", {uniqueShipmentIds})
         // 2. Fetch all related data in chunks
         const shipmentsMap = new Map<string, Shipment>();
         const allShipmentRecipientsMap = new Map<string, Recipient[]>();
@@ -66,7 +66,9 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
                 }
             }
         }
-
+        console.log("shipmentsMap: ", shipmentsMap)
+        console.log("allShipmentRecipientsMap: ", allShipmentRecipientsMap)
+        console.log("awbsMap: ", awbsMap)
         // 3. Fetch static document IDs once
         const inventoryDocRef = doc(db, "static_documents", "inventory");
         const instructionsDocRef = doc(db, "static_documents", "instructions");
@@ -88,7 +90,7 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
                         shipmentId: shipment.id,
                         awbNumber: awbData.awb_data?.awbNumber,
                         awbUrl: awbData?.awbUrl,
-                        awbDocumentId: awbData.awbFileId,
+                        awbDocumentId: awbData.id,
                         awbNumberOfParcels: awbData.parcelCount,
                         inventoryDocumentId: inventoryDocumentId,
                         instructionsDocumentId: instructionsDocumentId,
@@ -105,7 +107,7 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
                  console.warn(`Could not construct full payload for shipment ${shipmentId} due to missing data.`);
             }
         }
-
+        console.log("payloads: ", payloads)
         // 5. Send all events to Trigger.dev.
         if (payloads.length > 0) {
              await tasks.batchTrigger("send-email", payloads);
