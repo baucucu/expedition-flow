@@ -94,6 +94,7 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
                         instructionsDocumentId: instructionsDocumentId,
                         recipients: allRecipientsForShipment.map(r => ({
                             recipientId: r.id,
+                            numericId: r.numericId,
                             name: r.name,
                             pvDocumentId: r.pvId || null,
                             pvUrl: r.pvUrl || null,

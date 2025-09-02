@@ -284,8 +284,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                          ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">
-                        {selectedDocument.recipient.awb.awbUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.awb.awbUrl} docType="pdf" />
+                        {selectedDocument.recipient.awb?.awbUrl ? (
+                            <DocumentViewer url={selectedDocument.recipient.awb?.awbUrl} docType="pdf" />
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">

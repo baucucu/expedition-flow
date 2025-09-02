@@ -4,6 +4,7 @@ import { z } from "zod";
 
 const RecipientSchema = z.object({
   recipientId: z.string(),
+  numericId: z.string(),
   name: z.string(),
   pvDocumentId: z.string().nullable(),
   pvUrl: z.string().nullable(),
