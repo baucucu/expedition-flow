@@ -24,9 +24,9 @@ const N8N_EMAIL_WEBHOOK_URL = process.env.N8N_EMAIL_WEBHOOK_URL;
 
 export const sendEmailTask = task({
   id: "send-email",
-  machine: {
-    preset: "large-1x", // 4 vCPU, 8 GB RAM
-  },
+  // machine: {
+  //   preset: "large-1x", // 4 vCPU, 8 GB RAM
+  // },
   run: async (payload: z.infer<typeof SendEmailPayloadSchema>, { ctx }) => {
     logger.info(`Starting email sending task for shipment: ${payload.shipmentId}`);
     
