@@ -113,13 +113,14 @@ export async function getStaticFilesStatusAction() {
 }
 
 // Action for PV Generation
-export async function generateProcesVerbalAction(recipients: {id: string, name: string, shipmentId: string, uuid?: string}[]) {
+export async function generateProcesVerbalAction(recipients: {id: string, name: string, shipmentId: string, numericId?: string}[]) {
     
     if (!Array.isArray(recipients) || recipients.length === 0) {
         return { success: false, message: "Invalid input for PV generation." };
     }
 
     try {
+        console.log("starting generateProcesVerbal: ", recipients)
         const result = await generateProcesVerbal({ recipients });
         return result;
     } catch (error: any) {

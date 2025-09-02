@@ -140,9 +140,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         id: row.id,
         name: row.name,
         shipmentId: row.shipmentId,
-        uuid: row.uuid
+        numericId: row.numericId
     }));
-    
+    console.log("selected recipients for pv generation",{recipientsToProcess})
     setIsGeneratingPv(true);
     const result = await generateProcesVerbalAction(recipientsToProcess);
     setIsGeneratingPv(false);

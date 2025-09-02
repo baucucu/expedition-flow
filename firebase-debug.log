@@ -6958,3 +6958,99 @@
 [error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
 [debug] [2025-09-01T16:27:26.608Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
 [debug] [2025-09-01T16:27:26.609Z] > authorizing via signed-in user (alexandru.raduca@gmail.com)
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-09-02T07:32:15.407Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.410Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.415Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:15.452Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:15.453Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:15.740Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.749Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.749Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:15.758Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:15.759Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:15.778Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.783Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.783Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:15.789Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:15.789Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:15.804Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.805Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:15.806Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:15.806Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:15.806Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-09-02T07:32:16.002Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.003Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.003Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:16.019Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:16.019Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.045Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.046Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.046Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:16.055Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:16.055Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.081Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.094Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.094Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:16.095Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:16.095Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.128Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.137Z] Checked if tokens are valid: false, expires at: 1756791907200
+[debug] [2025-09-02T07:32:16.138Z] > refreshing access token with scopes: []
+[debug] [2025-09-02T07:32:16.148Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-09-02T07:32:16.149Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.464Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.464Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.520Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [none]
+[debug] [2025-09-02T07:32:16.521Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.541Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.542Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.567Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [none]
+[debug] [2025-09-02T07:32:16.570Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.680Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.682Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.706Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-09-02T07:32:16.706Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.732Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.732Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.761Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [none]
+[debug] [2025-09-02T07:32:16.761Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.777Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.777Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.806Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [none]
+[debug] [2025-09-02T07:32:16.806Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.829Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.831Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.860Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [none]
+[debug] [2025-09-02T07:32:16.860Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.950Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.950Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:16.978Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [none]
+[debug] [2025-09-02T07:32:16.978Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:16.996Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-09-02T07:32:16.996Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-09-02T07:32:17.023Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [none]
+[debug] [2025-09-02T07:32:17.023Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com x-goog-quota-user=projects/expeditionflow
+[debug] [2025-09-02T07:32:17.364Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com 403
+[debug] [2025-09-02T07:32:17.366Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [omitted]
+[debug] [2025-09-02T07:32:17.689Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com 200
+[debug] [2025-09-02T07:32:17.693Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [omitted]
+[debug] [2025-09-02T07:32:17.768Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com 200
+[debug] [2025-09-02T07:32:17.769Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasecrashlytics.googleapis.com [omitted]
+[debug] [2025-09-02T07:32:17.781Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-09-02T07:32:17.781Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-09-02T07:32:17.791Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com 403
+[debug] [2025-09-02T07:32:17.792Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebaseio.com [omitted]
+[debug] [2025-09-02T07:32:17.835Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com 200
+[debug] [2025-09-02T07:32:17.836Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/firebasedataconnect.googleapis.com [omitted]
+[debug] [2025-09-02T07:32:17.989Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ 200
+[debug] [2025-09-02T07:32:17.993Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [omitted]
+[debug] [2025-09-02T07:32:18.086Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ 200
+[debug] [2025-09-02T07:32:18.086Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/expeditionflow/services/ [omitted]
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[error] Failed to fetch Firebase Project from Studio Workspace because WORKSPACE_SLUG environment variable is empty
+[debug] [2025-09-02T07:32:18.095Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-09-02T07:32:18.105Z] > authorizing via signed-in user (alexandru.raduca@gmail.com)

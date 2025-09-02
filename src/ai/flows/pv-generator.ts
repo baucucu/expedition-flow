@@ -17,7 +17,7 @@ const PVRecipientSchema = z.object({
   id: z.string(),
   name: z.string(),
   shipmentId: z.string(),
-  uuid: z.string().optional(),
+  numericId: z.string().optional(),
 });
 
 const ProcesVerbalGeneratorInputSchema = z.object({
@@ -47,7 +47,7 @@ const generateProcesVerbalFlow = ai.defineFlow(
     outputSchema: ProcesVerbalGeneratorOutputSchema,
   },
   async ({ recipients }) => {
-    
+    console.log("generateProcesVerbalFlow: ", recipients)
     if (!process.env.N8N_PV_WEBHOOK_URL) {
       return { success: false, message: "Proces Verbal webhook URL is not configured in environment variables." };
     }
@@ -64,10 +64,10 @@ const generateProcesVerbalFlow = ai.defineFlow(
                 id: recipient.id,
                 name: recipient.name,
                 shipmentId: recipient.shipmentId,
-                uuid: recipient.uuid,
+                numericId: recipient.numericId,
             },
         }));
-        console.log("Starting pv generation for ", events.length, " recipients")
+        console.log("Starting pv generation for ", events)
         // The first argument is the task, the second is an array of event payloads.
         await generateProcesVerbalTask.batchTrigger(events);
         totalTriggered += chunk.length;
