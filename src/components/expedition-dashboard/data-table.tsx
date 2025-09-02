@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { flexRender, Table as TanstackTable } from "@tanstack/react-table";
 import { RecipientRow } from "./types";
+import { cn } from "@/lib/utils";
 
 interface DataTableProps {
   table: TanstackTable<RecipientRow>;
@@ -22,8 +23,12 @@ export function DataTable({ table }: DataTableProps) {
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
+                const isFiltered = header.column.getIsFiltered();
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead 
+                    key={header.id}
+                    className={cn(isFiltered && 'bg-muted')}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
