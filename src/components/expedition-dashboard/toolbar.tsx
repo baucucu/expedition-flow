@@ -50,11 +50,10 @@ export function Toolbar({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 mb-4">
         {/* Actions Row */}
         <div className="flex items-center gap-2">
              <Button
-                variant="outline"
                 onClick={handleGeneratePvs}
                 disabled={isGeneratingPv || selectedRowCount === 0}
                 >
