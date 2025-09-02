@@ -245,7 +245,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       <Pagination table={table} />
 
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
-        <SheetContent className="w-full sm:w-2/3 lg:w-2/3 sm:max-w-none">
+        <SheetContent className="w-full sm:w-2-3 lg:w-2/3 sm:max-w-none">
           {selectedDocument && (
             <>
                 <SheetHeader>
@@ -264,7 +264,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
-                        <p>URL: {selectedDocument.recipient.pvUrl}</p>
                          {selectedDocument.recipient.pvUrl ? (
                             <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="pdf" />
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
@@ -286,7 +285,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="AWB">
                         {selectedDocument.recipient.awbUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.awbUrl} docType="gdrive-pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.awbUrl} docType="pdf" />
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">
