@@ -56,17 +56,26 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
+  const [emailFilter, setEmailFilter] = React.useState<'all' | 'sent' | 'not_sent'>('all');
   const { toast } = useToast();
 
   React.useEffect(() => {
     let filteredData = initialData;
+
     if (pvFilter === 'has_pv') {
       filteredData = filteredData.filter(row => row.pvStatus === 'Generated');
     } else if (pvFilter === 'no_pv') {
       filteredData = filteredData.filter(row => row.pvStatus !== 'Generated');
     }
+
+    if (emailFilter === 'sent') {
+      filteredData = filteredData.filter(row => row.emailStatus === 'Sent');
+    } else if (emailFilter === 'not_sent') {
+      filteredData = filteredData.filter(row => row.emailStatus !== 'Sent');
+    }
+
     setData(filteredData);
-  }, [initialData, pvFilter]);
+  }, [initialData, pvFilter, emailFilter]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {
     setSelectedDocument({ recipient, docType });
@@ -234,6 +243,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             table={table}
             pvFilter={pvFilter}
             setPvFilter={setPvFilter}
+            emailFilter={emailFilter}
+            setEmailFilter={setEmailFilter}
             isSendingEmail={isSendingEmail}
             handleSendEmails={handleSendEmails}
             isGeneratingPv={isGeneratingPv}

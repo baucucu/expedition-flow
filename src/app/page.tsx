@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PV' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -184,6 +184,10 @@ export default function Home() {
     if (activeFilter === 'Sent') {
         const sentEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Sent').map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => sentEmailAwbIds.has(r.awbId));
+    }
+
+    if (activeFilter === 'Email') {
+        return allRecipientsWithFullData.filter(r => r.emailStatus === 'Sent');
     }
 
     if (activeFilter === 'Issues') {

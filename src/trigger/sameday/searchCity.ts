@@ -38,7 +38,7 @@ export const searchCity = schemaTask({
     const fixedCityName = removeDiacritics(cityName)
     const endpoint = "/geolocation/city";
     const url = new URL(`${samedayApiUrl}${endpoint}`);
-    url.searchParams.append("name", fixedCityName);
+    url.searchParams.append("name", cityName);
     url.searchParams.append("county", String(countyId));
 
     logger.info(`Searching for city: ${cityName} in county ID: ${countyId}`, {
