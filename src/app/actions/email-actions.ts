@@ -84,8 +84,10 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
             if (shipment && allRecipientsForShipment && awbData) {
                 payloads.push({
                     payload: {
+                        logisticsEmail: process.env.EMAIL_DEPOZIT,
                         shipmentId: shipment.id,
                         awbNumber: awbData.awb_data?.awbNumber,
+                        awbUrl: awbData?.awbUrl,
                         awbDocumentId: awbData.awbFileId,
                         awbNumberOfParcels: awbData.parcelCount,
                         inventoryDocumentId: inventoryDocumentId,
