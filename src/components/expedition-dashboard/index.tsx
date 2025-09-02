@@ -264,8 +264,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
+                        <p>URL: {selectedDocument.recipient.pvUrl}</p>
                          {selectedDocument.recipient.pvUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="gdrive-pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="pdf" />
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
                     </TabsContent>
                     <TabsContent value="PV Semnat">
@@ -300,7 +301,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                         <ExternalLink className="mr-2 h-4 w-4" />
                                         View in Gmail
                                     </a>
-                                </Button>
+                                 </Button>
                              </div>
                          ) : (
                             <DocumentPlaceholder title={`Email has not been sent for this AWB.`} />

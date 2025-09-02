@@ -15,7 +15,6 @@ interface DocumentViewerProps {
 type SheetData = (string | number)[][];
 
 const extractFileIdFromUrl = (url: string): string | null => {
-    // This regex is more robust and handles various Google Drive URL formats.
     const regex = /(?:https\:\/\/drive\.google\.com\/(?:file\/d\/|open\?id=|drive\/folders\/|drive\/u\/\d+\/folders\/))([a-zA-Z0-9_-]{25,})/;
     const match = url.match(regex);
     return match ? match[1] : null;
@@ -32,7 +31,6 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
             setLoading(true);
             setError(null);
             try {
-                // For excel files, we need to fetch them through a CORS proxy if they are not from our origin
                 const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
                 const response = await fetch(`${proxyUrl}${url}`);
 
@@ -100,7 +98,6 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     }
     
     if (docType === 'pdf') {
-        // This is for public, non-google-drive URLs
         const encodedUrl = encodeURIComponent(url);
         const googleDocsUrl = `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
         return (
