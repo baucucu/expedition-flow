@@ -34,10 +34,11 @@ export const searchCity = schemaTask({
       logger.error("SAMEDAY_API_TOKEN environment variable is not set.");
       throw new Error("Sameday API token is not configured.");
     }
-
+    const removeDiacritics = (str: string): string => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const fixedCityName = removeDiacritics(cityName)
     const endpoint = "/geolocation/city";
     const url = new URL(`${samedayApiUrl}${endpoint}`);
-    url.searchParams.append("name", cityName);
+    url.searchParams.append("name", fixedCityName);
     url.searchParams.append("county", String(countyId));
 
     logger.info(`Searching for city: ${cityName} in county ID: ${countyId}`, {
