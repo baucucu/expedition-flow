@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'Email' | 'AwbNew' | 'AwbQueued' | 'Recipients' | 'Shipments' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailNew' | 'EmailQueued' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -102,8 +102,10 @@ export default function Home() {
     const awbQueuedCount = awbs.filter(e => e.status === 'Queued').length;
     const awbGenerationFailedCount = awbs.filter(e => e.status === 'Failed').length;
     
-    const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
+    const emailNewCount = awbs.filter(e => !e.emailStatus || e.emailStatus === 'New').length;
+    const emailQueuedCount = awbs.filter(e => e.emailStatus === 'Queued').length;
     const emailSentCount = awbs.filter(awb => awb.emailStatus === 'Sent').length;
+    const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
 
     const issuesCount = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length 
                 + recipientsWithFailedDocs.length
@@ -135,18 +137,19 @@ export default function Home() {
                 { value: pvGeneratedCount, label: 'Generated' },
             ]
         },
-        awbGenerated: {
-            value: awbGeneratedCount,
+        awbStatus: {
             kpis: [
-                { value: awbNewCount, label: 'new' },
-                { value: awbQueuedCount, label: 'queued' },
-                { value: awbGenerationFailedCount, label: 'failed', color: 'bg-destructive' },
+                { value: awbNewCount, label: 'New' },
+                { value: awbQueuedCount, label: 'Queued' },
+                { value: awbGeneratedCount, label: 'Generated' },
             ]
         },
-        sentToLogistics: {
-            value: emailSentCount,
-            footerText: `${emailSendFailedCount} errors`,
-            errorCount: emailSendFailedCount
+        logisticsStatus: {
+            kpis: [
+                { value: emailNewCount, label: 'New' },
+                { value: emailQueuedCount, label: 'Queued' },
+                { value: emailSentCount, label: 'Sent' },
+            ]
         },
         inTransit: {
             value: expeditions.filter(e => e.status === 'In Transit').length,
@@ -188,29 +191,40 @@ export default function Home() {
         );
     }
 
-    if (['AwbFailed', 'AwbNew', 'AwbQueued'].includes(activeFilter)) {
+    if (['AwbFailed', 'AwbNew', 'AwbQueued', 'AwbGenerated'].includes(activeFilter)) {
         const statusMap = {
             'AwbFailed': 'Failed',
             'AwbNew': 'New',
-            'AwbQueued': 'Queued'
+            'AwbQueued': 'Queued',
+            'AwbGenerated': 'Generated'
         };
         const awbStatus = statusMap[activeFilter as keyof typeof statusMap];
+
+        if (awbStatus === 'Generated') {
+            const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber).map(awb => awb.id));
+            return allRecipientsWithFullData.filter(r => r.awbId && generatedAwbIds.has(r.awbId));
+        }
+
         const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => targetAwbIds.has(r.awbId));
+        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
 
-    if (activeFilter === 'EmailFailed') {
-        const failedEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Failed').map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => failedEmailAwbIds.has(r.awbId));
-    }
-    
-    if (activeFilter === 'Sent') {
-        const sentEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Sent').map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => sentEmailAwbIds.has(r.awbId));
-    }
+    if (['EmailNew', 'EmailQueued', 'Sent', 'EmailFailed'].includes(activeFilter)) {
+        const statusMap = {
+            'EmailNew': 'New',
+            'EmailQueued': 'Queued',
+            'Sent': 'Sent',
+            'EmailFailed': 'Failed'
+        };
+        const emailStatus = statusMap[activeFilter as keyof typeof statusMap];
 
-    if (activeFilter === 'Email') {
-        return allRecipientsWithFullData.filter(r => r.emailStatus === 'Sent');
+        let targetAwbIds: Set<string>;
+        if (emailStatus === 'New') {
+            targetAwbIds = new Set(awbs.filter(awb => !awb.emailStatus || awb.emailStatus === 'New').map(awb => awb.id));
+        } else {
+            targetAwbIds = new Set(awbs.filter(awb => awb.emailStatus === emailStatus).map(awb => awb.id));
+        }
+        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
 
     if (activeFilter === 'Issues') {
@@ -226,10 +240,10 @@ export default function Home() {
         const failedEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Failed').map(awb => awb.id));
 
         return allRecipientsWithFullData.filter(r => 
-            issueExpeditionIds.includes(r.expeditionId!) || 
+            issueExpedtionIds.includes(r.expeditionId!) || 
             issueRecipientIds.includes(r.id) ||
-            failedAwbIds.has(r.awbId) ||
-            failedEmailAwbIds.has(r.awbId)
+            (r.awbId && failedAwbIds.has(r.awbId)) ||
+            (r.awbId && failedEmailAwbIds.has(r.awbId))
         );
     }
 
@@ -245,11 +259,6 @@ export default function Home() {
     
     if (activeFilter === 'Completed') {
         return allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet');
-    }
-
-    if (activeFilter === 'AWB Generated') {
-        const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => generatedAwbIds.has(r.awbId));
     }
 
     const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);

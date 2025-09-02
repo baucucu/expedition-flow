@@ -24,8 +24,8 @@ interface ScorecardInfo {
 export interface ScorecardData {
   overview: ScorecardInfo;
   pvStatus: ScorecardInfo;
-  awbGenerated: ScorecardInfo;
-  sentToLogistics: ScorecardInfo;
+  awbStatus: ScorecardInfo;
+  logisticsStatus: ScorecardInfo;
   inTransit: ScorecardInfo;
   delivered: ScorecardInfo;
   issues: ScorecardInfo;
@@ -43,6 +43,10 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     return [mainFilter, ...additionalFilters].includes(activeFilter);
   }
   
+  const getActiveKpiLabel = (filterMapping: { [key in FilterStatus]?: string }): string | undefined => {
+    return filterMapping[activeFilter];
+  }
+  
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {/* --- Top Row: Preparation & Hand-off --- */}
@@ -52,6 +56,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         icon={Box}
         onClick={() => setActiveFilter('Total')}
         isActive={isFilterActive('Recipients', 'Shipments', 'Inventory', 'Instructions')}
+        activeKpiLabel={getActiveKpiLabel({ 'Recipients': 'Recipients', 'Shipments': 'Shipments', 'Inventory': 'Inventories', 'Instructions': 'Instructions' })}
         onKpiClick={(label) => {
             if (label === 'Recipients') setActiveFilter('Recipients');
             if (label === 'Shipments') setActiveFilter('Shipments');
@@ -65,6 +70,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         icon={FileCheck2}
         onClick={() => setActiveFilter('Total')} // Main card click can be neutral
         isActive={isFilterActive('PVNew', 'PVQueued', 'PVGenerated')}
+        activeKpiLabel={getActiveKpiLabel({ 'PVNew': 'New', 'PVQueued': 'Queued', 'PVGenerated': 'Generated' })}
         onKpiClick={(label) => {
             if (label === 'New') setActiveFilter('PVNew');
             if (label === 'Queued') setActiveFilter('PVQueued');
@@ -72,24 +78,30 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         }}
        />
       <Scorecard
-        title="AWB Generated"
-        value={counts.awbGenerated.value}
-        kpis={counts.awbGenerated.kpis}
+        title="AWB Status"
+        kpis={counts.awbStatus.kpis}
         icon={Hourglass}
-        onClick={() => setActiveFilter('AWB Generated')}
+        onClick={() => setActiveFilter('Total')}
+        isActive={isFilterActive('AwbNew', 'AwbQueued', 'AwbGenerated')}
+        activeKpiLabel={getActiveKpiLabel({ 'AwbNew': 'New', 'AwbQueued': 'Queued', 'AwbGenerated': 'Generated' })}
         onKpiClick={(label) => {
-            if (label === 'failed') setActiveFilter('AwbFailed');
-            if (label === 'new') setActiveFilter('AwbNew');
-            if (label === 'queued') setActiveFilter('AwbQueued');
+            if (label === 'New') setActiveFilter('AwbNew');
+            if (label === 'Queued') setActiveFilter('AwbQueued');
+            if (label === 'Generated') setActiveFilter('AwbGenerated');
         }}
-        isActive={isFilterActive('AWB Generated', 'AwbFailed', 'AwbNew', 'AwbQueued')}
       />
       <Scorecard
-        title="Sent to Logistics"
-        value={counts.sentToLogistics.value}
+        title="Logistics Status"
+        kpis={counts.logisticsStatus.kpis}
         icon={Send}
-        onClick={() => setActiveFilter('Sent')}
-        isActive={isFilterActive('Sent', 'EmailFailed')}
+        onClick={() => setActiveFilter('Total')}
+        isActive={isFilterActive('EmailNew', 'EmailQueued', 'Sent')}
+        activeKpiLabel={getActiveKpiLabel({ 'EmailNew': 'New', 'EmailQueued': 'Queued', 'Sent': 'Sent' })}
+        onKpiClick={(label) => {
+            if (label === 'New') setActiveFilter('EmailNew');
+            if (label === 'Queued') setActiveFilter('EmailQueued');
+            if (label === 'Sent') setActiveFilter('Sent');
+        }}
       />
 
       {/* --- Bottom Row: Tracking & Completion --- */}

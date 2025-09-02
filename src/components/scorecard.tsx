@@ -20,6 +20,7 @@ interface ScorecardProps {
   onClick: () => void;
   onKpiClick?: (label: string) => void;
   isActive: boolean;
+  activeKpiLabel?: string;
   variant?: 'default' | 'destructive';
 }
 
@@ -31,6 +32,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   onClick,
   onKpiClick,
   isActive,
+  activeKpiLabel,
   variant = 'default',
 }) => {
   const ringClass = variant === 'destructive' ? "ring-destructive" : "ring-primary";
@@ -60,18 +62,25 @@ export const Scorecard: React.FC<ScorecardProps> = ({
       <CardContent className="h-16 flex items-center">
         {showKpisInContent ? (
              <div className="flex w-full items-center justify-around">
-                {kpis.map((kpi, index) => (
-                    <React.Fragment key={kpi.label}>
-                        <div 
-                            className={cn("text-center", onKpiClick && "hover:bg-accent p-2 rounded-md")}
-                            onClick={(e) => handleKpiClick(e, kpi.label)}
-                        >
-                            <div className={cn("text-2xl font-bold", kpi.color)}>{kpi.value}</div>
-                            <p className="text-xs text-muted-foreground">{kpi.label}</p>
-                        </div>
-                        {index < kpis.length - 1 && <Separator orientation="vertical" className="h-10" />}
-                    </React.Fragment>
-                ))}
+                {kpis.map((kpi, index) => {
+                    const isKpiActive = isActive && activeKpiLabel === kpi.label;
+                    return (
+                        <React.Fragment key={kpi.label}>
+                            <div 
+                                className={cn(
+                                    "text-center p-2 rounded-md transition-colors", 
+                                    onKpiClick && "hover:bg-accent",
+                                    isKpiActive && 'bg-muted'
+                                )}
+                                onClick={(e) => handleKpiClick(e, kpi.label)}
+                            >
+                                <div className={cn("text-2xl font-bold", kpi.color)}>{kpi.value}</div>
+                                <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                            </div>
+                            {index < kpis.length - 1 && <Separator orientation="vertical" className="h-10" />}
+                        </React.Fragment>
+                    )
+                })}
             </div>
         ) : (
             <div className="text-3xl font-bold">{value}</div>
@@ -81,12 +90,14 @@ export const Scorecard: React.FC<ScorecardProps> = ({
          <CardFooter className="h-8 pb-4 flex justify-end items-center gap-x-4">
             {kpis.map(kpi => {
                 const isBadge = kpi.color?.startsWith('bg-');
+                const isKpiActive = isActive && activeKpiLabel === kpi.label;
                 return (
                     <div 
                         key={kpi.label} 
                         className={cn(
-                            "flex items-center gap-x-1",
-                            onKpiClick && "cursor-pointer hover:underline"
+                            "flex items-center gap-x-1 p-1 rounded-md transition-colors",
+                            onKpiClick && "cursor-pointer hover:bg-accent",
+                            isKpiActive && 'bg-muted'
                         )}
                         onClick={(e) => handleKpiClick(e, kpi.label)}
                     >
