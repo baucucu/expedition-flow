@@ -99,10 +99,11 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     
     if (docType === 'pdf') {
         const encodedUrl = encodeURIComponent(url);
-        const googleDocsUrl = `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
+        // const googleDocsUrl = `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
         return (
             <div className="w-full h-[80vh] mt-4 border rounded-md">
-                <iframe src={googleDocsUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Document Viewer" />
+                <p>{url}</p>
+                <iframe src={url} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Document Viewer" />
             </div>
         );
     }

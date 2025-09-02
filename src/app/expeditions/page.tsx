@@ -41,7 +41,7 @@ async function getExpeditionsData() {
 }
 
 export default async function ExpeditionsPage() {
-  const { data, expeditions } = await getExpeditionsData();
+  const { data, expeditions } = await getExpeditionsPage();
   
   return (
     <div className="h-full px-4 py-6 lg:px-8">
