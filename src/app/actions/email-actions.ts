@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, getDoc, writeBatch } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { Recipient, Shipment, AWB } from "@/types";
 
@@ -35,6 +35,22 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
         const inputRecipients = recipientsFromInputSnapshot.docs.map(doc => doc.data() as Recipient);
         const uniqueShipmentIds = [...new Set(inputRecipients.map(r => r.shipmentId))];
         console.log("unique shipments selected: ", {uniqueShipmentIds})
+
+        // Find AWBs to update
+        const awbsToUpdateQuery = query(collection(db, "awbs"), where("shipmentId", "in", uniqueShipmentIds));
+        const awbsToUpdateSnapshot = await getDocs(awbsToUpdateQuery);
+        const awbDocsToUpdate = awbsToUpdateSnapshot.docs;
+        
+        // Update emailStatus to Queued
+        if (awbDocsToUpdate.length > 0) {
+            const batch = writeBatch(db);
+            awbDocsToUpdate.forEach(awbDoc => {
+                batch.update(awbDoc.ref, { emailStatus: 'Queued' });
+            });
+            await batch.commit();
+        }
+
+
         // 2. Fetch all related data in chunks
         const shipmentsMap = new Map<string, Shipment>();
         const allShipmentRecipientsMap = new Map<string, Recipient[]>();
