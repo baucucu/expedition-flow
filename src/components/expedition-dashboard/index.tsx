@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from 'next/navigation';
 import {
   ColumnFiltersState,
   SortingState,
@@ -58,6 +59,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
   const [emailFilter, setEmailFilter] = React.useState<'all' | 'sent' | 'not_sent'>('all');
   const { toast } = useToast();
+  const router = useRouter();
 
   React.useEffect(() => {
     let filteredData = initialData;
@@ -81,9 +83,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
+  const handleDataUpdate = () => {
+    router.refresh();
+  };
+
   const table = useReactTable({
     data,
-    columns: columns(handleOpenDocument, setRowSelection),
+    columns: columns(handleOpenDocument, setRowSelection, handleDataUpdate),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
