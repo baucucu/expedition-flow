@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Check, Edit, X } from "lucide-react";
 
@@ -27,18 +27,20 @@ export function EditableCell({ value, onSave }: EditableCellProps) {
 
     if (isEditing) {
         return (
-            <div className="flex items-center space-x-2">
-                <Input
+            <div className="flex items-start space-x-2">
+                <Textarea
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    className="h-8"
+                    className="resize-none"
                 />
-                <Button variant="ghost" size="icon" onClick={handleSave} className="h-8 w-8">
-                    <Check className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={handleCancel} className="h-8 w-8">
-                    <X className="h-4 w-4" />
-                </Button>
+                <div className="flex flex-col space-y-1">
+                    <Button variant="ghost" size="icon" onClick={handleSave} className="h-8 w-8">
+                        <Check className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={handleCancel} className="h-8 w-8">
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
         );
     }
@@ -49,7 +51,7 @@ export function EditableCell({ value, onSave }: EditableCellProps) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <span>{value}</span>
+            <span className="truncate">{value}</span>
             {isHovered && (
                 <Button
                     variant="ghost"
