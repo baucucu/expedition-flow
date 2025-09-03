@@ -197,7 +197,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     const awbsToProcess = selectedRecipients
       .filter((recipient) => {
         const status = recipient.awb?.status;
-        return status !== 'Generated' && status !== 'Queued' && status !== 'AWB_CREATED';
+        return status !== 'Generated' && status !== 'AWB_CREATED';
       })
       .map(recipient => ({
           shipmentId: recipient.expeditionId,
@@ -207,7 +207,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     if (awbsToProcess.length === 0) {
         toast({
             title: "Nothing to Queue",
-            description: "All selected recipients already have a generated or queued AWB.",
+            description: "All selected recipients already have a generated AWB.",
         });
         return;
     }
