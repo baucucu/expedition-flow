@@ -1,18 +1,23 @@
 
+"use server";
+
 import { task, logger } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const RecipientSchema = z.object({
   recipientId: z.string(),
-  numericId: z.string(),
+  numericId: z.string().optional(),
+  uuid: z.string().optional(),
   name: z.string(),
   pvDocumentId: z.string().nullable(),
   pvUrl: z.string().nullable(),
 });
 
 const SendEmailPayloadSchema = z.object({
+  logisticsEmail: z.string().optional(),
   shipmentId: z.string(),
   awbNumber: z.string().optional(),
+  awbUrl: z.string().optional().nullable(),
   awbDocumentId: z.string().optional().nullable(),
   awbNumberOfParcels: z.number().optional(),
   inventoryDocumentId: z.string().nullable(),
@@ -24,9 +29,9 @@ const N8N_EMAIL_WEBHOOK_URL = process.env.N8N_EMAIL_WEBHOOK_URL;
 
 export const sendEmailTask = task({
   id: "send-email",
-  // machine: {
-  //   preset: "large-1x", // 4 vCPU, 8 GB RAM
-  // },
+  queue: {
+    concurrencyLimit: 10,
+  },
   run: async (payload: z.infer<typeof SendEmailPayloadSchema>, { ctx }) => {
     logger.info(`Starting email sending task for shipment: ${payload.shipmentId}`);
     
