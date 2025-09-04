@@ -1,4 +1,5 @@
 
+
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV' | 'AWB' | 'Email';
 export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed' | 'Complet' | 'Queued';
 
@@ -86,6 +87,16 @@ export interface ExpeditionStatusInfo {
   inReturn: boolean | null;
 }
 
+export interface Note {
+    id: string;
+    text: string;
+    userId: string;
+    userName: string;
+    recipientId: string;
+    recipientName: string;
+    createdAt: any; // Firestore Timestamp
+}
+
 export interface AWB {
     id: string; // Firestore auto-generated ID
     shipmentId: string;
@@ -101,6 +112,7 @@ export interface AWB {
     awbFileId?: string; // The GDrive file ID for the AWB PDF
     emailStatus?: EmailStatus;
     emailId?: string;
+    notes?: Note[];
     awb_data?: {
       awbNumber: string;
       awbCost: number;

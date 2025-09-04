@@ -3,9 +3,12 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { AWB } from "@/types";
+import { FieldValue } from 'firebase-admin/firestore';
+import { adminDb } from "@/lib/firebase-admin";
+import { randomUUID } from "crypto";
 
 const queueShipmentAwbGenerationActionInputSchema = z.object({
   awbsToQueue: z.array(z.object({
@@ -101,5 +104,44 @@ export async function updateAwbStatusAction(input: z.infer<typeof updateAwbStatu
     } catch (error: any) {
         console.error("Error queueing AWB status update:", error);
         return { success: false, message: `Failed to queue AWB status update jobs: ${error.message}` };
+    }
+}
+
+
+const addNoteToAwbActionInputSchema = z.object({
+    awbId: z.string(),
+    noteText: z.string().min(1),
+    userId: z.string(),
+    userName: z.string(),
+    recipientId: z.string(),
+    recipientName: z.string(),
+});
+
+export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActionInputSchema>) {
+    const validation = addNoteToAwbActionInputSchema.safeParse(input);
+    if (!validation.success) {
+        return { success: false, message: "Invalid input for adding note." };
+    }
+    const { awbId, ...noteData } = validation.data;
+
+    try {
+        const awbRef = adminDb.collection("awbs").doc(awbId);
+        
+        const newNote = {
+            ...noteData,
+            id: randomUUID(),
+            createdAt: FieldValue.serverTimestamp(),
+        };
+
+        await awbRef.update({
+            notes: FieldValue.arrayUnion(newNote)
+        });
+
+        // We can't return the note with the timestamp from the server action directly,
+        // The client will get an updated version via snapshot listener.
+        return { success: true, message: "Note added successfully." };
+    } catch (error: any) {
+        console.error("Error adding note to AWB:", error);
+        return { success: false, message: `Failed to add note: ${error.message}` };
     }
 }

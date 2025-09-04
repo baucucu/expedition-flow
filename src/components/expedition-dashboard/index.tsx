@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import * as React from "react";
@@ -27,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "../document-viewer";
 import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 import { generateProcesVerbalAction } from "@/app/actions/document-actions";
-import { queueShipmentAwbGenerationAction, updateAwbStatusAction } from "@/app/actions/awb-actions";
+import { queueShipmentAwbGenerationAction, updateAwbStatusAction, addNoteToAwbAction } from "@/app/actions/awb-actions";
 import { 
     RecipientRow, 
     ExpeditionDashboardProps, 
@@ -40,8 +41,12 @@ import { Toolbar } from "@/components/expedition-dashboard/toolbar";
 import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
 import { Button } from "../ui/button";
-import { ExternalLink } from "lucide-react";
-import { ExpeditionStatusInfo } from "@/types";
+import { ExternalLink, Loader2, Send } from "lucide-react";
+import { ExpeditionStatusInfo, Note } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
+import { Textarea } from "../ui/textarea";
+import { ScrollArea } from "../ui/scroll-area";
+import { format } from 'date-fns';
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
@@ -58,10 +63,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [isUpdatingAwbStatus, setIsUpdatingAwbStatus] = React.useState(false);
+  const [isSavingNote, setIsSavingNote] = React.useState(false);
+  const [newNote, setNewNote] = React.useState("");
   const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
   const [emailFilter, setEmailFilter] = React.useState<'all' | 'sent' | 'not_sent'>('all');
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
 
   React.useEffect(() => {
     let filteredData = initialData;
@@ -294,6 +302,30 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   };
   
+  const handleSaveNote = async () => {
+    if (!selectedDocument || !user || !newNote.trim()) return;
+
+    setIsSavingNote(true);
+    const result = await addNoteToAwbAction({
+        awbId: selectedDocument.recipient.awbId,
+        noteText: newNote,
+        userId: user.uid,
+        userName: user.email || 'Unknown User',
+        recipientId: selectedDocument.recipient.id,
+        recipientName: selectedDocument.recipient.name,
+    });
+    setIsSavingNote(false);
+
+    if (result.success) {
+        toast({ title: 'Note Saved', description: result.message });
+        setNewNote("");
+        // The optimistic update is tricky with server timestamps, so we rely on the snapshot listener
+        // to refresh the data in the sheet.
+    } else {
+        toast({ variant: 'destructive', title: 'Failed to Save Note', description: result.message });
+    }
+  }
+
   const awbStatusHistory = React.useMemo(() => {
     if (selectedDocument?.recipient.awb?.awbStatusHistory) {
         try {
@@ -306,6 +338,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         }
     }
     return [];
+}, [selectedDocument]);
+
+const awbNotes = React.useMemo(() => {
+    const notes = selectedDocument?.recipient.awb?.notes || [];
+    // Sort by createdAt timestamp
+    return [...notes].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return dateA.getTime() - dateB.getTime();
+    });
 }, [selectedDocument]);
 
 
@@ -348,6 +390,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awbUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
                         <TabsTrigger value="AWB History" disabled={!selectedDocument.recipient.awb?.awbStatusHistory}>AWB History</TabsTrigger>
+                        <TabsTrigger value="Notes">Notes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
                          {selectedDocument.recipient.pvUrl ? (
@@ -406,6 +449,42 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                 ))}
                             </div>
                         ) : <DocumentPlaceholder title="AWB History not available" />}
+                    </TabsContent>
+                    <TabsContent value="Notes">
+                         <div className="flex flex-col h-[85vh] mt-4">
+                            <ScrollArea className="flex-grow pr-4">
+                                <div className="space-y-4">
+                                    {awbNotes.length > 0 ? (
+                                        awbNotes.map((note: Note) => (
+                                            <div key={note.id} className="p-3 border rounded-lg bg-muted/50">
+                                                <p className="text-sm">{note.text}</p>
+                                                <p className="text-xs text-muted-foreground mt-2">
+                                                    {note.userName} for {note.recipientName} on {note.createdAt ? format(note.createdAt.toDate(), 'PPP p') : '...'}
+                                                </p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-muted-foreground py-8">
+                                            <p>No notes for this AWB yet.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                            <div className="mt-4 pt-4 border-t">
+                                <div className="space-y-2">
+                                    <Textarea 
+                                        placeholder={`Add a note for ${selectedDocument.recipient.name}...`}
+                                        value={newNote}
+                                        onChange={(e) => setNewNote(e.target.value)}
+                                        disabled={isSavingNote}
+                                    />
+                                    <Button onClick={handleSaveNote} disabled={isSavingNote || !newNote.trim()} className="w-full">
+                                        {isSavingNote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                        Save Note
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
                     </TabsContent>
                 </Tabs>
             </>

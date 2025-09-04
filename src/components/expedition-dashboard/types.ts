@@ -1,5 +1,6 @@
 
-import type { Recipient, DocumentType as AppDocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus, EmailStatus, ExpeditionStatusInfo } from "@/types";
+
+import type { Recipient, DocumentType as AppDocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus, EmailStatus, ExpeditionStatusInfo, Note } from "@/types";
 
 export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -38,7 +39,7 @@ export interface ExpeditionDashboardProps {
     expeditions: Expedition[];
 }
 
-export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'AWB History';
+export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'AWB History' | 'Notes';
 
 export const docShortNames: Record<DocType, string> = {
     'proces verbal de receptie': 'PV',
@@ -50,7 +51,8 @@ export const docShortNames: Record<DocType, string> = {
     'Instructions': 'Instructions',
     'Inventory': 'Inventory',
     'PV Semnat': 'PV Semnat',
-    'AWB History': 'AWB History'
+    'AWB History': 'AWB History',
+    'Notes': 'Notes'
 }
 
 export type SelectedDocument = {

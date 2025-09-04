@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -24,6 +25,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    FIREBASE_ADMIN_SDK_CONFIG: process.env.FIREBASE_ADMIN_SDK_CONFIG,
+  }
 };
 
 export default nextConfig;
