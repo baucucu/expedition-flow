@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -167,6 +167,7 @@ export default function Home() {
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in agentie",
+        "Incarcat in OOH",
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
@@ -243,6 +244,7 @@ export default function Home() {
     if (activeFilter === 'IntrareSorter') return filterByAwbStatus("Intrare sorter");
     if (activeFilter === 'IesireHub') return filterByAwbStatus("Iesire din hub");
     if (activeFilter === 'IntrareAgentie') return filterByAwbStatus("Intrare in agentie");
+    if (activeFilter === 'IncarcatInOOH') return filterByAwbStatus("Incarcat in OOH");
     if (activeFilter === 'InLivrare') return filterByAwbStatus("In livrare la curier");
     if (activeFilter === 'RedirectionareHome') return filterByAwbStatus("Redirectionare Home Delivery");
     if (activeFilter === 'RedirectOOH') return filterByAwbStatus("Redirect Home to OOH");
@@ -324,27 +326,21 @@ export default function Home() {
         );
 
         if (activeFilter === 'Avizat') {
-            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Avizat').map(awb => awb.id));
-            return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+            return filterByAwbStatus('Avizat');
         }
         if (activeFilter === 'Ridicare ulterioara') {
-            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Ridicare ulterioara').map(awb => awb.id));
-            return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+            return filterByAwbStatus('Ridicare ulterioara');
         }
-        // For general 'Issues' filter, we also include the new statuses
-        const avizatAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Avizat').map(awb => awb.id));
-        const ridicareAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Ridicare ulterioara').map(awb => awb.id));
         
-        const additionalIssueRecipients = allRecipientsWithFullData.filter(r => r.awbId && (avizatAwbIds.has(r.awbId) || ridicareAwbIds.has(r.awbId)));
+        const avizatRecipients = filterByAwbStatus('Avizat');
+        const ridicareRecipients = filterByAwbStatus('Ridicare ulterioara');
 
-        return [...issueRecipients, ...additionalIssueRecipients];
+        return [...issueRecipients, ...avizatRecipients, ...ridicareRecipients];
     }
 
     if (activeFilter === 'Delivered') {
-        const deliveredAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId));
+        return filterByAwbStatus("Livrata cu succes");
     }
-
 
     if (['NewRecipient', 'Returned'].includes(activeFilter)) {
         const statusMap = { 'NewRecipient': 'New', 'Returned': 'Returned' };
