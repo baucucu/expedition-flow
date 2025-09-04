@@ -294,15 +294,15 @@ export default function Home() {
 
     if (activeFilter === 'Delivered') {
         const deliveredAwbIds = new Set(awbs.filter(awb => {
-            if (awb.expeditionStatus) {
-                try {
-                    const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
-                        ? JSON.parse(awb.expeditionStatus)
-                        : awb.expeditionStatus;
-                    return status && status.status === 'Livrat cu succes';
-                } catch (e) { return false; }
+            if (!awb.expeditionStatus) return false;
+            try {
+                const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
+                    ? JSON.parse(awb.expeditionStatus)
+                    : awb.expeditionStatus;
+                return status && status.status === 'Livrat cu succes';
+            } catch (e) {
+                return false;
             }
-            return false;
         }).map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId));
     }
@@ -369,5 +369,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
