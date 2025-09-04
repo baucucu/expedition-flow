@@ -107,7 +107,7 @@ export default function Home() {
     const emailSentCount = awbs.filter(awb => awb.emailStatus === 'Sent').length;
     const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
     
-    const awbsToBeUpdatedCount = awbs.filter(awb => awb.awbNumber && !awb.expeditionStatus).length;
+    const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
 
     const avizatCount = awbs.filter(awb => awb.expeditionStatus?.status === "Avizat").length;
     const ridicareUlterioaraCount = awbs.filter(awb => awb.expeditionStatus?.status === "Ridicare ulterioara").length;
@@ -312,7 +312,7 @@ export default function Home() {
     }
     
     if (activeFilter === 'AwbNeedsUpdate') {
-        const targetAwbIds = new Set(awbs.filter(awb => awb.awbNumber && !awb.expeditionStatus).map(awb => awb.id));
+        const targetAwbIds = new Set(awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
 
