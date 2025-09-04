@@ -51,8 +51,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   
   const inTransitFilterMapping: { [key: string]: FilterStatus } = {
     "AWB Emis": 'AwbEmis',
-    "Alocata pentru ridicare": 'AlocataRidicare',
     "Ridicata de la client": 'RidicataClient',
+    "Alocata pentru ridicare": 'AlocataRidicare',
     "Intrare sorter": 'IntrareSorter',
     "Iesire din hub": 'IesireHub',
     "Intrare in agentie": 'IntrareAgentie',
@@ -120,13 +120,14 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         kpis={counts.logisticsStatus.kpis}
         icon={Send}
         onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('LogisticsNotReady', 'LogisticsReady', 'EmailQueued', 'Sent')}
-        activeKpiLabel={getActiveKpiLabel({ 'LogisticsNotReady': 'Not Ready', 'LogisticsReady': 'Ready', 'EmailQueued': 'Queued', 'Sent': 'Sent' })}
+        isActive={isFilterActive('LogisticsNotReady', 'LogisticsReady', 'EmailQueued', 'Sent', 'AwbNeedsUpdate')}
+        activeKpiLabel={getActiveKpiLabel({ 'LogisticsNotReady': 'Not Ready', 'LogisticsReady': 'Ready', 'EmailQueued': 'Queued', 'Sent': 'Sent', 'AwbNeedsUpdate': 'To be updated' })}
         onKpiClick={(label) => {
             if (label === 'Not Ready') setActiveFilter('LogisticsNotReady');
             if (label === 'Ready') setActiveFilter('LogisticsReady');
             if (label === 'Queued') setActiveFilter('EmailQueued');
             if (label === 'Sent') setActiveFilter('Sent');
+            if (label === 'To be updated') setActiveFilter('AwbNeedsUpdate');
         }}
       />
 

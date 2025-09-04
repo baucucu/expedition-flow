@@ -14,7 +14,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'InTransit' | 'Depozitare' | 'IesireAgentie' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -106,6 +106,8 @@ export default function Home() {
     const emailQueuedCount = awbs.filter(e => e.emailStatus === 'Queued').length;
     const emailSentCount = awbs.filter(awb => awb.emailStatus === 'Sent').length;
     const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
+    
+    const awbsToBeUpdatedCount = awbs.filter(awb => awb.awbNumber && !awb.expeditionStatus).length;
 
     const avizatCount = awbs.filter(awb => awb.expeditionStatus?.status === "Avizat").length;
     const ridicareUlterioaraCount = awbs.filter(awb => awb.expeditionStatus?.status === "Ridicare ulterioara").length;
@@ -163,7 +165,6 @@ export default function Home() {
     
     const inTransitStatuses = [
         "AWB Emis",
-        "Alocata pentru ridicare",
         "Ridicata de la client",
         "Intrare sorter",
         "Iesire din hub",
@@ -223,6 +224,7 @@ export default function Home() {
                 { value: readyForLogisticsCount, label: 'Ready' },
                 { value: emailQueuedCount, label: 'Queued' },
                 { value: emailSentCount, label: 'Sent' },
+                { value: awbsToBeUpdatedCount, label: 'To be updated' },
             ]
         },
         inTransit: {
@@ -255,7 +257,6 @@ export default function Home() {
 
     const inTransitStatuses = [
         "AWB Emis",
-        "Alocata pentru ridicare",
         "Ridicata de la client",
         "Intrare sorter",
         "Iesire din hub",
@@ -274,7 +275,6 @@ export default function Home() {
     }
 
     if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");
-    if (activeFilter === 'AlocataRidicare') return filterByAwbStatus("Alocata pentru ridicare");
     if (activeFilter === 'RidicataClient') return filterByAwbStatus("Ridicata de la client");
     if (activeFilter === 'IntrareSorter') return filterByAwbStatus("Intrare sorter");
     if (activeFilter === 'IesireHub') return filterByAwbStatus("Iesire din hub");
@@ -308,6 +308,11 @@ export default function Home() {
         }
 
         const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+    }
+    
+    if (activeFilter === 'AwbNeedsUpdate') {
+        const targetAwbIds = new Set(awbs.filter(awb => awb.awbNumber && !awb.expeditionStatus).map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
 
