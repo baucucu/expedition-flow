@@ -83,7 +83,7 @@ export default function Home() {
         return {
             ...rec,
             expeditionId: expedition?.id || rec.shipmentId,
-            expeditionStatus: awb?.expeditionStatus || 'New',
+            expeditionStatus: awb?.expeditionStatus,
             awb: awb,
             awbUrl: awb?.awb_data?.pdfLink,
             awbStatus: awbStatus,
@@ -122,6 +122,8 @@ export default function Home() {
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
+    
+    const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
     const completedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet').length;
 
     const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
@@ -157,8 +159,6 @@ export default function Home() {
     });
 
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
-
-    const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
     
     // In Transit Statuses
     const inTransitStatuses = [
@@ -212,10 +212,13 @@ export default function Home() {
         },
         inTransit: {
             value: totalInTransit,
-            kpis: inTransitCounts,
+            kpis: inTransitCounts.sort((a,b) => b.value - a.value),
         },
-        delivered: {
-            value: deliveredCount,
+        deliveredAndCompleted: {
+            kpis: [
+                { value: deliveredCount, label: 'Delivered' },
+                { value: completedCount, label: 'Completed' },
+            ],
         },
         issues: {
             value: issuesCount,
@@ -224,9 +227,6 @@ export default function Home() {
                 { value: ridicareUlterioaraCount, label: 'Ridicare ulterioara' },
             ]
         },
-        completed: {
-            value: completedCount,
-        }
     }
   }, [allRecipientsWithFullData, expeditions, awbs]);
 
@@ -407,7 +407,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    

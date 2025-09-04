@@ -28,9 +28,8 @@ export interface ScorecardData {
   awbStatus: ScorecardInfo;
   logisticsStatus: ScorecardInfo;
   inTransit: ScorecardInfo;
-  delivered: ScorecardInfo;
+  deliveredAndCompleted: ScorecardInfo;
   issues: ScorecardInfo;
-  completed: ScorecardInfo;
 }
 
 interface ScorecardGridProps {
@@ -146,12 +145,18 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
-        <Scorecard
-            title="Delivered"
-            value={counts.delivered.value}
-            icon={PackageCheck}
-            onClick={() => setActiveFilter('Delivered')}
-            isActive={activeFilter === 'Delivered'}
+         <Scorecard
+          title="Delivered & Completed"
+          kpis={counts.deliveredAndCompleted.kpis}
+          iconMapping={{ 'Delivered': PackageCheck, 'Completed': CheckCircle2 }}
+          onClick={() => setActiveFilter('Total')}
+          isActive={isFilterActive('Delivered', 'Completed')}
+          onKpiClick={(label) => {
+            if (label === 'Delivered') setActiveFilter('Delivered');
+            if (label === 'Completed') setActiveFilter('Completed');
+          }}
+          activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'Completed': 'Completed' })}
+          className="sm:col-span-2"
         />
         <Scorecard
           title="Issues"
@@ -166,13 +171,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
               if (label === 'Ridicare ulterioara') setActiveFilter('Ridicare ulterioara');
           }}
           activeKpiLabel={getActiveKpiLabel({ 'Avizat': 'Avizat', 'Ridicare ulterioara': 'Ridicare ulterioara'})}
-        />
-        <Scorecard
-          title="Completed"
-          value={counts.completed.value}
-          icon={CheckCircle2}
-          onClick={() => setActiveFilter('Completed')}
-          isActive={activeFilter === 'Completed'}
           className="sm:col-span-2"
         />
       </div>

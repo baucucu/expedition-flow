@@ -16,12 +16,14 @@ interface ScorecardProps {
   title: string;
   value?: number;
   kpis?: Kpi[];
-  icon: React.ElementType;
+  icon?: React.ElementType;
+  iconMapping?: Record<string, React.ElementType>;
   onClick: () => void;
   onKpiClick?: (label: string) => void;
   isActive: boolean;
   activeKpiLabel?: string;
   variant?: 'default' | 'destructive';
+  className?: string;
 }
 
 export const Scorecard: React.FC<ScorecardProps> = ({
@@ -29,11 +31,13 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   value,
   kpis,
   icon: Icon,
+  iconMapping,
   onClick,
   onKpiClick,
   isActive,
   activeKpiLabel,
   variant = 'default',
+  className,
 }) => {
   const ringClass = variant === 'destructive' ? "ring-destructive" : "ring-primary";
 
@@ -52,12 +56,13 @@ export const Scorecard: React.FC<ScorecardProps> = ({
       onClick={onClick}
       className={cn(
         "cursor-pointer transition-all hover:shadow-md flex flex-col",
-        isActive && `ring-2 ${ringClass} shadow-lg`
+        isActive && `ring-2 ${ringClass} shadow-lg`,
+        className,
       )}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />
+        {Icon && <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />}
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center">
         {showValue ? (
@@ -66,7 +71,8 @@ export const Scorecard: React.FC<ScorecardProps> = ({
             <div className="flex w-full items-center justify-around flex-wrap gap-2">
                 {kpis!.map((kpi, index) => {
                     const isKpiActive = isActive && activeKpiLabel === kpi.label;
-                    if(kpi.value === 0) return null;
+                    const KpiIcon = iconMapping ? iconMapping[kpi.label] : null;
+                    if(kpi.value === 0 && !iconMapping) return null;
                     return (
                         <React.Fragment key={kpi.label}>
                             <div 
@@ -77,6 +83,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                                 )}
                                 onClick={(e) => handleKpiClick(e, kpi.label)}
                             >
+                                {KpiIcon && <KpiIcon className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />}
                                 <div className={cn("text-2xl font-bold", kpi.color)}>{kpi.value}</div>
                                 <p className="text-xs text-muted-foreground whitespace-normal max-w-20">{kpi.label}</p>
                             </div>
