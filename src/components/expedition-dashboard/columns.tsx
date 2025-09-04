@@ -126,7 +126,7 @@ export const columns = (
             id: 'contact',
             header: 'Contact',
             cell: ({ row }) => (
-                <div className="w-40">
+                <div className="w-64">
                     <ContactCell 
                         recipient={row.original}
                         onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}

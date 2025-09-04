@@ -12,7 +12,7 @@ interface ContactCellProps {
 
 export function ContactCell({ recipient, onSave }: ContactCellProps) {
     return (
-        <div className="flex flex-col gap-2 w-64">
+        <div className="flex flex-col gap-2">
             <div className="whitespace-normal">
                 <EditableCell
                     value={recipient.awb?.address ?? 'N/A'}
@@ -42,4 +42,3 @@ export function ContactCell({ recipient, onSave }: ContactCellProps) {
         </div>
     );
 }
-
