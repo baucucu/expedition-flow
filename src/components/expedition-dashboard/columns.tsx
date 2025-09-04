@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ChevronDown, FileText, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
-import { DocumentType, RecipientStatus, AWBStatus } from "@/types";
+import { DocumentType, RecipientStatus, AWBStatus, ExpeditionStatusInfo } from "@/types";
 import React from "react";
 import { EditableCell } from "./editable-cell";
 import { updateShipmentDetails } from "@/app/actions/expedition-actions";
@@ -189,11 +189,31 @@ export const columns = (
                 />
             ),
             cell: ({ row }) => {
-                const status: AWBStatus = row.original.awb?.status ?? 'New';
+                const awb = row.original.awb;
+                const status: AWBStatus = awb?.status ?? 'New';
+                const awbNumber = awb?.awb_data?.awbNumber;
+
+                let expeditionStatusObj: ExpeditionStatusInfo | undefined;
+                if (awb?.expeditionStatus) {
+                    try {
+                        expeditionStatusObj = typeof awb.expeditionStatus === 'string'
+                            ? JSON.parse(awb.expeditionStatus)
+                            : awb.expeditionStatus;
+                    } catch (error) {
+                        console.error("Failed to parse expeditionStatus:", error);
+                    }
+                }
+
                 return (
-                    <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
-                        {status}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1">
+                        <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
+                            {status}
+                        </Badge>
+                        {awbNumber && <Badge variant="secondary">{awbNumber}</Badge>}
+                        {expeditionStatusObj?.status && (
+                            <Badge variant="default">{expeditionStatusObj.status}</Badge>
+                        )}
+                    </div>
                 );
             },
             filterFn: (row, id, value) => {

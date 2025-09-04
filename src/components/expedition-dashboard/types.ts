@@ -1,5 +1,5 @@
 
-import type { Recipient, DocumentType as AppDocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus, EmailStatus } from "@/types";
+import type { Recipient, DocumentType as AppDocumentType, RecipientStatus, Expedition, ExpeditionStatus, AWB, AWBStatus, DocumentStatus, EmailStatus, ExpeditionStatusInfo } from "@/types";
 
 export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "secondary" | "outline" | "destructive" } = {
   New: "outline",
@@ -25,7 +25,8 @@ export const awbStatuses: AWBStatus[] = ['New', 'Queued', 'Generated', 'AWB_CREA
 export type RecipientRow = Recipient & { 
     expeditionId: string; 
     awb?: AWB, 
-    expeditionStatus: ExpeditionStatus,
+    expeditionStatus?: ExpeditionStatusInfo,
+    awbStatusHistory?: ExpeditionStatusInfo[],
     awbUrl?: string;
     awbStatus?: DocumentStatus;
     emailStatus?: EmailStatus;

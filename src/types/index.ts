@@ -1,6 +1,6 @@
 
 export type DocumentType = 'proces verbal de receptie' | 'instructiuni pentru confirmarea primirii coletului' | 'parcel inventory' | 'PV' | 'AWB' | 'Email';
-export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed' | 'Complet';
+export type DocumentStatus = 'Not Generated' | 'Generated' | 'Failed' | 'Complet' | 'Queued';
 
 export type RecipientStatus = 
   | 'New'
@@ -70,6 +70,22 @@ export interface Recipient {
 export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed' | 'AWB_CREATED';
 export type EmailStatus = 'Sent' | 'Failed' | 'Not Sent';
 
+export interface ExpeditionStatusInfo {
+  statusId: number;
+  status: string;
+  statusLabel: string;
+  statusState: string;
+  statusDate: string;
+  county: string;
+  parcelAwbNumber: string | null;
+  reasonId: number | null;
+  reason: string;
+  parcelDetails: any | null;
+  expeditionDetails: any | null;
+  transitLocation: string;
+  inReturn: boolean | null;
+}
+
 export interface AWB {
     id: string; // Firestore auto-generated ID
     shipmentId: string;
@@ -98,6 +114,8 @@ export interface AWB {
       deliveryLogisticLocationId: number;
       pickupLogisticLocationId: number;
     };
+    expeditionStatus?: ExpeditionStatusInfo;
+    awbStatusHistory?: ExpeditionStatusInfo[];
 
     // Address fields moved from Recipient
     address: string;

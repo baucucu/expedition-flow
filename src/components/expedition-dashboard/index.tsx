@@ -27,7 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "../document-viewer";
 import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 import { generateProcesVerbalAction } from "@/app/actions/document-actions";
-import { queueShipmentAwbGenerationAction } from "@/app/actions/awb-actions";
+import { queueShipmentAwbGenerationAction, updateAwbStatusAction } from "@/app/actions/awb-actions";
 import { 
     RecipientRow, 
     ExpeditionDashboardProps, 
@@ -56,6 +56,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isQueuingAwb, setIsQueuingAwb] = React.useState(false);
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
+  const [isUpdatingAwbStatus, setIsUpdatingAwbStatus] = React.useState(false);
   const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
   const [emailFilter, setEmailFilter] = React.useState<'all' | 'sent' | 'not_sent'>('all');
   const { toast } = useToast();
@@ -256,6 +257,42 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   }
 
+  const handleUpdateAwbStatus = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
+
+    const awbIds = selectedRecipients
+      .map(r => r.awbId)
+      .filter((id): id is string => !!id);
+
+    if (awbIds.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No AWBs to Update",
+        description: "None of the selected recipients have an AWB.",
+      });
+      return;
+    }
+
+    setIsUpdatingAwbStatus(true);
+    const result = await updateAwbStatusAction({ awbIds });
+    setIsUpdatingAwbStatus(false);
+
+    if (result.success) {
+      toast({
+        title: "AWB Status Update Queued",
+        description: result.message,
+      });
+      table.resetRowSelection();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Failed to Queue AWB Status Update",
+        description: result.message,
+      });
+    }
+  };
+
   return (
     <div className="w-full">
         <Toolbar 
@@ -270,6 +307,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             handleGeneratePvs={handleGeneratePvs}
             isQueuingAwb={isQueuingAwb}
             handleQueueAwbs={handleQueueAwbs}
+            isUpdatingAwbStatus={isUpdatingAwbStatus}
+            handleUpdateAwbStatus={handleUpdateAwbStatus}
         />
       <DataTable table={table} />
       <Pagination table={table} />

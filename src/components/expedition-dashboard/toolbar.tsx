@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { FileCheck, Loader2, Send, FileSignature, Hourglass, Mail } from "lucide-react";
+import { FileCheck, Loader2, Send, FileSignature, Hourglass, Mail, RefreshCw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
@@ -28,6 +28,8 @@ interface ToolbarProps {
   handleGeneratePvs: () => void;
   isQueuingAwb: boolean;
   handleQueueAwbs: () => void;
+  isUpdatingAwbStatus: boolean;
+  handleUpdateAwbStatus: () => void;
 }
 
 export function Toolbar({
@@ -42,6 +44,8 @@ export function Toolbar({
   handleGeneratePvs,
   isQueuingAwb,
   handleQueueAwbs,
+  isUpdatingAwbStatus,
+  handleUpdateAwbStatus,
 }: ToolbarProps) {
   const selectedRowCount = Object.keys(table.getState().rowSelection).length;
   const emailFilterText = {
@@ -91,6 +95,19 @@ export function Toolbar({
                 {isSendingEmail
                     ? "Queuing..."
                     : `Send Email for ${selectedRowCount} selected`}
+            </Button>
+            <Button
+                onClick={handleUpdateAwbStatus}
+                disabled={isUpdatingAwbStatus || selectedRowCount === 0}
+                >
+                {isUpdatingAwbStatus ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                )}
+                {isUpdatingAwbStatus
+                    ? "Updating..."
+                    : `Update AWB Status for ${selectedRowCount} selected`}
             </Button>
         </div>
         {/* Filters Row */}
