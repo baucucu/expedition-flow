@@ -12,6 +12,7 @@ import {
   PackageCheck,
   AlertTriangle,
   CheckCircle2,
+  PackageX,
 } from 'lucide-react';
 import { Scorecard, type Kpi } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -151,14 +152,15 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
        <Scorecard
         title="Delivered & Completed"
         kpis={counts.deliveredAndCompleted.kpis}
-        iconMapping={{ 'Delivered': PackageCheck, 'Completed': CheckCircle2 }}
+        iconMapping={{ 'Delivered': PackageCheck, 'Not Delivered': PackageX, 'Completed': CheckCircle2 }}
         onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('Delivered', 'Completed')}
+        isActive={isFilterActive('Delivered', 'NotDelivered', 'Completed')}
         onKpiClick={(label) => {
           if (label === 'Delivered') setActiveFilter('Delivered');
+          if (label === 'Not Delivered') setActiveFilter('NotDelivered');
           if (label === 'Completed') setActiveFilter('Completed');
         }}
-        activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'Completed': 'Completed' })}
+        activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'NotDelivered': 'Not Delivered', 'Completed': 'Completed' })}
         className="lg:col-span-1"
       />
       <Scorecard
