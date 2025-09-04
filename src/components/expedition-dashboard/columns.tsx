@@ -126,10 +126,12 @@ export const columns = (
             id: 'contact',
             header: 'Contact',
             cell: ({ row }) => (
-                <ContactCell 
-                    recipient={row.original}
-                    onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}
-                />
+                <div className="w-40">
+                    <ContactCell 
+                        recipient={row.original}
+                        onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}
+                    />
+                </div>
             )
         },
         {
@@ -180,13 +182,13 @@ export const columns = (
             header: ({ column }) => (
                 <DataTableColumnFilter
                     column={column}
-                    title="Parcel Count"
+                    title="Parcels"
                     options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))}
                 />
             ),
             cell: ({ row }) => {
                 const parcelCount = row.original.awb?.parcelCount;
-                return <div>{parcelCount ?? 'N/A'}</div>;
+                return <div className="text-center">{parcelCount ?? 'N/A'}</div>;
             },
             filterFn: (row, id, value) => {
                 const parcelCount = row.original.awb?.parcelCount;
