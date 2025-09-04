@@ -154,15 +154,17 @@ export default function Home() {
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
 
     const deliveredCount = awbs.filter(awb => {
-        if (!awb.expeditionStatus) return false;
-        try {
-            const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
-                ? JSON.parse(awb.expeditionStatus)
-                : awb.expeditionStatus;
-            return status && status.status === 'Livrat cu succes';
-        } catch (e) {
-            return false;
-        }
+      if (!awb.expeditionStatus) return false;
+      try {
+        const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
+          ? JSON.parse(awb.expeditionStatus)
+          : awb.expeditionStatus;
+        return status && status.status === "Livrat cu succes";
+      } catch (e) {
+        // This can happen if the JSON is malformed, so we log it but don't crash.
+        console.error("Failed to parse expeditionStatus for AWB:", awb.id, e);
+        return false;
+      }
     }).length;
 
 
@@ -293,18 +295,18 @@ export default function Home() {
     }
 
     if (activeFilter === 'Delivered') {
-        const deliveredAwbIds = new Set(awbs.filter(awb => {
-            if (!awb.expeditionStatus) return false;
-            try {
-                const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
-                    ? JSON.parse(awb.expeditionStatus)
-                    : awb.expeditionStatus;
-                return status && status.status === 'Livrat cu succes';
-            } catch (e) {
-                return false;
-            }
-        }).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId));
+      const deliveredAwbIds = new Set(awbs.filter(awb => {
+        if (!awb.expeditionStatus) return false;
+        try {
+          const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
+            ? JSON.parse(awb.expeditionStatus)
+            : awb.expeditionStatus;
+          return status && status.status === "Livrat cu succes";
+        } catch (e) {
+          return false;
+        }
+      }).map(awb => awb.id));
+      return allRecipientsWithFullData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId));
     }
 
 
@@ -369,3 +371,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

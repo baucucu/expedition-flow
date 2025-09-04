@@ -203,6 +203,8 @@ export const columns = (
                         console.error("Failed to parse expeditionStatus:", error);
                     }
                 }
+                
+                const isDelivered = expeditionStatusObj?.status === "Livrat cu succes";
 
                 return (
                     <div className="flex flex-wrap gap-1 items-center">
@@ -210,9 +212,14 @@ export const columns = (
                             {status}
                         </Badge>
                         {awbNumber && <Badge variant="secondary">{awbNumber}</Badge>}
-                        {expeditionStatusObj?.status && (
+                         {isDelivered && (
+                            <Badge variant="default" className="font-normal">
+                                {expeditionStatusObj.status}
+                            </Badge>
+                        )}
+                        {expeditionStatusObj?.status && !isDelivered && (
                              <Badge 
-                                variant={expeditionStatusObj.statusState === 'Livrat' ? "default" : "secondary"}
+                                variant={"secondary"}
                                 className="font-normal"
                             >
                                 {expeditionStatusObj.status}
@@ -326,5 +333,7 @@ export const columns = (
         },
     ];
 }
+
+    
 
     
