@@ -154,19 +154,15 @@ export default function Home() {
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
 
     const deliveredCount = awbs.filter(awb => {
-        if (awb.expeditionStatus) {
-            try {
-                const status = typeof awb.expeditionStatus === 'string' 
-                    ? JSON.parse(awb.expeditionStatus) 
-                    : awb.expeditionStatus;
-                // Correct check for "Livrat" status
-                return status.statusState === 'Livrat';
-            } catch (e) {
-                // console.error("Failed to parse expeditionStatus for AWB:", awb.id, e);
-                return false;
-            }
+        if (!awb.expeditionStatus) return false;
+        try {
+            const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
+                ? JSON.parse(awb.expeditionStatus)
+                : awb.expeditionStatus;
+            return status && status.status === 'Livrat cu succes';
+        } catch (e) {
+            return false;
         }
-        return false;
     }).length;
 
 
@@ -303,7 +299,7 @@ export default function Home() {
                     const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
                         ? JSON.parse(awb.expeditionStatus)
                         : awb.expeditionStatus;
-                    return status.statusState === 'Livrat';
+                    return status && status.status === 'Livrat cu succes';
                 } catch (e) { return false; }
             }
             return false;
