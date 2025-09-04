@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -131,11 +132,19 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       <Scorecard
         title="Issues"
         value={counts.issues.value}
+        kpis={counts.issues.kpis}
         icon={AlertTriangle}
         onClick={() => setActiveFilter('Issues')}
-        isActive={activeFilter === 'Issues'}
+        isActive={isFilterActive('Issues', 'Avizat', 'Ridicare ulterioara')}
         variant="destructive"
+        onKpiClick={(label) => {
+            if (label === 'Avizat') setActiveFilter('Avizat');
+            if (label === 'Ridicare ulterioara') setActiveFilter('Ridicare ulterioara');
+        }}
+        activeKpiLabel={getActiveKpiLabel({ 'Avizat': 'Avizat', 'Ridicare ulterioara': 'Ridicare ulterioara'})}
       />
     </div>
   );
 };
+
+    

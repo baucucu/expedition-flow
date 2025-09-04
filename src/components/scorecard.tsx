@@ -44,9 +44,9 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     }
   }
 
-  const showKpisInContent = value === undefined && kpis && kpis.length > 0;
-  const showKpisInFooter = value !== undefined && kpis && kpis.length > 0;
-
+  const hasKpis = kpis && kpis.length > 0;
+  const showValue = value !== undefined;
+  
   return (
     <Card
       onClick={onClick}
@@ -60,9 +60,11 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />
       </CardHeader>
       <CardContent className="h-16 flex items-center">
-        {showKpisInContent ? (
-             <div className="flex w-full items-center justify-around">
-                {kpis.map((kpi, index) => {
+        {showValue ? (
+            <div className="text-3xl font-bold">{value}</div>
+        ) : hasKpis ? (
+            <div className="flex w-full items-center justify-around">
+                {kpis!.map((kpi, index) => {
                     const isKpiActive = isActive && activeKpiLabel === kpi.label;
                     return (
                         <React.Fragment key={kpi.label}>
@@ -82,13 +84,11 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                     )
                 })}
             </div>
-        ) : (
-            <div className="text-3xl font-bold">{value}</div>
-        )}
+        ) : null }
       </CardContent>
-       {showKpisInFooter && (
+       {showValue && hasKpis && (
          <CardFooter className="h-8 pb-4 flex justify-end items-center gap-x-4">
-            {kpis.map(kpi => {
+            {kpis!.map(kpi => {
                 const isBadge = kpi.color?.startsWith('bg-');
                 const isKpiActive = isActive && activeKpiLabel === kpi.label;
                 return (
@@ -116,3 +116,5 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     </Card>
   );
 };
+
+    

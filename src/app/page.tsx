@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -106,10 +106,15 @@ export default function Home() {
     const emailSentCount = awbs.filter(awb => awb.emailStatus === 'Sent').length;
     const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
 
+    const avizatCount = awbs.filter(awb => awb.expeditionStatus?.status === "Avizat").length;
+    const ridicareUlterioaraCount = awbs.filter(awb => awb.expeditionStatus?.status === "Ridicare ulterioara").length;
+
     const issuesCount = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length 
                 + recipientsWithFailedDocs.length
                 + awbGenerationFailedCount
-                + emailSendFailedCount;
+                + emailSendFailedCount
+                + avizatCount
+                + ridicareUlterioaraCount;
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
@@ -154,7 +159,7 @@ export default function Home() {
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
 
     const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
-
+    
     return {
         overview: {
             kpis: [
@@ -194,6 +199,10 @@ export default function Home() {
         },
         issues: {
             value: issuesCount,
+             kpis: [
+                { value: avizatCount, label: 'Avizat' },
+                { value: ridicareUlterioaraCount, label: 'Ridicare ulterioara' },
+            ]
         },
         completed: {
             value: completedCount,
@@ -267,18 +276,34 @@ export default function Home() {
     }
 
 
-    if (activeFilter === 'Issues') {
+    if (activeFilter === 'Issues' || activeFilter === 'Avizat' || activeFilter === 'Ridicare ulterioara') {
         const issueExpeditionIds = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
         const issueRecipientIds = allRecipientsWithFullData.filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed').map(r => r.id);
         const failedAwbIds = new Set(awbs.filter(awb => awb.status === 'Failed').map(awb => awb.id));
         const failedEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Failed').map(awb => awb.id));
-
-        return allRecipientsWithFullData.filter(r => 
+        
+        let issueRecipients = allRecipientsWithFullData.filter(r => 
             issueExpeditionIds.includes(r.expeditionId!) || 
             issueRecipientIds.includes(r.id) ||
             (r.awbId && failedAwbIds.has(r.awbId)) ||
             (r.awbId && failedEmailAwbIds.has(r.awbId))
         );
+
+        if (activeFilter === 'Avizat') {
+            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Avizat').map(awb => awb.id));
+            return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        }
+        if (activeFilter === 'Ridicare ulterioara') {
+            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Ridicare ulterioara').map(awb => awb.id));
+            return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        }
+        // For general 'Issues' filter, we also include the new statuses
+        const avizatAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Avizat').map(awb => awb.id));
+        const ridicareAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === 'Ridicare ulterioara').map(awb => awb.id));
+        
+        const additionalIssueRecipients = allRecipientsWithFullData.filter(r => r.awbId && (avizatAwbIds.has(r.awbId) || ridicareAwbIds.has(r.awbId)));
+
+        return [...issueRecipients, ...additionalIssueRecipients];
     }
 
     if (activeFilter === 'Delivered') {
@@ -348,5 +373,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
