@@ -140,20 +140,24 @@ export const columns = (
             accessorKey: "awb.city",
             header: "City",
             cell: ({ row }) => (
-                <EditableCell
-                    value={row.original.awb?.city ?? 'N/A'}
-                    onSave={(value) => onSave(row.index, 'awb.city', value, row.original.expeditionId)}
-                />
+                <div className="w-40">
+                    <EditableCell
+                        value={row.original.awb?.city ?? 'N/A'}
+                        onSave={(value) => onSave(row.index, 'awb.city', value, row.original.expeditionId)}
+                    />
+                </div>
             ),
         },
         {
             accessorKey: "awb.county",
             header: "County",
             cell: ({ row }) => (
-                <EditableCell
-                    value={row.original.awb?.county ?? 'N/A'}
-                    onSave={(value) => onSave(row.index, 'awb.county', value, row.original.expeditionId)}
-                />
+                <div className="w-40">
+                    <EditableCell
+                        value={row.original.awb?.county ?? 'N/A'}
+                        onSave={(value) => onSave(row.index, 'awb.county', value, row.original.expeditionId)}
+                    />
+                </div>
             ),
         },
         {
