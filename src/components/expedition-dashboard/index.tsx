@@ -356,7 +356,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="PV Semnat">
                          {selectedDocument.recipient.pvSemnatUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.pvSemnatUrl} docType="gdrive-pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.pvSemnatUrl} docType="image" />
                          ) : <DocumentPlaceholder title="PV Semnat (Signed) not available" />}
                     </TabsContent>
                     <TabsContent value="Instructions">

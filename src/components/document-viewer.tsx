@@ -9,7 +9,7 @@ import { ScrollArea } from './ui/scroll-area';
 
 interface DocumentViewerProps {
     url: string;
-    docType: 'pdf' | 'excel' | 'gdrive-pdf' | 'gdrive-excel';
+    docType: 'pdf' | 'excel' | 'gdrive-pdf' | 'gdrive-excel' | 'image';
 }
 
 type SheetData = (string | number)[][];
@@ -103,6 +103,14 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
         return (
             <div className="w-full h-[80vh] mt-4 border rounded-md">
                 <iframe src={googleDocsUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="PDF Document Viewer" />
+            </div>
+        );
+    }
+
+    if (docType === 'image') {
+        return (
+            <div className="w-full h-[80vh] mt-4 flex items-center justify-center border rounded-md overflow-auto p-4 bg-muted/20">
+                <img src={url} alt="Document Preview" className="max-w-full max-h-full h-auto w-auto object-contain" />
             </div>
         );
     }
