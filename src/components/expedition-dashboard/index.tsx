@@ -47,7 +47,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
-import { randomUUID } from "crypto";
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
@@ -88,7 +87,16 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
 
     setData(filteredData);
-  }, [initialData, pvFilter, emailFilter]);
+    
+    // If a document is selected, find its updated version in the new data
+    if (selectedDocument) {
+      const updatedRecipient = initialData.find(d => d.id === selectedDocument.recipient.id);
+      if (updatedRecipient) {
+        setSelectedDocument(prev => prev ? { ...prev, recipient: updatedRecipient } : null);
+      }
+    }
+
+  }, [initialData, pvFilter, emailFilter, selectedDocument]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {
     setSelectedDocument({ recipient, docType });
@@ -323,32 +331,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
     if (result.success) {
         toast({ title: 'Note Saved', description: result.message });
-        
-        // Optimistically update the UI
-        setSelectedDocument(prevDoc => {
-            if (!prevDoc) return null;
-            
-            const newNoteForState: Note = {
-                id: crypto.randomUUID(), // temp client-side ID
-                ...noteData,
-            };
-            
-            const updatedAwb = {
-                ...prevDoc.recipient.awb,
-                notes: [...(prevDoc.recipient.awb?.notes || []), newNoteForState]
-            };
-
-            const updatedRecipient = {
-                ...prevDoc.recipient,
-                awb: updatedAwb,
-            };
-            
-            return {
-                ...prevDoc,
-                recipient: updatedRecipient,
-            };
-        });
-
         setNewNote("");
     } else {
         toast({ variant: 'destructive', title: 'Failed to Save Note', description: result.message });
@@ -371,7 +353,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
 const awbNotes = React.useMemo(() => {
     const notes = selectedDocument?.recipient.awb?.notes || [];
-    // Sort by createdAt timestamp
     return [...notes].sort((a, b) => {
         const dateA = new Date(a.createdAt);
         const dateB = new Date(b.createdAt);
