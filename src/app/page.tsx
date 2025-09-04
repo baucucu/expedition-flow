@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -83,7 +83,7 @@ export default function Home() {
         return {
             ...rec,
             expeditionId: expedition?.id || rec.shipmentId,
-            expeditionStatus: expedition?.status || 'New',
+            expeditionStatus: awb?.expeditionStatus || 'New',
             awb: awb,
             awbUrl: awb?.awb_data?.pdfLink,
             awbStatus: awbStatus,
@@ -160,6 +160,25 @@ export default function Home() {
 
     const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
     
+    // In Transit Statuses
+    const inTransitStatuses = [
+        "AWB Emis",
+        "Alocata pentru ridicare",
+        "Intrare sorter",
+        "Iesire din hub",
+        "Intrare in agentie",
+        "In livrare la curier",
+        "Redirectionare Home Delivery",
+        "Redirect Home to OOH",
+    ];
+    
+    const inTransitCounts = inTransitStatuses.map(status => ({
+        label: status,
+        value: awbs.filter(awb => awb.expeditionStatus?.status === status).length,
+    }));
+    
+    const totalInTransit = inTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+
     return {
         overview: {
             kpis: [
@@ -192,7 +211,8 @@ export default function Home() {
             ]
         },
         inTransit: {
-            value: expeditions.filter(e => e.status === 'In Transit').length,
+            value: totalInTransit,
+            kpis: inTransitCounts,
         },
         delivered: {
             value: deliveredCount,
@@ -213,6 +233,20 @@ export default function Home() {
   const filteredRecipients = useMemo(() => {
     if (!activeFilter || activeFilter === 'Total' || activeFilter === 'Recipients' || activeFilter === 'Shipments') return allRecipientsWithFullData;
     
+    const filterByAwbStatus = (status: string) => {
+        const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === status).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+    };
+
+    if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");
+    if (activeFilter === 'AlocataRidicare') return filterByAwbStatus("Alocata pentru ridicare");
+    if (activeFilter === 'IntrareSorter') return filterByAwbStatus("Intrare sorter");
+    if (activeFilter === 'IesireHub') return filterByAwbStatus("Iesire din hub");
+    if (activeFilter === 'IntrareAgentie') return filterByAwbStatus("Intrare in agentie");
+    if (activeFilter === 'InLivrare') return filterByAwbStatus("In livrare la curier");
+    if (activeFilter === 'RedirectionareHome') return filterByAwbStatus("Redirectionare Home Delivery");
+    if (activeFilter === 'RedirectOOH') return filterByAwbStatus("Redirect Home to OOH");
+
     if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
     if(activeFilter === 'PVNew') return allRecipientsWithFullData.filter(r => r.pvStatus !== 'Generated' && r.pvStatus !== 'Queued');

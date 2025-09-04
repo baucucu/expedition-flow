@@ -49,6 +49,26 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     return filterMapping[activeFilter];
   }
   
+  const inTransitFilterMapping: { [key: string]: FilterStatus } = {
+    "AWB Emis": 'AwbEmis',
+    "Alocata pentru ridicare": 'AlocataRidicare',
+    "Intrare sorter": 'IntrareSorter',
+    "Iesire din hub": 'IesireHub',
+    "Intrare in agentie": 'IntrareAgentie',
+    "In livrare la curier": 'InLivrare',
+    "Redirectionare Home Delivery": 'RedirectionareHome',
+    "Redirect Home to OOH": 'RedirectOOH',
+  };
+
+  const getActiveInTransitKpiLabel = () => {
+    for (const [label, filter] of Object.entries(inTransitFilterMapping)) {
+      if (activeFilter === filter) {
+        return label;
+      }
+    }
+    return undefined;
+  }
+
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {/* --- Top Row: Preparation & Hand-off --- */}
@@ -108,12 +128,20 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       />
 
       {/* --- Bottom Row: Tracking & Completion --- */}
-      <Scorecard
+       <Scorecard
         title="In Transit"
         value={counts.inTransit.value}
+        kpis={counts.inTransit.kpis}
         icon={Truck}
         onClick={() => setActiveFilter('In Transit')}
-        isActive={activeFilter === 'In Transit'}
+        isActive={isFilterActive('In Transit', ...Object.values(inTransitFilterMapping))}
+        onKpiClick={(label) => {
+            const filter = inTransitFilterMapping[label];
+            if (filter) {
+                setActiveFilter(filter);
+            }
+        }}
+        activeKpiLabel={getActiveInTransitKpiLabel()}
       />
       <Scorecard
         title="Delivered"
