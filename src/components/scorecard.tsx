@@ -68,7 +68,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         {showValue ? (
             <div className="text-3xl font-bold text-center">{value}</div>
         ) : hasKpis ? (
-            <div className="flex w-full items-center justify-around flex-nowrap gap-2">
+            <div className="flex w-full items-start justify-around flex-nowrap gap-2">
                 {kpis!.map((kpi, index) => {
                     const isKpiActive = isActive && activeKpiLabel === kpi.label;
                     const KpiIcon = iconMapping ? iconMapping[kpi.label] : null;
