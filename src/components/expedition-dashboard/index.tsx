@@ -313,6 +313,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         userName: user.email || 'Unknown User',
         recipientId: selectedDocument.recipient.id,
         recipientName: selectedDocument.recipient.name,
+        createdAt: new Date().toISOString(),
     });
     setIsSavingNote(false);
 
@@ -344,8 +345,8 @@ const awbNotes = React.useMemo(() => {
     const notes = selectedDocument?.recipient.awb?.notes || [];
     // Sort by createdAt timestamp
     return [...notes].sort((a, b) => {
-        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
-        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
         return dateA.getTime() - dateB.getTime();
     });
 }, [selectedDocument]);
@@ -457,9 +458,9 @@ const awbNotes = React.useMemo(() => {
                                     {awbNotes.length > 0 ? (
                                         awbNotes.map((note: Note) => (
                                             <div key={note.id} className="p-3 border rounded-lg bg-muted/50">
-                                                <p className="text-sm whitespace-pre-wrap">{note.text}</p>
+                                                <p className="text-sm whitespace-pre-wrap">{note.noteText}</p>
                                                 <p className="text-xs text-muted-foreground mt-2">
-                                                    By: {note.userName} for {note.recipientName} on {note.createdAt ? format(note.createdAt.toDate(), 'PPP p') : '...'}
+                                                    By: {note.userName} for {note.recipientName} on {note.createdAt ? format(new Date(note.createdAt), 'PPP p') : '...'}
                                                 </p>
                                             </div>
                                         ))

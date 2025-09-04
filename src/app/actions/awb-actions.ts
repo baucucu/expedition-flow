@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { AWB } from "@/types";
 import { randomUUID } from "crypto";
@@ -113,6 +113,7 @@ const addNoteToAwbActionInputSchema = z.object({
     userName: z.string(),
     recipientId: z.string(),
     recipientName: z.string(),
+    createdAt: z.string(), // Expecting ISO string from client
 });
 
 export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActionInputSchema>) {
@@ -128,15 +129,12 @@ export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActio
         const newNote = {
             ...noteData,
             id: randomUUID(),
-            createdAt: serverTimestamp(),
         };
 
         await updateDoc(awbRef, {
             notes: arrayUnion(newNote)
         });
 
-        // We can't return the note with the timestamp from the server action directly,
-        // The client will get an updated version via snapshot listener.
         return { success: true, message: "Note added successfully." };
     } catch (error: any) {
         console.error("Error adding note to AWB:", error);

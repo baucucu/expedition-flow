@@ -89,12 +89,12 @@ export interface ExpeditionStatusInfo {
 
 export interface Note {
     id: string;
-    text: string;
+    noteText: string;
     userId: string;
     userName: string;
     recipientId: string;
     recipientName: string;
-    createdAt: any; // Firestore Timestamp, can be null during optimistic update
+    createdAt: string; // ISO string from client
 }
 
 export interface AWB {
