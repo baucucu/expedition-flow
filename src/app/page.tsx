@@ -160,7 +160,6 @@ export default function Home() {
 
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
     
-    // In Transit Statuses
     const inTransitStatuses = [
         "AWB Emis",
         "Alocata pentru ridicare",
@@ -403,3 +402,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
