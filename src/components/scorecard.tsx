@@ -72,7 +72,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 {kpis!.map((kpi, index) => {
                     const isKpiActive = isActive && activeKpiLabel === kpi.label;
                     const KpiIcon = iconMapping ? iconMapping[kpi.label] : null;
-                    if(kpi.value === 0 && !iconMapping) return null;
+                    if(kpi.value === 0 && !iconMapping && !showValue) return null;
                     return (
                         <React.Fragment key={kpi.label}>
                             <div 
@@ -98,7 +98,6 @@ export const Scorecard: React.FC<ScorecardProps> = ({
          <CardFooter className="flex-wrap justify-center gap-x-4 gap-y-2 pt-4">
             {kpis!.map(kpi => {
                 const isKpiActive = isActive && activeKpiLabel === kpi.label;
-                if(kpi.value === 0) return null;
                 return (
                     <div 
                         key={kpi.label} 

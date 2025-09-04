@@ -166,15 +166,26 @@ export default function Home() {
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in agentie",
-        "Incarcat in OOH",
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
+        "Incarcat in OOH",
     ];
     
+    const awbByStatus = awbs.reduce((acc, awb) => {
+        const status = awb.expeditionStatus?.status;
+        if (status) {
+            if (!acc[status]) {
+                acc[status] = 0;
+            }
+            acc[status]++;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
     const inTransitCounts = inTransitStatuses.map(status => ({
         label: status,
-        value: awbs.filter(awb => awb.expeditionStatus?.status === status).length,
+        value: awbByStatus[status] || 0,
     }));
     
     const totalInTransit = inTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
@@ -212,7 +223,7 @@ export default function Home() {
         },
         inTransit: {
             value: totalInTransit,
-            kpis: inTransitCounts.sort((a,b) => b.value - a.value),
+            kpis: inTransitCounts,
         },
         deliveredAndCompleted: {
             kpis: [
@@ -402,5 +413,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
