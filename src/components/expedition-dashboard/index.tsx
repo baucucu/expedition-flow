@@ -329,8 +329,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   }
   
-  // FIX: This is the core fix. We find the most up-to-date recipient data from the `data` state
-  // which is updated by the real-time listener in page.tsx. This prevents the infinite loop.
   const displayedRecipient = React.useMemo(() => {
     if (!selectedDocument) return null;
     return data.find(d => d.id === selectedDocument.recipient.id) || selectedDocument.recipient;
@@ -356,7 +354,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       return [...notes].sort((a, b) => {
           const dateA = new Date(a.createdAt);
           const dateB = new Date(b.createdAt);
-          return dateA.getTime() - dateB.getTime();
+          return dateB.getTime() - dateA.getTime();
       });
   }, [displayedRecipient]);
 
@@ -504,3 +502,5 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    
