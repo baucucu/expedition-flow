@@ -341,11 +341,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                 </SheetHeader>
                 <Tabs defaultValue={selectedDocument.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="PV" disabled={selectedDocument.recipient.pvStatus !== 'Generated'}>Proces Verbal (PV)</TabsTrigger>
+                        <TabsTrigger value="PV" disabled={!selectedDocument.recipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
                         <TabsTrigger value="PV Semnat" disabled={!selectedDocument.recipient.pvSemnatUrl}>PV Semnat</TabsTrigger>
                         <TabsTrigger value="Instructions" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
                         <TabsTrigger value="Inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
-                        <TabsTrigger value="AWB" disabled={selectedDocument.recipient.awbStatus !== 'Generated'}>AWB</TabsTrigger>
+                        <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awbUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
                         <TabsTrigger value="AWB History" disabled={!selectedDocument.recipient.awb?.awbStatusHistory}>AWB History</TabsTrigger>
                     </TabsList>
@@ -356,7 +356,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="PV Semnat">
                          {selectedDocument.recipient.pvSemnatUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.pvSemnatUrl} docType="pdf" />
+                            <DocumentViewer url={selectedDocument.recipient.pvSemnatUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="PV Semnat (Signed) not available" />}
                     </TabsContent>
                     <TabsContent value="Instructions">
