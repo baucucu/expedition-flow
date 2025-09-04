@@ -60,7 +60,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />
       </CardHeader>
       <CardContent className="h-auto flex items-center">
-        {showValue && !hasKpis ? (
+        {showValue ? (
             <div className="text-3xl font-bold h-16 flex items-center">{value}</div>
         ) : hasKpis ? (
             <div className="flex w-full items-center justify-around flex-wrap gap-2">
@@ -85,8 +85,6 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                     )
                 })}
             </div>
-        ) : showValue ? (
-             <div className="text-3xl font-bold h-16 flex items-center">{value}</div>
         ) : null }
       </CardContent>
        {showValue && hasKpis && (
