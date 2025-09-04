@@ -52,6 +52,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
   const inTransitFilterMapping: { [key: string]: FilterStatus } = {
     "AWB Emis": 'AwbEmis',
     "Alocata pentru ridicare": 'AlocataRidicare',
+    "Ridicata de la client": 'RidicataClient',
     "Intrare sorter": 'IntrareSorter',
     "Iesire din hub": 'IesireHub',
     "Intrare in agentie": 'IntrareAgentie',
