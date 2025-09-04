@@ -68,7 +68,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         {showValue ? (
             <div className="text-3xl font-bold text-center">{value}</div>
         ) : hasKpis ? (
-            <div className="flex w-full items-center justify-around flex-wrap gap-2">
+            <div className="flex w-full items-center justify-around flex-nowrap gap-2">
                 {kpis!.map((kpi, index) => {
                     const isKpiActive = isActive && activeKpiLabel === kpi.label;
                     const KpiIcon = iconMapping ? iconMapping[kpi.label] : null;
@@ -87,7 +87,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                                 <div className={cn("text-2xl font-bold", kpi.color)}>{kpi.value}</div>
                                 <p className="text-xs text-muted-foreground whitespace-normal max-w-20">{kpi.label}</p>
                             </div>
-                            {index < kpis.length - 1 && kpis[index+1].value > 0 && <Separator orientation="vertical" className="h-10" />}
+                            {index < kpis.length - 1 && <Separator orientation="vertical" className="h-10" />}
                         </React.Fragment>
                     )
                 })}
@@ -118,5 +118,3 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     </Card>
   );
 };
-
-  
