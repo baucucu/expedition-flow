@@ -43,7 +43,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     return [mainFilter, ...additionalFilters].includes(activeFilter);
   }
   
-  const getActiveKpiLabel = (filterMapping: { [key in FilterStatus]?: string }): string | undefined => {
+  const getActiveKpiLabel = (filterMapping: { [key: string]: string }): string | undefined => {
+    if (!activeFilter) return undefined;
     return filterMapping[activeFilter];
   }
   

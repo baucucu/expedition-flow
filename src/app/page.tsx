@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Expedition, ExpeditionStatus, Recipient, AWB, DocumentStatus, EmailStatus } from "@/types";
+import type { Expedition, ExpeditionStatus, Recipient, AWB, DocumentStatus, EmailStatus, ExpeditionStatusInfo } from "@/types";
 import { ExpeditionDashboard } from "@/components/expedition-dashboard/index";
 import { ScorecardGrid, type ScorecardData } from "@/components/scorecard-grid";
 import { AppHeader } from "@/components/header";
@@ -153,6 +153,21 @@ export default function Home() {
 
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
 
+    const deliveredCount = awbs.filter(awb => {
+        if (awb.expeditionStatus) {
+            try {
+                const status = typeof awb.expeditionStatus === 'string' 
+                    ? JSON.parse(awb.expeditionStatus) 
+                    : awb.expeditionStatus;
+                return status.status === 'Livrat cu succes';
+            } catch (e) {
+                return false;
+            }
+        }
+        return false;
+    }).length;
+
+
     return {
         overview: {
             kpis: [
@@ -188,7 +203,7 @@ export default function Home() {
             value: expeditions.filter(e => e.status === 'In Transit').length,
         },
         delivered: {
-            value: allRecipientsWithFullData.filter(r => r.status === 'Delivered').length,
+            value: deliveredCount,
         },
         issues: {
             value: issuesCount,
@@ -279,8 +294,24 @@ export default function Home() {
         );
     }
 
-    if (['NewRecipient', 'Delivered', 'Returned'].includes(activeFilter)) {
-        const statusMap = { 'NewRecipient': 'New', 'Delivered': 'Delivered', 'Returned': 'Returned' };
+    if (activeFilter === 'Delivered') {
+        const deliveredAwbIds = new Set(awbs.filter(awb => {
+            if (awb.expeditionStatus) {
+                try {
+                    const status = typeof awb.expeditionStatus === 'string'
+                        ? JSON.parse(awb.expeditionStatus)
+                        : awb.expeditionStatus;
+                    return status.status === 'Livrat cu succes';
+                } catch (e) { return false; }
+            }
+            return false;
+        }).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId));
+    }
+
+
+    if (['NewRecipient', 'Returned'].includes(activeFilter)) {
+        const statusMap = { 'NewRecipient': 'New', 'Returned': 'Returned' };
         const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
         return allRecipientsWithFullData.filter(r => r.status === recipientStatus);
     }
