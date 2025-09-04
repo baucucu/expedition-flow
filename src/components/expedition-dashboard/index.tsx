@@ -42,7 +42,7 @@ import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
 import { Button } from "../ui/button";
 import { ExternalLink, Loader2, Send } from "lucide-react";
-import { ExpeditionStatusInfo, Note } from "@/types";
+import { Note } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
@@ -79,13 +79,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
-  const handleDataUpdate = () => {
-    router.refresh();
-  };
-
   const table = useReactTable({
     data,
-    columns: columns(handleOpenDocument, setRowSelection, handleDataUpdate),
+    columns: columns(handleOpenDocument, setRowSelection),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -335,12 +331,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }, [displayedRecipient]);
 
   const awbNotes = React.useMemo(() => {
-      const notes = displayedRecipient?.awb?.notes || [];
-      return [...notes].sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          return dateB.getTime() - dateA.getTime();
-      });
+      if (!displayedRecipient?.awb?.notes) return [];
+      return [...displayedRecipient.awb.notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [displayedRecipient]);
 
 
@@ -382,7 +374,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
-                        <TabsTrigger value="AWB History" disabled={!displayedRecipient.awb?.awbStatusHistory}>AWB History</TabsTrigger>
+                        <TabsTrigger value="AWB History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>AWB History</TabsTrigger>
                         <TabsTrigger value="Notes">Notes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
@@ -430,17 +422,19 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="AWB History">
                         {awbStatusHistory.length > 0 ? (
-                            <div className="flex flex-col gap-4 py-4">
-                                {awbStatusHistory.map((historyItem: ExpeditionStatusInfo, index: number) => (
-                                    <div key={index} className="p-4 border rounded-lg">
-                                        <p><strong>Status:</strong> {historyItem.status}</p>
-                                        <p><strong>State:</strong> {historyItem.statusState}</p>
-                                        <p><strong>Date:</strong> {new Date(historyItem.statusDate).toLocaleString()}</p>
-                                        <p><strong>County:</strong> {historyItem.county}</p>
-                                        {historyItem.transitLocation && <p><strong>Transit Location:</strong> {historyItem.transitLocation}</p>}
-                                    </div>
-                                ))}
-                            </div>
+                            <ScrollArea className="h-[calc(100vh-10rem)] pr-4">
+                                <div className="flex flex-col gap-4 py-4">
+                                    {awbStatusHistory.map((historyItem, index) => (
+                                        <div key={index} className="p-4 border rounded-lg bg-muted/50">
+                                            <p><strong>Status:</strong> {historyItem.status}</p>
+                                            <p><strong>State:</strong> {historyItem.statusState}</p>
+                                            <p><strong>Date:</strong> {new Date(historyItem.statusDate).toLocaleString()}</p>
+                                            <p><strong>County:</strong> {historyItem.county}</p>
+                                            {historyItem.transitLocation && <p><strong>Transit Location:</strong> {historyItem.transitLocation}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
                         ) : <DocumentPlaceholder title="AWB History not available" />}
                     </TabsContent>
                      <TabsContent value="Notes" className="h-[calc(100vh-10rem)]">

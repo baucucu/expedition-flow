@@ -3,29 +3,27 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { RecipientRow, recipientStatuses, recipientStatusVariant, awbStatuses, awbStatusVariant, docShortNames, DocType } from "./types";
+import { RecipientRow, awbStatuses, awbStatusVariant, docShortNames, DocType } from "./types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDown, FileText, Mail, History, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
-import { DocumentType, RecipientStatus, AWBStatus, ExpeditionStatusInfo } from "@/types";
+import { AWBStatus } from "@/types";
 import React from "react";
-import { EditableCell } from "./editable-cell";
 import { updateShipmentDetails } from "@/app/actions/expedition-actions";
 import { useToast } from "@/hooks/use-toast";
+import { ContactCell } from "./contact-cell";
 
 
 export const columns = (
     handleOpenDocument: (recipient: RecipientRow, docType: DocType) => void,
     setRowSelection: React.Dispatch<React.SetStateAction<{}>>,
-    updateData: (rowIndex: number, columnId: string, value: any) => void
 ): ColumnDef<RecipientRow>[] => {
     const { toast } = useToast();
 
-    const onSave = async (rowIndex: number, columnId: string, value: string, shipmentId: string) => {
-        const field = columnId.split('.')[1];
+    const onSave = async (rowIndex: number, field: string, value: string, shipmentId: string) => {
         const res = await updateShipmentDetails(shipmentId, { [field]: value });
         if (res.success) {
             toast({
@@ -125,45 +123,14 @@ export const columns = (
             cell: ({ row }) => <div>{row.original.schoolName}</div>,
         },
         {
-            accessorKey: "awb.address",
-            header: "Recipient Address",
+            id: 'contact',
+            header: 'Contact',
             cell: ({ row }) => (
-                 <div className="w-48 whitespace-normal">
-                    <EditableCell
-                        value={row.original.awb?.address ?? 'N/A'}
-                        onSave={(value) => onSave(row.index, 'awb.address', value, row.original.expeditionId)}
-                    />
-                </div>
-            ),
-        },
-        {
-            accessorKey: "awb.city",
-            header: "City",
-            cell: ({ row }) => (
-                <div className="w-40">
-                    <EditableCell
-                        value={row.original.awb?.city ?? 'N/A'}
-                        onSave={(value) => onSave(row.index, 'awb.city', value, row.original.expeditionId)}
-                    />
-                </div>
-            ),
-        },
-        {
-            accessorKey: "awb.county",
-            header: "County",
-            cell: ({ row }) => (
-                <div className="w-40">
-                    <EditableCell
-                        value={row.original.awb?.county ?? 'N/A'}
-                        onSave={(value) => onSave(row.index, 'awb.county', value, row.original.expeditionId)}
-                    />
-                </div>
-            ),
-        },
-        {
-            accessorKey: "telephone",
-            header: "Telephone",
-            cell: ({ row }) => <div>{row.original.telephone}</div>,
+                <ContactCell 
+                    recipient={row.original}
+                    onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}
+                />
+            )
         },
         {
             accessorKey: "awb.status",
