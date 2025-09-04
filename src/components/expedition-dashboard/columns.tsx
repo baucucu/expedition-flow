@@ -205,13 +205,18 @@ export const columns = (
                 }
 
                 return (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 items-center">
                         <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
                             {status}
                         </Badge>
                         {awbNumber && <Badge variant="secondary">{awbNumber}</Badge>}
                         {expeditionStatusObj?.status && (
-                            <Badge variant="default">{expeditionStatusObj.status}</Badge>
+                             <Badge 
+                                variant={expeditionStatusObj.statusState === 'Livrat' ? "default" : "secondary"}
+                                className="font-normal"
+                            >
+                                {expeditionStatusObj.status}
+                            </Badge>
                         )}
                     </div>
                 );
@@ -249,7 +254,7 @@ export const columns = (
 
                 return (
                     <div className="flex flex-wrap gap-2">
-                        {recipient.pvStatus === 'Generated' && (
+                        {recipient.pvUrl && (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
@@ -260,7 +265,7 @@ export const columns = (
                             </Badge>
                         )}
                         {recipient.pvSemnatUrl && (
-                            <Badge
+                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
                                 onClick={() => handleOpenDocument(recipient, 'PV Semnat')}
@@ -321,3 +326,5 @@ export const columns = (
         },
     ];
 }
+
+    

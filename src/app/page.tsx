@@ -159,8 +159,10 @@ export default function Home() {
                 const status = typeof awb.expeditionStatus === 'string' 
                     ? JSON.parse(awb.expeditionStatus) 
                     : awb.expeditionStatus;
-                return status.status === 'Livrat cu succes';
+                // Correct check for "Livrat" status
+                return status.statusState === 'Livrat';
             } catch (e) {
+                // console.error("Failed to parse expeditionStatus for AWB:", awb.id, e);
                 return false;
             }
         }
@@ -298,10 +300,10 @@ export default function Home() {
         const deliveredAwbIds = new Set(awbs.filter(awb => {
             if (awb.expeditionStatus) {
                 try {
-                    const status = typeof awb.expeditionStatus === 'string'
+                    const status: ExpeditionStatusInfo = typeof awb.expeditionStatus === 'string'
                         ? JSON.parse(awb.expeditionStatus)
                         : awb.expeditionStatus;
-                    return status.status === 'Livrat cu succes';
+                    return status.statusState === 'Livrat';
                 } catch (e) { return false; }
             }
             return false;
@@ -371,3 +373,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
