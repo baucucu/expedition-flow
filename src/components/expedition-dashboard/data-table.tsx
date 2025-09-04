@@ -48,7 +48,13 @@ export function DataTable({ table, handleOpenDocument }: DataTableProps) {
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                onClick={() => handleOpenDocument(row.original, 'Notes')}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  // Only open the notes if the user clicks directly on a cell's background
+                  if (target.tagName === 'TD') {
+                    handleOpenDocument(row.original, 'Notes');
+                  }
+                }}
                 className="cursor-pointer"
               >
                 {row.getVisibleCells().map((cell) => (
