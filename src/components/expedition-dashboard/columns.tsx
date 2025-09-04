@@ -93,6 +93,7 @@ export const columns = (
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
                     aria-label="Select row"
+                    onClick={(e) => e.stopPropagation()}
                 />
             ),
             enableSorting: false,
@@ -127,7 +128,7 @@ export const columns = (
             accessorKey: "awb.address",
             header: "Recipient Address",
             cell: ({ row }) => (
-                 <div className="w-48">
+                 <div className="w-48 whitespace-normal">
                     <EditableCell
                         value={row.original.awb?.address ?? 'N/A'}
                         onSave={(value) => onSave(row.index, 'awb.address', value, row.original.expeditionId)}
@@ -257,7 +258,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={() => handleOpenDocument(recipient, 'PV')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'PV'); }}
                             >
                                 <FileText className="w-3 h-3" />
                                 {docShortNames['PV']}
@@ -267,7 +268,7 @@ export const columns = (
                              <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={() => handleOpenDocument(recipient, 'PV Semnat')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'PV Semnat'); }}
                             >
                                 {docShortNames['PV Semnat']}
                             </Badge>
@@ -276,7 +277,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={() => handleOpenDocument(recipient, 'Instructions')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Instructions'); }}
                             >
                                 {docShortNames['Instructions']}
                             </Badge>
@@ -285,7 +286,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={() => handleOpenDocument(recipient, 'Inventory')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Inventory'); }}
                             >
                                 {docShortNames['Inventory']}
                             </Badge>
@@ -294,7 +295,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={() => handleOpenDocument(recipient, 'AWB')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'AWB'); }}
                             >
                                 {docShortNames['AWB']}
                             </Badge>
@@ -303,7 +304,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={() => handleOpenDocument(recipient, 'Email')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Email'); }}
                             >
                                 <Mail className="w-3 h-3" />
                                 {docShortNames['Email']}
@@ -313,7 +314,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={() => handleOpenDocument(recipient, 'AWB History')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'AWB History'); }}
                             >
                                 <History className="w-3 h-3" />
                                 {docShortNames['AWB History']}
@@ -323,7 +324,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={() => handleOpenDocument(recipient, 'Notes')}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Notes'); }}
                             >
                                 <MessageSquare className="w-3 h-3" />
                                 {docShortNames['Notes']}

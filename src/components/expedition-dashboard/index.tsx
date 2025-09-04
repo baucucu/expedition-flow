@@ -331,6 +331,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   
   const displayedRecipient = React.useMemo(() => {
     if (!selectedDocument) return null;
+    // Find the latest version of the recipient from the real-time data
     return data.find(d => d.id === selectedDocument.recipient.id) || selectedDocument.recipient;
   }, [selectedDocument, data]);
 
@@ -376,7 +377,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             isUpdatingAwbStatus={isUpdatingAwbStatus}
             handleUpdateAwbStatus={handleUpdateAwbStatus}
         />
-      <DataTable table={table} />
+      <DataTable table={table} handleOpenDocument={handleOpenDocument} />
       <Pagination table={table} />
 
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
@@ -502,5 +503,3 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
-
-    
