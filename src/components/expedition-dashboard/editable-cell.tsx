@@ -51,13 +51,13 @@ export function EditableCell({ value, onSave }: EditableCellProps) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <span className="truncate">{value}</span>
+            <span className="whitespace-normal">{value}</span>
             {isHovered && (
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsEditing(true)}
-                    className="h-8 w-8 ml-2"
+                    className="h-8 w-8 ml-2 flex-shrink-0"
                 >
                     <Edit className="h-4 w-4" />
                 </Button>

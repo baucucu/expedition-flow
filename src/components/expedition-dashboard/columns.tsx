@@ -127,10 +127,12 @@ export const columns = (
             accessorKey: "awb.address",
             header: "Recipient Address",
             cell: ({ row }) => (
-                <EditableCell
-                    value={row.original.awb?.address ?? 'N/A'}
-                    onSave={(value) => onSave(row.index, 'awb.address', value, row.original.expeditionId)}
-                />
+                 <div className="w-64 whitespace-normal">
+                    <EditableCell
+                        value={row.original.awb?.address ?? 'N/A'}
+                        onSave={(value) => onSave(row.index, 'awb.address', value, row.original.expeditionId)}
+                    />
+                </div>
             ),
         },
         {
