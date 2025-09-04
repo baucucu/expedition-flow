@@ -192,18 +192,7 @@ export const columns = (
                 const awb = row.original.awb;
                 const status: AWBStatus = awb?.status ?? 'New';
                 const awbNumber = awb?.awb_data?.awbNumber;
-
-                let expeditionStatusObj: ExpeditionStatusInfo | undefined;
-                if (awb?.expeditionStatus) {
-                    try {
-                        expeditionStatusObj = typeof awb.expeditionStatus === 'string'
-                            ? JSON.parse(awb.expeditionStatus)
-                            : awb.expeditionStatus;
-                    } catch (error) {
-                        // console.error("Failed to parse expeditionStatus:", error);
-                    }
-                }
-                
+                const expeditionStatusObj = awb?.expeditionStatus;
                 const isDelivered = expeditionStatusObj?.status === "Livrat cu succes";
 
                 return (
