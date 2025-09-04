@@ -49,7 +49,7 @@ export const docShortNames: Record<DocType, string> = {
     'PV': 'PV',
     'Instructions': 'Instructions',
     'Inventory': 'Inventory',
-    'PV semnat': 'PV semnat',
+    'PV Semnat': 'PV Semnat',
     'AWB History': 'AWB History'
 }
 
