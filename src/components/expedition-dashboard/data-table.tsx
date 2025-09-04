@@ -8,15 +8,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { flexRender, Table as TanstackTable } from "@tanstack/react-table";
-import { RecipientRow, DocType } from "./types";
+import { RecipientRow } from "./types";
 import { cn } from "@/lib/utils";
 
 interface DataTableProps {
   table: TanstackTable<RecipientRow>;
-  handleOpenDocument: (recipient: RecipientRow, docType: DocType) => void;
 }
 
-export function DataTable({ table, handleOpenDocument }: DataTableProps) {
+export function DataTable({ table }: DataTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -48,14 +47,6 @@ export function DataTable({ table, handleOpenDocument }: DataTableProps) {
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  // Only open the notes if the user clicks directly on a cell's background
-                  if (target.tagName === 'TD') {
-                    handleOpenDocument(row.original, 'Notes');
-                  }
-                }}
-                className="cursor-pointer"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>

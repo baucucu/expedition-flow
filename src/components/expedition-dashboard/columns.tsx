@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -93,7 +94,6 @@ export const columns = (
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
                     aria-label="Select row"
-                    onClick={(e) => e.stopPropagation()}
                 />
             ),
             enableSorting: false,
@@ -258,7 +258,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'PV'); }}
+                                onClick={() => handleOpenDocument(recipient, 'PV')}
                             >
                                 <FileText className="w-3 h-3" />
                                 {docShortNames['PV']}
@@ -268,7 +268,7 @@ export const columns = (
                              <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'PV Semnat'); }}
+                                onClick={() => handleOpenDocument(recipient, 'PV Semnat')}
                             >
                                 {docShortNames['PV Semnat']}
                             </Badge>
@@ -277,7 +277,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Instructions'); }}
+                                onClick={() => handleOpenDocument(recipient, 'Instructions')}
                             >
                                 {docShortNames['Instructions']}
                             </Badge>
@@ -286,7 +286,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Inventory'); }}
+                                onClick={() => handleOpenDocument(recipient, 'Inventory')}
                             >
                                 {docShortNames['Inventory']}
                             </Badge>
@@ -295,7 +295,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'AWB'); }}
+                                onClick={() => handleOpenDocument(recipient, 'AWB')}
                             >
                                 {docShortNames['AWB']}
                             </Badge>
@@ -304,7 +304,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Email'); }}
+                                onClick={() => handleOpenDocument(recipient, 'Email')}
                             >
                                 <Mail className="w-3 h-3" />
                                 {docShortNames['Email']}
@@ -314,7 +314,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'AWB History'); }}
+                                onClick={() => handleOpenDocument(recipient, 'AWB History')}
                             >
                                 <History className="w-3 h-3" />
                                 {docShortNames['AWB History']}
@@ -324,7 +324,7 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Notes'); }}
+                                onClick={() => handleOpenDocument(recipient, 'Notes')}
                             >
                                 <MessageSquare className="w-3 h-3" />
                                 {docShortNames['Notes']}

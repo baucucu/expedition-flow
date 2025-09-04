@@ -72,23 +72,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const { user } = useAuth();
 
   React.useEffect(() => {
-    let filteredData = initialData;
-
-    if (pvFilter === 'has_pv') {
-      filteredData = filteredData.filter(row => row.pvStatus === 'Generated');
-    } else if (pvFilter === 'no_pv') {
-      filteredData = filteredData.filter(row => row.pvStatus !== 'Generated');
-    }
-
-    if (emailFilter === 'sent') {
-      filteredData = filteredData.filter(row => row.emailStatus === 'Sent');
-    } else if (emailFilter === 'not_sent') {
-      filteredData = filteredData.filter(row => row.emailStatus !== 'Sent');
-    }
-
-    setData(filteredData);
-
-  }, [initialData, pvFilter, emailFilter]);
+    setData(initialData);
+  }, [initialData]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {
     setSelectedDocument({ recipient, docType });
@@ -331,7 +316,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   
   const displayedRecipient = React.useMemo(() => {
     if (!selectedDocument) return null;
-    // Find the latest version of the recipient from the real-time data
     return data.find(d => d.id === selectedDocument.recipient.id) || selectedDocument.recipient;
   }, [selectedDocument, data]);
 
@@ -377,7 +361,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             isUpdatingAwbStatus={isUpdatingAwbStatus}
             handleUpdateAwbStatus={handleUpdateAwbStatus}
         />
-      <DataTable table={table} handleOpenDocument={handleOpenDocument} />
+      <DataTable table={table} />
       <Pagination table={table} />
 
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
