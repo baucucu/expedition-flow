@@ -6,7 +6,7 @@ import { RecipientRow, recipientStatuses, recipientStatusVariant, awbStatuses, a
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, FileText, Mail } from "lucide-react";
+import { ChevronDown, FileText, Mail, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { DocumentType, RecipientStatus, AWBStatus, ExpeditionStatusInfo } from "@/types";
@@ -245,6 +245,7 @@ export const columns = (
             cell: ({ row }) => {
                 const recipient = row.original;
                 const emailSent = recipient.emailId;
+                const hasAwbHistory = recipient.awb?.awbStatusHistory && recipient.awb.awbStatusHistory.length > 0;
 
                 return (
                     <div className="flex flex-wrap gap-2">
@@ -302,6 +303,16 @@ export const columns = (
                             >
                                 <Mail className="w-3 h-3" />
                                 {docShortNames['Email']}
+                            </Badge>
+                        )}
+                        {hasAwbHistory && (
+                            <Badge
+                                variant={"secondary"}
+                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                                onClick={() => handleOpenDocument(recipient, 'AWB History')}
+                            >
+                                <History className="w-3 h-3" />
+                                {docShortNames['AWB History']}
                             </Badge>
                         )}
                     </div>

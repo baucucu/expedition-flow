@@ -25,7 +25,7 @@ export const awbStatuses: AWBStatus[] = ['New', 'Queued', 'Generated', 'AWB_CREA
 export type RecipientRow = Recipient & { 
     expeditionId: string; 
     awb?: AWB, 
-    expeditionStatus?: ExpeditionStatusInfo,
+    expeditionStatus?: ExpeditionStatusInfo | string,
     awbStatusHistory?: ExpeditionStatusInfo[],
     awbUrl?: string;
     awbStatus?: DocumentStatus;
@@ -38,7 +38,7 @@ export interface ExpeditionDashboardProps {
     expeditions: Expedition[];
 }
 
-export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat';
+export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'AWB History';
 
 export const docShortNames: Record<DocType, string> = {
     'proces verbal de receptie': 'PV',
@@ -49,7 +49,8 @@ export const docShortNames: Record<DocType, string> = {
     'PV': 'PV',
     'Instructions': 'Instructions',
     'Inventory': 'Inventory',
-    'PV Semnat': 'PV semnat'
+    'PV Semnat': 'PV semnat',
+    'AWB History': 'AWB History'
 }
 
 export type SelectedDocument = {

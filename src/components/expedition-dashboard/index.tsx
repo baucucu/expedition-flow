@@ -41,6 +41,7 @@ import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
 import { Button } from "../ui/button";
 import { ExternalLink } from "lucide-react";
+import { ExpeditionStatusInfo } from "@/types";
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
@@ -292,6 +293,21 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       });
     }
   };
+  
+  const awbStatusHistory = React.useMemo(() => {
+    if (selectedDocument?.recipient.awb?.awbStatusHistory) {
+        try {
+            return typeof selectedDocument.recipient.awb.awbStatusHistory === 'string'
+                ? JSON.parse(selectedDocument.recipient.awb.awbStatusHistory)
+                : selectedDocument.recipient.awb.awbStatusHistory;
+        } catch (error) {
+            console.error("Failed to parse awbStatusHistory:", error);
+            return [];
+        }
+    }
+    return [];
+}, [selectedDocument]);
+
 
   return (
     <div className="w-full">
@@ -331,6 +347,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={selectedDocument.recipient.awbStatus !== 'Generated'}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
+                        <TabsTrigger value="AWB History" disabled={!selectedDocument.recipient.awb?.awbStatusHistory}>AWB History</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
                          {selectedDocument.recipient.pvUrl ? (
@@ -362,7 +379,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                              <div className="mt-4 flex flex-col items-center justify-center gap-4 text-center p-8 border rounded-lg">
                                 <h3 className="font-semibold">Email Sent to Logistics</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    The email for AWB <span className="font-mono">{selectedDocument.recipient.awb?.awbNumber}</span> has been sent.
+                                    The email for AWB <span className="font-mono">{selectedDocument.recipient.awb?.awb_data?.awbNumber}</span> has been sent.
                                 </p>
                                 <Button asChild>
                                     <a href={`https://mail.google.com/mail/u/0/#inbox/${selectedDocument.recipient.emailId}`} target="_blank" rel="noopener noreferrer">
@@ -374,6 +391,21 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                          ) : (
                             <DocumentPlaceholder title={`Email has not been sent for this AWB.`} />
                          )}
+                    </TabsContent>
+                    <TabsContent value="AWB History">
+                        {awbStatusHistory.length > 0 ? (
+                            <div className="flex flex-col gap-4 py-4">
+                                {awbStatusHistory.map((historyItem: ExpeditionStatusInfo, index: number) => (
+                                    <div key={index} className="p-4 border rounded-lg">
+                                        <p><strong>Status:</strong> {historyItem.status}</p>
+                                        <p><strong>State:</strong> {historyItem.statusState}</p>
+                                        <p><strong>Date:</strong> {new Date(historyItem.statusDate).toLocaleString()}</p>
+                                        <p><strong>County:</strong> {historyItem.county}</p>
+                                        {historyItem.transitLocation && <p><strong>Transit Location:</strong> {historyItem.transitLocation}</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : <DocumentPlaceholder title="AWB History not available" />}
                     </TabsContent>
                 </Tabs>
             </>
