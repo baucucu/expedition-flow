@@ -162,7 +162,7 @@ export default function Home() {
         return status && status.status === "Livrat cu succes";
       } catch (e) {
         // This can happen if the JSON is malformed, so we log it but don't crash.
-        console.error("Failed to parse expeditionStatus for AWB:", awb.id, e);
+        // console.error("Failed to parse expeditionStatus for AWB:", awb.id, e);
         return false;
       }
     }).length;
@@ -371,5 +371,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     

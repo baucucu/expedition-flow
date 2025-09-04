@@ -200,7 +200,7 @@ export const columns = (
                             ? JSON.parse(awb.expeditionStatus)
                             : awb.expeditionStatus;
                     } catch (error) {
-                        console.error("Failed to parse expeditionStatus:", error);
+                        // console.error("Failed to parse expeditionStatus:", error);
                     }
                 }
                 
@@ -213,7 +213,7 @@ export const columns = (
                         </Badge>
                         {awbNumber && <Badge variant="secondary">{awbNumber}</Badge>}
                          {isDelivered && (
-                            <Badge variant="default" className="font-normal">
+                            <Badge variant="default" className="font-normal bg-green-600 hover:bg-green-700">
                                 {expeditionStatusObj.status}
                             </Badge>
                         )}
@@ -333,6 +333,8 @@ export const columns = (
         },
     ];
 }
+
+    
 
     
 
