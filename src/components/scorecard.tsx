@@ -51,17 +51,17 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     <Card
       onClick={onClick}
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md flex flex-col justify-between",
+        "cursor-pointer transition-all hover:shadow-md flex flex-col",
         isActive && `ring-2 ${ringClass} shadow-lg`
       )}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 h-12">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />
       </CardHeader>
-      <CardContent className="h-auto flex items-center">
+      <CardContent className="flex-grow flex flex-col justify-center">
         {showValue ? (
-            <div className="text-3xl font-bold h-16 flex items-center">{value}</div>
+            <div className="text-3xl font-bold text-center">{value}</div>
         ) : hasKpis ? (
             <div className="flex w-full items-center justify-around flex-wrap gap-2">
                 {kpis!.map((kpi, index) => {
@@ -88,9 +88,8 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         ) : null }
       </CardContent>
        {showValue && hasKpis && (
-         <CardFooter className="h-auto pb-4 flex flex-wrap justify-end items-center gap-x-4">
+         <CardFooter className="flex-wrap justify-center gap-x-4 gap-y-2 pt-4">
             {kpis!.map(kpi => {
-                const isBadge = kpi.color?.startsWith('bg-');
                 const isKpiActive = isActive && activeKpiLabel === kpi.label;
                 if(kpi.value === 0) return null;
                 return (
@@ -103,12 +102,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                         )}
                         onClick={(e) => handleKpiClick(e, kpi.label)}
                     >
-                        <span className={cn(
-                            "text-sm font-bold",
-                            isBadge && `${kpi.color} text-destructive-foreground px-1.5 py-0.5 rounded-sm`
-                        )}>
-                            {kpi.value}
-                        </span>
+                        <span className="text-sm font-bold">{kpi.value}</span>
                         <span className="text-xs text-muted-foreground">{kpi.label}</span>
                     </div>
                 )

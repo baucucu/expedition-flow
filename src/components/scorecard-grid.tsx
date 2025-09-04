@@ -128,51 +128,54 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       />
 
       {/* --- Bottom Row: Tracking & Completion --- */}
-       <Scorecard
-        title="In Transit"
-        value={counts.inTransit.value}
-        kpis={counts.inTransit.kpis}
-        icon={Truck}
-        onClick={() => setActiveFilter('In Transit')}
-        isActive={isFilterActive('In Transit', ...Object.values(inTransitFilterMapping))}
-        onKpiClick={(label) => {
-            const filter = inTransitFilterMapping[label];
-            if (filter) {
-                setActiveFilter(filter);
-            }
-        }}
-        activeKpiLabel={getActiveInTransitKpiLabel()}
-      />
-      <Scorecard
-        title="Delivered"
-        value={counts.delivered.value}
-        icon={PackageCheck}
-        onClick={() => setActiveFilter('Delivered')}
-        isActive={activeFilter === 'Delivered'}
-      />
-       <Scorecard
-        title="Completed"
-        value={counts.completed.value}
-        icon={CheckCircle2}
-        onClick={() => setActiveFilter('Completed')}
-        isActive={activeFilter === 'Completed'}
-      />
-      <Scorecard
-        title="Issues"
-        value={counts.issues.value}
-        kpis={counts.issues.kpis}
-        icon={AlertTriangle}
-        onClick={() => setActiveFilter('Issues')}
-        isActive={isFilterActive('Issues', 'Avizat', 'Ridicare ulterioara')}
-        variant="destructive"
-        onKpiClick={(label) => {
-            if (label === 'Avizat') setActiveFilter('Avizat');
-            if (label === 'Ridicare ulterioara') setActiveFilter('Ridicare ulterioara');
-        }}
-        activeKpiLabel={getActiveKpiLabel({ 'Avizat': 'Avizat', 'Ridicare ulterioara': 'Ridicare ulterioara'})}
-      />
+      <div className="lg:col-span-2">
+        <Scorecard
+          title="In Transit"
+          value={counts.inTransit.value}
+          kpis={counts.inTransit.kpis}
+          icon={Truck}
+          onClick={() => setActiveFilter('In Transit')}
+          isActive={isFilterActive('In Transit', ...Object.values(inTransitFilterMapping))}
+          onKpiClick={(label) => {
+              const filter = inTransitFilterMapping[label];
+              if (filter) {
+                  setActiveFilter(filter);
+              }
+          }}
+          activeKpiLabel={getActiveInTransitKpiLabel()}
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
+        <Scorecard
+            title="Delivered"
+            value={counts.delivered.value}
+            icon={PackageCheck}
+            onClick={() => setActiveFilter('Delivered')}
+            isActive={activeFilter === 'Delivered'}
+        />
+        <Scorecard
+          title="Issues"
+          value={counts.issues.value}
+          kpis={counts.issues.kpis}
+          icon={AlertTriangle}
+          onClick={() => setActiveFilter('Issues')}
+          isActive={isFilterActive('Issues', 'Avizat', 'Ridicare ulterioara')}
+          variant="destructive"
+          onKpiClick={(label) => {
+              if (label === 'Avizat') setActiveFilter('Avizat');
+              if (label === 'Ridicare ulterioara') setActiveFilter('Ridicare ulterioara');
+          }}
+          activeKpiLabel={getActiveKpiLabel({ 'Avizat': 'Avizat', 'Ridicare ulterioara': 'Ridicare ulterioara'})}
+        />
+        <Scorecard
+          title="Completed"
+          value={counts.completed.value}
+          icon={CheckCircle2}
+          onClick={() => setActiveFilter('Completed')}
+          isActive={activeFilter === 'Completed'}
+          className="sm:col-span-2"
+        />
+      </div>
     </div>
   );
 };
-
-    
