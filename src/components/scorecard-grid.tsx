@@ -55,7 +55,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     "Alocata pentru ridicare": 'AlocataRidicare',
     "Intrare sorter": 'IntrareSorter',
     "Iesire din hub": 'IesireHub',
-    "Intrare in hub": 'IntrareHub',
+    "Intrare in HUB": 'IntrareInHUB',
     "Intrare in agentie": 'IntrareAgentie',
     "Iesire din agentie": 'IesireAgentie',
     "In livrare la curier": 'InLivrare',
