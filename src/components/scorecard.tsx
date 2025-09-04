@@ -72,7 +72,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 {kpis!.map((kpi, index) => {
                     const isKpiActive = isActive && activeKpiLabel === kpi.label;
                     const KpiIcon = iconMapping ? iconMapping[kpi.label] : null;
-                    if(kpi.value === 0 && !iconMapping && !showValue && kpis.length > 1) return null;
+                    
                     return (
                         <React.Fragment key={kpi.label}>
                             <div 

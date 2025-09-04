@@ -224,7 +224,7 @@ export default function Home() {
                 { value: readyForLogisticsCount, label: 'Ready' },
                 { value: emailQueuedCount, label: 'Queued' },
                 { value: emailSentCount, label: 'Sent' },
-                { value: 0, label: 'To be updated' },
+                { value: awbsToBeUpdatedCount, label: 'To be updated' },
             ]
         },
         inTransit: {
