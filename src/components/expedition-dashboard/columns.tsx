@@ -193,7 +193,7 @@ export const columns = (
                 const status: AWBStatus = awb?.status ?? 'New';
                 const awbNumber = awb?.awb_data?.awbNumber;
                 const expeditionStatusObj = awb?.expeditionStatus;
-                const isDelivered = expeditionStatusObj?.status === "Livrat cu succes";
+                const isDelivered = expeditionStatusObj?.status === "Livrata cu succes";
 
                 return (
                     <div className="flex flex-wrap gap-1 items-center">
@@ -322,9 +322,5 @@ export const columns = (
         },
     ];
 }
-
-    
-
-    
 
     
