@@ -6,7 +6,7 @@ import { RecipientRow, recipientStatuses, recipientStatusVariant, awbStatuses, a
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, FileText, Mail, History } from "lucide-react";
+import { ChevronDown, FileText, Mail, History, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { DocumentType, RecipientStatus, AWBStatus, ExpeditionStatusInfo } from "@/types";
@@ -127,7 +127,7 @@ export const columns = (
             accessorKey: "awb.address",
             header: "Recipient Address",
             cell: ({ row }) => (
-                 <div className="w-64 whitespace-normal">
+                 <div className="w-48">
                     <EditableCell
                         value={row.original.awb?.address ?? 'N/A'}
                         onSave={(value) => onSave(row.index, 'awb.address', value, row.original.expeditionId)}
@@ -249,6 +249,7 @@ export const columns = (
                 const recipient = row.original;
                 const emailSent = recipient.emailId;
                 const hasAwbHistory = recipient.awb?.awbStatusHistory && recipient.awb.awbStatusHistory.length > 0;
+                const hasNotes = recipient.awb?.notes && recipient.awb.notes.length > 0;
 
                 return (
                     <div className="flex flex-wrap gap-2">
@@ -316,6 +317,16 @@ export const columns = (
                             >
                                 <History className="w-3 h-3" />
                                 {docShortNames['AWB History']}
+                            </Badge>
+                        )}
+                        {hasNotes && (
+                            <Badge
+                                variant={"secondary"}
+                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                                onClick={() => handleOpenDocument(recipient, 'Notes')}
+                            >
+                                <MessageSquare className="w-3 h-3" />
+                                {docShortNames['Notes']}
                             </Badge>
                         )}
                     </div>
