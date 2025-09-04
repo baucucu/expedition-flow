@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React from 'react';
@@ -132,8 +133,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
           value={counts.inTransit.value}
           kpis={counts.inTransit.kpis}
           icon={Truck}
-          onClick={() => setActiveFilter('Total')}
-          isActive={isFilterActive('Total', ...Object.values(inTransitFilterMapping))}
+          onClick={() => setActiveFilter('InTransit')}
+          isActive={isFilterActive('InTransit', ...Object.values(inTransitFilterMapping))}
           onKpiClick={(label) => {
               const filter = inTransitFilterMapping[label];
               if (filter) {

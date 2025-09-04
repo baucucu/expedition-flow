@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -13,7 +14,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'InTransit' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -248,6 +249,23 @@ export default function Home() {
         const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === status).map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     };
+
+    const inTransitStatuses = [
+        "AWB Emis",
+        "Alocata pentru ridicare",
+        "Intrare sorter",
+        "Iesire din hub",
+        "Intrare in agentie",
+        "In livrare la curier",
+        "Redirectionare Home Delivery",
+        "Redirect Home to OOH",
+        "Incarcat in OOH",
+    ];
+
+    if (activeFilter === 'InTransit') {
+        const targetAwbIds = new Set(awbs.filter(awb => inTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+    }
 
     if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");
     if (activeFilter === 'AlocataRidicare') return filterByAwbStatus("Alocata pentru ridicare");
