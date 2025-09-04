@@ -15,6 +15,7 @@ import React from "react";
 import { updateShipmentDetails } from "@/app/actions/expedition-actions";
 import { useToast } from "@/hooks/use-toast";
 import { ContactCell } from "./contact-cell";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 
 export const columns = (
@@ -103,11 +104,6 @@ export const columns = (
             cell: ({ row }) => <div>{row.getValue("numericId")}</div>,
         },
         {
-            accessorKey: "id",
-            header: "Document ID",
-            cell: ({ row }) => <div className="font-mono text-xs w-28 truncate">{row.getValue("id")}</div>,
-        },
-        {
             accessorKey: "expeditionId",
             header: "Shipment ID",
             cell: ({ row }) => <div>{row.getValue("expeditionId")}</div>,
@@ -126,12 +122,10 @@ export const columns = (
             id: 'contact',
             header: 'Contact',
             cell: ({ row }) => (
-                <div className="w-64">
-                    <ContactCell 
-                        recipient={row.original}
-                        onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}
-                    />
-                </div>
+                <ContactCell 
+                    recipient={row.original}
+                    onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}
+                />
             )
         },
         {
@@ -286,5 +280,28 @@ export const columns = (
                 );
             },
         },
+        {
+            id: 'lastNote',
+            header: 'Last Note',
+            cell: ({ row }) => {
+                const notes = row.original.awb?.notes;
+                if (!notes || notes.length === 0) {
+                    return null;
+                }
+                const lastNote = [...notes].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                return (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className="w-48 truncate">{lastNote.noteText}</div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="max-w-xs whitespace-pre-wrap">{lastNote.noteText}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                )
+            }
+        }
     ];
 }
