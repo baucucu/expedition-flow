@@ -47,6 +47,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
+import { randomUUID } from "crypto";
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
@@ -306,7 +307,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     if (!selectedDocument || !user || !newNote.trim()) return;
 
     setIsSavingNote(true);
-    const result = await addNoteToAwbAction({
+    
+    const noteData = {
         awbId: selectedDocument.recipient.awbId,
         noteText: newNote,
         userId: user.uid,
@@ -314,14 +316,40 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         recipientId: selectedDocument.recipient.id,
         recipientName: selectedDocument.recipient.name,
         createdAt: new Date().toISOString(),
-    });
+    };
+
+    const result = await addNoteToAwbAction(noteData);
     setIsSavingNote(false);
 
     if (result.success) {
         toast({ title: 'Note Saved', description: result.message });
+        
+        // Optimistically update the UI
+        setSelectedDocument(prevDoc => {
+            if (!prevDoc) return null;
+            
+            const newNoteForState: Note = {
+                id: crypto.randomUUID(), // temp client-side ID
+                ...noteData,
+            };
+            
+            const updatedAwb = {
+                ...prevDoc.recipient.awb,
+                notes: [...(prevDoc.recipient.awb?.notes || []), newNoteForState]
+            };
+
+            const updatedRecipient = {
+                ...prevDoc.recipient,
+                awb: updatedAwb,
+            };
+            
+            return {
+                ...prevDoc,
+                recipient: updatedRecipient,
+            };
+        });
+
         setNewNote("");
-        // The optimistic update is tricky with server timestamps, so we rely on the snapshot listener
-        // to refresh the data in the sheet.
     } else {
         toast({ variant: 'destructive', title: 'Failed to Save Note', description: result.message });
     }
