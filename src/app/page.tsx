@@ -14,7 +14,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'InTransit' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'InTransit' | 'Depozitare' | 'IesireAgentie' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -168,10 +168,12 @@ export default function Home() {
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in agentie",
+        "Iesire din agentie",
         "Incarcat in OOH",
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
+        "Depozitare",
     ];
     
     const awbByStatus = awbs.reduce((acc, awb) => {
@@ -258,10 +260,12 @@ export default function Home() {
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in agentie",
+        "Iesire din agentie",
         "Incarcat in OOH",
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
+        "Depozitare",
     ];
 
     if (activeFilter === 'InTransit') {
@@ -275,10 +279,12 @@ export default function Home() {
     if (activeFilter === 'IntrareSorter') return filterByAwbStatus("Intrare sorter");
     if (activeFilter === 'IesireHub') return filterByAwbStatus("Iesire din hub");
     if (activeFilter === 'IntrareAgentie') return filterByAwbStatus("Intrare in agentie");
+    if (activeFilter === 'IesireAgentie') return filterByAwbStatus("Iesire din agentie");
     if (activeFilter === 'IncarcatInOOH') return filterByAwbStatus("Incarcat in OOH");
     if (activeFilter === 'InLivrare') return filterByAwbStatus("In livrare la curier");
     if (activeFilter === 'RedirectionareHome') return filterByAwbStatus("Redirectionare Home Delivery");
     if (activeFilter === 'RedirectOOH') return filterByAwbStatus("Redirect Home to OOH");
+    if (activeFilter === 'Depozitare') return filterByAwbStatus("Depozitare");
 
     if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');

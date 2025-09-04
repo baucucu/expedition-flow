@@ -56,10 +56,12 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     "Intrare sorter": 'IntrareSorter',
     "Iesire din hub": 'IesireHub',
     "Intrare in agentie": 'IntrareAgentie',
+    "Iesire din agentie": 'IesireAgentie',
     "Incarcat in OOH": 'IncarcatInOOH',
     "In livrare la curier": 'InLivrare',
     "Redirectionare Home Delivery": 'RedirectionareHome',
     "Redirect Home to OOH": 'RedirectOOH',
+    "Depozitare": 'Depozitare',
   };
 
   const getActiveInTransitKpiLabel = () => {
