@@ -165,17 +165,17 @@ export default function Home() {
     const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
     
     const inTransitStatuses = [
-      "AWB Emis",
-      "Ridicata de la client",
-      "Intrare sorter",
-      "Iesire din hub",
-      "Intrare in agentie",
-      "Iesire din agentie",
-      "In livrare la curier",
-      "Redirectionare Home Delivery",
-      "Redirect Home to OOH",
-      "Incarcat in OOH",
-      "Depozitare",
+        "AWB Emis",
+        "Ridicata de la client",
+        "Intrare sorter",
+        "Iesire din hub",
+        "Intrare in agentie",
+        "Iesire din agentie",
+        "In livrare la curier",
+        "Redirectionare Home Delivery",
+        "Redirect Home to OOH",
+        "Incarcat in OOH",
+        "Depozitare",
     ];
     
     const awbByStatus = awbs.reduce((acc, awb) => {
