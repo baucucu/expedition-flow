@@ -87,16 +87,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
 
     setData(filteredData);
-    
-    // If a document is selected, find its updated version in the new data
-    if (selectedDocument) {
-      const updatedRecipient = initialData.find(d => d.id === selectedDocument.recipient.id);
-      if (updatedRecipient) {
-        setSelectedDocument(prev => prev ? { ...prev, recipient: updatedRecipient } : null);
-      }
-    }
 
-  }, [initialData, pvFilter, emailFilter, selectedDocument]);
+  }, [initialData, pvFilter, emailFilter]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {
     setSelectedDocument({ recipient, docType });
@@ -336,29 +328,37 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         toast({ variant: 'destructive', title: 'Failed to Save Note', description: result.message });
     }
   }
+  
+  // FIX: This is the core fix. We find the most up-to-date recipient data from the `data` state
+  // which is updated by the real-time listener in page.tsx. This prevents the infinite loop.
+  const displayedRecipient = React.useMemo(() => {
+    if (!selectedDocument) return null;
+    return data.find(d => d.id === selectedDocument.recipient.id) || selectedDocument.recipient;
+  }, [selectedDocument, data]);
+
 
   const awbStatusHistory = React.useMemo(() => {
-    if (selectedDocument?.recipient.awb?.awbStatusHistory) {
+    if (displayedRecipient?.awb?.awbStatusHistory) {
         try {
-            return typeof selectedDocument.recipient.awb.awbStatusHistory === 'string'
-                ? JSON.parse(selectedDocument.recipient.awb.awbStatusHistory)
-                : selectedDocument.recipient.awb.awbStatusHistory;
+            return typeof displayedRecipient.awb.awbStatusHistory === 'string'
+                ? JSON.parse(displayedRecipient.awb.awbStatusHistory)
+                : displayedRecipient.awb.awbStatusHistory;
         } catch (error) {
             console.error("Failed to parse awbStatusHistory:", error);
             return [];
         }
     }
     return [];
-}, [selectedDocument]);
+  }, [displayedRecipient]);
 
-const awbNotes = React.useMemo(() => {
-    const notes = selectedDocument?.recipient.awb?.notes || [];
-    return [...notes].sort((a, b) => {
-        const dateA = new Date(a.createdAt);
-        const dateB = new Date(b.createdAt);
-        return dateA.getTime() - dateB.getTime();
-    });
-}, [selectedDocument]);
+  const awbNotes = React.useMemo(() => {
+      const notes = displayedRecipient?.awb?.notes || [];
+      return [...notes].sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateA.getTime() - dateB.getTime();
+      });
+  }, [displayedRecipient]);
 
 
   return (
@@ -383,59 +383,59 @@ const awbNotes = React.useMemo(() => {
 
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
         <SheetContent className="sm:max-w-[80vw]">
-          {selectedDocument && (
+          {displayedRecipient && (
             <>
                 <SheetHeader>
-                    <SheetTitle>Documents for Recipient: {selectedDocument.recipient.name} ({selectedDocument.recipient.numericId})</SheetTitle>
+                    <SheetTitle>Documents for Recipient: {displayedRecipient.name} ({displayedRecipient.numericId})</SheetTitle>
                     <SheetDescription>
-                        Part of shipment {selectedDocument.recipient.expeditionId} with AWB: {selectedDocument.recipient.awb?.mainRecipientName || 'N/A'}.
+                        Part of shipment {displayedRecipient.expeditionId} with AWB: {displayedRecipient.awb?.mainRecipientName || 'N/A'}.
                     </SheetDescription>
                 </SheetHeader>
-                <Tabs defaultValue={selectedDocument.docType} className="py-4">
+                <Tabs defaultValue={selectedDocument?.docType} className="py-4">
                     <TabsList>
-                        <TabsTrigger value="PV" disabled={!selectedDocument.recipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
-                        <TabsTrigger value="PV Semnat" disabled={!selectedDocument.recipient.pvSemnatUrl}>PV Semnat</TabsTrigger>
-                        <TabsTrigger value="Instructions" disabled={selectedDocument.recipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
-                        <TabsTrigger value="Inventory" disabled={selectedDocument.recipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
-                        <TabsTrigger value="AWB" disabled={!selectedDocument.recipient.awbUrl}>AWB</TabsTrigger>
-                        <TabsTrigger value="Email" disabled={!selectedDocument.recipient.emailId}>Email</TabsTrigger>
-                        <TabsTrigger value="AWB History" disabled={!selectedDocument.recipient.awb?.awbStatusHistory}>AWB History</TabsTrigger>
+                        <TabsTrigger value="PV" disabled={!displayedRecipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
+                        <TabsTrigger value="PV Semnat" disabled={!displayedRecipient.pvSemnatUrl}>PV Semnat</TabsTrigger>
+                        <TabsTrigger value="Instructions" disabled={displayedRecipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
+                        <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
+                        <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
+                        <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
+                        <TabsTrigger value="AWB History" disabled={!displayedRecipient.awb?.awbStatusHistory}>AWB History</TabsTrigger>
                         <TabsTrigger value="Notes">Notes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
-                         {selectedDocument.recipient.pvUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.pvUrl} docType="pdf" />
+                         {displayedRecipient.pvUrl ? (
+                            <DocumentViewer url={displayedRecipient.pvUrl} docType="pdf" />
                          ) : <DocumentPlaceholder title="Proces Verbal not available" />}
                     </TabsContent>
                     <TabsContent value="PV Semnat">
-                         {selectedDocument.recipient.pvSemnatUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.pvSemnatUrl} docType="image" />
+                         {displayedRecipient.pvSemnatUrl ? (
+                            <DocumentViewer url={displayedRecipient.pvSemnatUrl} docType="image" />
                          ) : <DocumentPlaceholder title="PV Semnat (Signed) not available" />}
                     </TabsContent>
                     <TabsContent value="Instructions">
-                         {selectedDocument.recipient.instructionsUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.instructionsUrl} docType="gdrive-pdf" />
+                         {displayedRecipient.instructionsUrl ? (
+                            <DocumentViewer url={displayedRecipient.instructionsUrl} docType="gdrive-pdf" />
                          ) : <DocumentPlaceholder title="Instructions not available" />}
                     </TabsContent>
                     <TabsContent value="Inventory">
-                        {selectedDocument.recipient.inventoryUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.inventoryUrl} docType="gdrive-excel" />
+                        {displayedRecipient.inventoryUrl ? (
+                            <DocumentViewer url={displayedRecipient.inventoryUrl} docType="gdrive-excel" />
                          ) : <DocumentPlaceholder title="Parcel inventory not available" />}
                     </TabsContent>
                     <TabsContent value="AWB">
-                        {selectedDocument.recipient.awb?.awbUrl ? (
-                            <DocumentViewer url={selectedDocument.recipient.awb?.awbUrl} docType="pdf" />
+                        {displayedRecipient.awb?.awbUrl ? (
+                            <DocumentViewer url={displayedRecipient.awb?.awbUrl} docType="pdf" />
                         ) : <DocumentPlaceholder title={`AWB not available.`} /> }
                     </TabsContent>
                     <TabsContent value="Email">
-                        {selectedDocument.recipient.emailId ? (
+                        {displayedRecipient.emailId ? (
                              <div className="mt-4 flex flex-col items-center justify-center gap-4 text-center p-8 border rounded-lg">
                                 <h3 className="font-semibold">Email Sent to Logistics</h3>
                                 <p className="text-sm text-muted-foreground">
-                                    The email for AWB <span className="font-mono">{selectedDocument.recipient.awb?.awb_data?.awbNumber}</span> has been sent.
+                                    The email for AWB <span className="font-mono">{displayedRecipient.awb?.awb_data?.awbNumber}</span> has been sent.
                                 </p>
                                 <Button asChild>
-                                    <a href={`https://mail.google.com/mail/u/0/#inbox/${selectedDocument.recipient.emailId}`} target="_blank" rel="noopener noreferrer">
+                                    <a href={`https://mail.google.com/mail/u/0/#inbox/${displayedRecipient.emailId}`} target="_blank" rel="noopener noreferrer">
                                         <ExternalLink className="mr-2 h-4 w-4" />
                                         View in Gmail
                                     </a>
@@ -483,7 +483,7 @@ const awbNotes = React.useMemo(() => {
                             <div className="mt-auto pt-4 border-t">
                                 <div className="space-y-2">
                                     <Textarea 
-                                        placeholder={`Add a note for ${selectedDocument.recipient.name}...`}
+                                        placeholder={`Add a note for ${displayedRecipient.name}...`}
                                         value={newNote}
                                         onChange={(e) => setNewNote(e.target.value)}
                                         disabled={isSavingNote}
