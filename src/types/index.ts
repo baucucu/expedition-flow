@@ -94,7 +94,7 @@ export interface Note {
     userName: string;
     recipientId: string;
     recipientName: string;
-    createdAt: any; // Firestore Timestamp
+    createdAt: any; // Firestore Timestamp, can be null during optimistic update
 }
 
 export interface AWB {

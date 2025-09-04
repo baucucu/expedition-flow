@@ -3,11 +3,9 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { AWB } from "@/types";
-import { FieldValue } from 'firebase-admin/firestore';
-import { adminDb } from "@/lib/firebase-admin";
 import { randomUUID } from "crypto";
 
 const queueShipmentAwbGenerationActionInputSchema = z.object({
@@ -125,16 +123,16 @@ export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActio
     const { awbId, ...noteData } = validation.data;
 
     try {
-        const awbRef = adminDb.collection("awbs").doc(awbId);
+        const awbRef = doc(db, "awbs", awbId);
         
         const newNote = {
             ...noteData,
             id: randomUUID(),
-            createdAt: FieldValue.serverTimestamp(),
+            createdAt: serverTimestamp(),
         };
 
-        await awbRef.update({
-            notes: FieldValue.arrayUnion(newNote)
+        await updateDoc(awbRef, {
+            notes: arrayUnion(newNote)
         });
 
         // We can't return the note with the timestamp from the server action directly,

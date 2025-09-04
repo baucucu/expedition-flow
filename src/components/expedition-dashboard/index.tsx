@@ -450,16 +450,16 @@ const awbNotes = React.useMemo(() => {
                             </div>
                         ) : <DocumentPlaceholder title="AWB History not available" />}
                     </TabsContent>
-                    <TabsContent value="Notes">
-                         <div className="flex flex-col h-[85vh] mt-4">
+                     <TabsContent value="Notes" className="h-[calc(100vh-10rem)]">
+                         <div className="flex flex-col h-full mt-4">
                             <ScrollArea className="flex-grow pr-4">
                                 <div className="space-y-4">
                                     {awbNotes.length > 0 ? (
                                         awbNotes.map((note: Note) => (
                                             <div key={note.id} className="p-3 border rounded-lg bg-muted/50">
-                                                <p className="text-sm">{note.text}</p>
+                                                <p className="text-sm whitespace-pre-wrap">{note.text}</p>
                                                 <p className="text-xs text-muted-foreground mt-2">
-                                                    {note.userName} for {note.recipientName} on {note.createdAt ? format(note.createdAt.toDate(), 'PPP p') : '...'}
+                                                    By: {note.userName} for {note.recipientName} on {note.createdAt ? format(note.createdAt.toDate(), 'PPP p') : '...'}
                                                 </p>
                                             </div>
                                         ))
@@ -470,7 +470,7 @@ const awbNotes = React.useMemo(() => {
                                     )}
                                 </div>
                             </ScrollArea>
-                            <div className="mt-4 pt-4 border-t">
+                            <div className="mt-auto pt-4 border-t">
                                 <div className="space-y-2">
                                     <Textarea 
                                         placeholder={`Add a note for ${selectedDocument.recipient.name}...`}
