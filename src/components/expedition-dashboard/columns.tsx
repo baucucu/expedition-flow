@@ -7,7 +7,7 @@ import { RecipientRow, awbStatuses, awbStatusVariant, docShortNames, DocType } f
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, FileText, Mail, History, MessageSquare } from "lucide-react";
+import { ChevronDown, FileText, Mail, History, MessageSquare, CheckCircle2, Plane, AlertCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
@@ -151,20 +151,30 @@ export const columns = (
                     if (["Avizat", "Ridicare ulterioara"].includes(status)) return "red";
                     return "yellow";
                 }
+                
+                const getStatusIcon = (status: string | undefined) => {
+                    if (!status) return null;
+                    if (status === "Livrata cu succes") return <CheckCircle2 className="w-3 h-3" />;
+                    if (status === "AWB Emis") return <Plane className="w-3 h-3" />;
+                    if (status === "Avizat") return <AlertCircle className="w-3 h-3" />;
+                    if (status === "Ridicare ulterioara") return <Clock className="w-3 h-3" />;
+                    return null;
+                }
 
                 return (
                     <div className="flex flex-wrap gap-1 items-center">
-                        <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
+                        {!awbNumber && <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
                             {status}
-                        </Badge>
+                        </Badge>}
                         
                         {awbNumber && <Badge variant="blue">{awbNumber}</Badge>}
                          
                         {expeditionStatus && (
                              <Badge 
                                 variant={getStatusVariant(expeditionStatus)}
-                                className="font-normal"
+                                className="font-normal flex items-center gap-1"
                             >
+                                {getStatusIcon(expeditionStatus)}
                                 {expeditionStatus}
                             </Badge>
                         )}
