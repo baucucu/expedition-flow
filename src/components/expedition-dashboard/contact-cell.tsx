@@ -12,29 +12,21 @@ interface ContactCellProps {
 
 export function ContactCell({ recipient, onSave }: ContactCellProps) {
     return (
-        <div className="flex flex-col gap-2">
-            <div className="whitespace-normal">
-                <EditableCell
-                    value={recipient.awb?.address ?? 'N/A'}
-                    onSave={(value) => onSave('address', value)}
-                />
-            </div>
-            <div className="flex gap-2">
-                <div className="flex-1">
-                     <EditableCell
-                        value={recipient.awb?.city ?? 'N/A'}
-                        onSave={(value) => onSave('city', value)}
-                    />
-                </div>
-                <div className="flex-1">
-                    <EditableCell
-                        value={recipient.awb?.county ?? 'N/A'}
-                        onSave={(value) => onSave('county', value)}
-                    />
-                </div>
-            </div>
+        <div className="flex flex-col gap-1">
+            <EditableCell
+                value={recipient.awb?.address ?? 'N/A'}
+                onSave={(value) => onSave('address', value)}
+            />
+            <EditableCell
+                value={recipient.awb?.city ?? 'N/A'}
+                onSave={(value) => onSave('city', value)}
+            />
+            <EditableCell
+                value={recipient.awb?.county ?? 'N/A'}
+                onSave={(value) => onSave('county', value)}
+            />
             {recipient.telephone && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
                     <Phone className="w-3 h-3" />
                     <span>{recipient.telephone}</span>
                 </div>
