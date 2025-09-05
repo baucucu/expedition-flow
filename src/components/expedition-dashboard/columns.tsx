@@ -208,10 +208,9 @@ export const columns = (
                         {recipient.pvUrl && (
                             <Badge
                                 variant={"secondary"}
-                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
                                 onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'PV'); }}
                             >
-                                <FileText className="w-3 h-3" />
                                 {docShortNames['PV']}
                             </Badge>
                         )}
@@ -254,30 +253,27 @@ export const columns = (
                         {emailSent && (
                             <Badge
                                 variant={"secondary"}
-                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
                                 onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Email'); }}
                             >
-                                <Mail className="w-3 h-3" />
                                 {docShortNames['Email']}
                             </Badge>
                         )}
                         {hasAwbHistory && (
                             <Badge
                                 variant={"secondary"}
-                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
                                 onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'AWB History'); }}
                             >
-                                <History className="w-3 h-3" />
                                 {docShortNames['AWB History']}
                             </Badge>
                         )}
                         {hasNotes && (
                             <Badge
                                 variant={"secondary"}
-                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground flex items-center gap-1"
+                                className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
                                 onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'Notes'); }}
                             >
-                                <MessageSquare className="w-3 h-3" />
                                 {docShortNames['Notes']}
                             </Badge>
                         )}
