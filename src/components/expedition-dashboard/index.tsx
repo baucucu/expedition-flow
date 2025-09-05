@@ -29,6 +29,7 @@ import { DocumentViewer } from "../document-viewer";
 import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 import { generateProcesVerbalAction } from "@/app/actions/document-actions";
 import { queueShipmentAwbGenerationAction, updateAwbStatusAction, addNoteToAwbAction } from "@/app/actions/awb-actions";
+import { sendReminder } from "@/app/actions/reminder-actions";
 import { 
     RecipientRow, 
     ExpeditionDashboardProps, 
@@ -42,7 +43,7 @@ import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
 import { Button } from "../ui/button";
 import { ExternalLink, Loader2, Send } from "lucide-react";
-import { Note } from "@/types";
+import { Note, ExpeditionStatusInfo } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
@@ -64,6 +65,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [isUpdatingAwbStatus, setIsUpdatingAwbStatus] = React.useState(false);
   const [isSavingNote, setIsSavingNote] = React.useState(false);
+  const [isSendingReminder, setIsSendingReminder] = React.useState(false);
   const [newNote, setNewNote] = React.useState("");
   const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
   const [emailFilter, setEmailFilter] = React.useState<'all' | 'sent' | 'not_sent'>('all');
@@ -310,18 +312,62 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   }
   
+  const handleSendReminder = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
+
+    const recipientsWithEmail = selectedRecipients.filter(
+      (r) => r.email && r.id
+    );
+
+    if (recipientsWithEmail.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Recipients with Email",
+        description: "None of the selected recipients have an email address.",
+      });
+      return;
+    }
+
+    const reminderPayload = recipientsWithEmail.map((r) => ({
+      documentId: r.id,
+      recipientEmail: r.email,
+    }));
+
+    setIsSendingReminder(true);
+    const result = await sendReminder(reminderPayload);
+    setIsSendingReminder(false);
+
+    if (result.success) {
+      toast({
+        title: "Reminders Sent",
+        description: result.message,
+      });
+      table.resetRowSelection();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Failed to Send Reminders",
+        description: result.message,
+      });
+    }
+  };
+  
   const displayedRecipient = React.useMemo(() => {
     if (!selectedDocument) return null;
     return data.find(d => d.id === selectedDocument.recipient.id) || selectedDocument.recipient;
   }, [selectedDocument, data]);
 
 
-  const awbStatusHistory = React.useMemo(() => {
+  const awbStatusHistory: ExpeditionStatusInfo[] = React.useMemo(() => {
     if (displayedRecipient?.awb?.awbStatusHistory) {
         try {
-            return typeof displayedRecipient.awb.awbStatusHistory === 'string'
+            const history = typeof displayedRecipient.awb.awbStatusHistory === 'string'
                 ? JSON.parse(displayedRecipient.awb.awbStatusHistory)
                 : displayedRecipient.awb.awbStatusHistory;
+            if (Array.isArray(history)) {
+                return history;
+            }
         } catch (error) {
             console.error("Failed to parse awbStatusHistory:", error);
             return [];
@@ -352,6 +398,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             handleQueueAwbs={handleQueueAwbs}
             isUpdatingAwbStatus={isUpdatingAwbStatus}
             handleUpdateAwbStatus={handleUpdateAwbStatus}
+            isSendingReminder={isSendingReminder}
+            handleSendReminder={handleSendReminder}
         />
       <DataTable table={table} />
       <Pagination table={table} />

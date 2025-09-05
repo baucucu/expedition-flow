@@ -30,6 +30,8 @@ interface ToolbarProps {
   handleQueueAwbs: () => void;
   isUpdatingAwbStatus: boolean;
   handleUpdateAwbStatus: () => void;
+  isSendingReminder: boolean;
+  handleSendReminder: () => void;
 }
 
 export function Toolbar({
@@ -46,6 +48,8 @@ export function Toolbar({
   handleQueueAwbs,
   isUpdatingAwbStatus,
   handleUpdateAwbStatus,
+  isSendingReminder,
+  handleSendReminder,
 }: ToolbarProps) {
   const selectedRowCount = Object.keys(table.getState().rowSelection).length;
   const emailFilterText = {
@@ -108,6 +112,19 @@ export function Toolbar({
                 {isUpdatingAwbStatus
                     ? "Updating..."
                     : `Update AWB Status for ${selectedRowCount} selected`}
+            </Button>
+            <Button
+                onClick={handleSendReminder}
+                disabled={isSendingReminder || selectedRowCount === 0}
+                >
+                {isSendingReminder ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                )}
+                {isSendingReminder
+                    ? "Sending..."
+                    : `Send Reminder for ${selectedRowCount} selected`}
             </Button>
         </div>
         {/* Filters Row */}
