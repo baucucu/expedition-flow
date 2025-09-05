@@ -39,7 +39,7 @@ export interface ExpeditionDashboardProps {
     expeditions: Expedition[];
 }
 
-export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'AWB History' | 'Notes';
+export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'History' | 'Notes';
 
 export const docShortNames: Record<DocType, string> = {
     'proces verbal de receptie': 'PV',
@@ -51,7 +51,7 @@ export const docShortNames: Record<DocType, string> = {
     'Instructions': 'Instructions',
     'Inventory': 'Inventory',
     'PV Semnat': 'PV Semnat',
-    'AWB History': 'History',
+    'History': 'History',
     'Notes': 'Notes'
 }
 

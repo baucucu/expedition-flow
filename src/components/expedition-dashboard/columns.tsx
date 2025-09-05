@@ -116,11 +116,6 @@ export const columns = (
             enableHiding: false,
         },
         {
-            accessorKey: "numericId",
-            header: "Recipient ID",
-            cell: ({ row }) => <div>{row.getValue("numericId")}</div>,
-        },
-        {
             accessorKey: "expeditionId",
             header: "Shipment ID",
             cell: ({ row }) => <div>{row.getValue("expeditionId")}</div>,

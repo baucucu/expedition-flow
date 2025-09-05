@@ -55,9 +55,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
-      numericId: false,
-  });
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [data, setData] = React.useState<RecipientRow[]>(initialData);
   const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
@@ -438,7 +436,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
-                        <TabsTrigger value="AWB History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>History</TabsTrigger>
+                        <TabsTrigger value="History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>History</TabsTrigger>
                         <TabsTrigger value="Notes">Notes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
@@ -484,7 +482,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             <DocumentPlaceholder title={`Email has not been sent for this AWB.`} />
                          )}
                     </TabsContent>
-                    <TabsContent value="AWB History">
+                    <TabsContent value="History">
                         {awbStatusHistory.length > 0 ? (
                             <ScrollArea className="h-[calc(100vh-10rem)] pr-4">
                                 <div className="flex flex-col gap-4 py-4">
