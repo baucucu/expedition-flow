@@ -49,8 +49,8 @@ import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
 
-// Helper to convert Firestore Timestamps
-const formatTimestamp = (timestamp: any): string => {
+// Helper to convert Firestore Timestamps for notes
+const formatNoteTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
     // It's a firestore timestamp
     if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
@@ -413,8 +413,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const awbNotes = React.useMemo(() => {
       if (!displayedRecipient?.awb?.notes) return [];
       return [...displayedRecipient.awb.notes].sort((a, b) => {
-            const dateA = a.createdAt ? new Date(formatTimestamp(a.createdAt)).getTime() : 0;
-            const dateB = b.createdAt ? new Date(formatTimestamp(b.createdAt)).getTime() : 0;
+            const dateA = a.createdAt ? new Date(formatNoteTimestamp(a.createdAt)).getTime() : 0;
+            const dateB = b.createdAt ? new Date(formatNoteTimestamp(b.createdAt)).getTime() : 0;
             return dateB - dateA;
       });
   }, [displayedRecipient]);
@@ -516,12 +516,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                 <div className="flex flex-col gap-4 py-4">
                                     {awbStatusHistory.map((historyItem, index) => (
                                         <div key={index} className="p-4 border rounded-lg bg-muted/50 text-sm">
-                                            <p><strong>Date:</strong> {String(historyItem.statusDate)}</p>
+                                            <p><strong>Date:</strong> {historyItem.statusDate}</p>
                                             <p><strong>Status:</strong> {historyItem.status}</p>
                                             <p><strong>Label:</strong> {historyItem.statusLabel}</p>
                                             <p><strong>State:</strong> {historyItem.statusState}</p>
                                             <p><strong>County:</strong> {historyItem.county}</p>
-                                            {historyItem.transitLocation && <p><strong>Location:</strong> {historyItem.transitLocation}</p>}
+                                            <p><strong>Location:</strong> {historyItem.transitLocation}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -537,7 +537,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                             <div key={note.id} className="p-3 border rounded-lg bg-muted/50">
                                                 <p className="text-sm whitespace-pre-wrap">{note.noteText}</p>
                                                 <p className="text-xs text-muted-foreground mt-2">
-                                                    By: {note.userName} for {note.recipientName} on {formatTimestamp(note.createdAt)}
+                                                    By: {note.userName} for {note.recipientName} on {formatNoteTimestamp(note.createdAt)}
                                                 </p>
                                             </div>
                                         ))
