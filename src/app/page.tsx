@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -116,6 +116,8 @@ export default function Home() {
     ).length;
     
     const completedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet').length;
+    
+    const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
 
     const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
         if (!acc[recipient.shipmentId]) {
@@ -150,27 +152,20 @@ export default function Home() {
     });
     
     const inTransitStatuses = [
-        // 1. AWB Emis
         "AWB Emis",
-        // 2. Ridicare
         "Ridicata de la client",
         "Ridicare ulterioara",
-        // 3. Sorter/Hub
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in HUB",
         "Intrare sorter agentie",
-        // 4. Depozitare
         "Depozitare",
-        // 5. Agentie
         "Intrare in agentie",
         "Iesire din agentie",
-        // 6. Curier
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
         "Incarcat in OOH",
-        // 7. Avizat (end of line before delivered/returned)
         "Avizat",
     ];
     
@@ -239,6 +234,7 @@ export default function Home() {
                 { value: deliveredCount, label: 'Delivered' },
                 { value: notCompletedCount, label: 'Not Completed' },
                 { value: completedCount, label: 'Completed' },
+                { value: verifiedCount, label: 'Verified' },
             ],
         },
     }
@@ -253,27 +249,20 @@ export default function Home() {
     };
 
     const inTransitStatuses = [
-        // 1. AWB Emis
         "AWB Emis",
-        // 2. Ridicare
         "Ridicata de la client",
         "Ridicare ulterioara",
-        // 3. Sorter/Hub
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in HUB",
         "Intrare sorter agentie",
-        // 4. Depozitare
         "Depozitare",
-        // 5. Agentie
         "Intrare in agentie",
         "Iesire din agentie",
-        // 6. Curier
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
         "Incarcat in OOH",
-        // 7. Avizat (end of line before delivered/returned)
         "Avizat",
     ];
 
@@ -286,6 +275,10 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => 
             r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl
         );
+    }
+    
+    if (activeFilter === 'Verified') {
+        return allRecipientsWithFullData.filter(r => r.verified === true);
     }
     
     if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");

@@ -55,7 +55,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+      numericId: false,
+  });
   const [rowSelection, setRowSelection] = React.useState({});
   const [data, setData] = React.useState<RecipientRow[]>(initialData);
   const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
@@ -436,7 +438,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
-                        <TabsTrigger value="AWB History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>AWB History</TabsTrigger>
+                        <TabsTrigger value="AWB History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>History</TabsTrigger>
                         <TabsTrigger value="Notes">Notes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">

@@ -41,6 +41,7 @@ export interface Recipient {
   awbId: string; // The ID of the AWB document this recipient belongs to
   name: string; // Nume și prenume
   status: RecipientStatus;
+  verified?: boolean;
   
   // Document fields
   pvStatus?: DocumentStatus;

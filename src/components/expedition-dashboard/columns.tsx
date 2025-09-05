@@ -7,12 +7,13 @@ import { RecipientRow, awbStatuses, awbStatusVariant, docShortNames, DocType } f
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, FileText, Mail, History, MessageSquare, CheckCircle2, Plane, AlertCircle, Clock } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
 import React from "react";
 import { updateShipmentDetails } from "@/app/actions/expedition-actions";
+import { updateRecipientVerificationAction } from "@/app/actions/recipient-actions";
 import { useToast } from "@/hooks/use-toast";
 import { ContactCell } from "./contact-cell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
@@ -40,6 +41,22 @@ export const columns = (
             });
         }
     };
+    
+    const handleVerificationChange = async (recipientId: string, verified: boolean) => {
+        const result = await updateRecipientVerificationAction({ recipientId, verified });
+        if (result.success) {
+            toast({
+                title: `Recipient ${verified ? 'Verified' : 'Unverified'}`,
+                description: result.message
+            });
+        } else {
+             toast({
+                title: "Verification Update Failed",
+                description: result.error,
+                variant: 'destructive',
+            });
+        }
+    }
 
     return [
         {
@@ -263,9 +280,9 @@ export const columns = (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
-                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'AWB History'); }}
+                                onClick={(e) => { e.stopPropagation(); handleOpenDocument(recipient, 'History'); }}
                             >
-                                {docShortNames['AWB History']}
+                                {docShortNames['History']}
                             </Badge>
                         )}
                         {hasNotes && (
@@ -303,6 +320,17 @@ export const columns = (
                     </TooltipProvider>
                 )
             }
-        }
+        },
+        {
+            id: "verified",
+            header: "Verified",
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.original.verified}
+                    onCheckedChange={(value) => handleVerificationChange(row.original.id, !!value)}
+                    aria-label="Toggle verification"
+                />
+            ),
+        },
     ];
 }
