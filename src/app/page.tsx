@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -155,25 +155,7 @@ export default function Home() {
         }
     });
     
-    const inTransitStatuses = [
-        "AWB Emis",
-        "Ridicata de la client",
-        "Ridicare ulterioara",
-        "Intrare sorter",
-        "Intrare sorter agentie",
-        "Iesire din hub",
-        "Intrare in HUB",
-        "Depozitare",
-        "Intrare in agentie",
-        "Iesire din agentie",
-        "In livrare la curier",
-        "Redirectionare Home Delivery",
-        "Redirect Home to OOH",
-        "Incarcat in OOH",
-        "Avizat",
-    ];
-    
-    const awbByStatus = awbs.reduce((acc, awb) => {
+     const awbByStatus = awbs.reduce((acc, awb) => {
         const status = awb.expeditionStatus?.status;
         if (status) {
             if (!acc[status]) {
@@ -184,19 +166,25 @@ export default function Home() {
         return acc;
     }, {} as Record<string, number>);
 
-    const getColorForStatus = (status: string) => {
-        if (status === 'AWB Emis') return 'blue';
-        if (['Avizat', 'Ridicare ulterioara'].includes(status)) return 'red';
-        return 'yellow';
-    }
+    const finalStatuses = ["Livrata cu succes"];
+    const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
+    const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
 
-    const inTransitCounts = inTransitStatuses.map(status => ({
-        label: status,
-        value: awbByStatus[status] || 0,
-        color: getColorForStatus(status),
-    })).filter(s => s.value > 0);
-    
-    let totalInTransit = inTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const dynamicInTransitCounts = Object.entries(awbByStatus)
+        .filter(([status, count]) => !excludedStatuses.has(status) && count > 0)
+        .map(([status, count]) => {
+            let color = 'yellow';
+            if (status === 'AWB Emis') color = 'blue';
+            if (['Avizat', 'Ridicare ulterioara'].includes(status)) color = 'red';
+            return {
+                label: status,
+                value: count,
+                color: color,
+            };
+        })
+        .sort((a, b) => b.value - a.value);
+
+    let totalInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
 
     return {
         overview: {
@@ -231,7 +219,7 @@ export default function Home() {
         },
         inTransit: {
             value: totalInTransit,
-            kpis: inTransitCounts,
+            kpis: dynamicInTransitCounts,
         },
         deliveredAndCompleted: {
             kpis: [
@@ -254,27 +242,24 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     };
 
-    const inTransitStatuses = [
-        "AWB Emis",
-        "Ridicata de la client",
-        "Ridicare ulterioara",
-        "Intrare sorter",
-        "Iesire din hub",
-        "Intrare in HUB",
-        "Intrare sorter agentie",
-        "Depozitare",
-        "Intrare in agentie",
-        "Iesire din agentie",
-        "In livrare la curier",
-        "Redirectionare Home Delivery",
-        "Redirect Home to OOH",
-        "Incarcat in OOH",
-        "Avizat",
-    ];
+    const finalStatuses = ["Livrata cu succes"];
+    const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
+    const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
+    const allInTransitStatuses = Object.keys(awbs.reduce((acc, awb) => {
+        if (awb.expeditionStatus?.status && !excludedStatuses.has(awb.expeditionStatus.status)) {
+            acc[awb.expeditionStatus.status] = true;
+        }
+        return acc;
+    }, {} as Record<string, boolean>));
 
     if (activeFilter === 'InTransit') {
-        const targetAwbIds = new Set(awbs.filter(awb => inTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
+        const targetAwbIds = new Set(awbs.filter(awb => allInTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+    }
+    
+    // Handle dynamic in-transit statuses
+    if (allInTransitStatuses.includes(activeFilter)) {
+        return filterByAwbStatus(activeFilter);
     }
     
     if (activeFilter === 'NotCompleted') {
@@ -295,22 +280,6 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
     
-    if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");
-    if (activeFilter === 'RidicataClient') return filterByAwbStatus("Ridicata de la client");
-    if (activeFilter === 'IntrareSorter') return filterByAwbStatus("Intrare sorter");
-    if (activeFilter === 'IesireHub') return filterByAwbStatus("Iesire din hub");
-    if (activeFilter === 'IntrareInHUB') return filterByAwbStatus("Intrare in HUB");
-    if (activeFilter === 'IntrareAgentie') return filterByAwbStatus("Intrare in agentie");
-    if (activeFilter === 'IesireAgentie') return filterByAwbStatus("Iesire din agentie");
-    if (activeFilter === 'IncarcatInOOH') return filterByAwbStatus("Incarcat in OOH");
-    if (activeFilter === 'InLivrare') return filterByAwbStatus("In livrare la curier");
-    if (activeFilter === 'RedirectionareHome') return filterByAwbStatus("Redirectionare Home Delivery");
-    if (activeFilter === 'RedirectOOH') return filterByAwbStatus("Redirect Home to OOH");
-    if (activeFilter === 'Depozitare') return filterByAwbStatus("Depozitare");
-    if (activeFilter === 'Avizat') return filterByAwbStatus('Avizat');
-    if (activeFilter === 'Ridicare ulterioara') return filterByAwbStatus('Ridicare ulterioara');
-    if (activeFilter === 'IntrareSorterAgentie') return filterByAwbStatus('Intrare sorter agentie');
-
     if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
     if(activeFilter === 'PVNew') return allRecipientsWithFullData.filter(r => r.pvStatus !== 'Generated' && r.pvStatus !== 'Queued');
@@ -445,3 +414,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

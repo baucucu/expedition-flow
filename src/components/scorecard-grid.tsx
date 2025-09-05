@@ -48,7 +48,7 @@ interface ScorecardGridProps {
 }
 
 export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilter, setActiveFilter }) => {
-  const isFilterActive = (mainFilter: FilterStatus, ...additionalFilters: FilterStatus[]) => {
+  const isFilterActive = (mainFilter: FilterStatus, ...additionalFilters: (FilterStatus | string)[]) => {
     return [mainFilter, ...additionalFilters].includes(activeFilter);
   }
   
@@ -57,25 +57,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     return filterMapping[activeFilter];
   }
   
-  const inTransitFilterMapping: { [key: string]: FilterStatus } = {
-    "AWB Emis": 'AwbEmis',
-    "Ridicata de la client": 'RidicataClient',
-    "Alocata pentru ridicare": 'AlocataRidicare',
-    "Intrare sorter": 'IntrareSorter',
-    "Iesire din hub": 'IesireHub',
-    "Intrare in HUB": 'IntrareInHUB',
-    "Intrare in agentie": 'IntrareAgentie',
-    "Iesire din agentie": 'IesireAgentie',
-    "In livrare la curier": 'InLivrare',
-    "Redirectionare Home Delivery": 'RedirectionareHome',
-    "Redirect Home to OOH": 'RedirectOOH',
-    "Incarcat in OOH": 'IncarcatInOOH',
-    "Depozitare": 'Depozitare',
-    "Avizat": 'Avizat',
-    "Ridicare ulterioara": 'Ridicare ulterioara',
-    "Intrare sorter agentie": 'IntrareSorterAgentie',
-  };
-
   const getIconForStatus = (status: string) => {
     const map: Record<string, React.ElementType> = {
         "AWB Emis": Plane,
@@ -95,15 +76,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         "Intrare sorter agentie": ArrowRightLeft,
     }
     return map[status];
-  }
-
-  const getActiveInTransitKpiLabel = () => {
-    for (const [label, filter] of Object.entries(inTransitFilterMapping)) {
-      if (activeFilter === filter) {
-        return label;
-      }
-    }
-    return undefined;
   }
   
   const inTransitKpisWithIcons = counts.inTransit.kpis?.map(kpi => ({
@@ -176,14 +148,11 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
           kpis={inTransitKpisWithIcons}
           icon={Truck}
           onClick={() => setActiveFilter('InTransit')}
-          isActive={isFilterActive('InTransit', ...Object.values(inTransitFilterMapping))}
+          isActive={isFilterActive('InTransit', ...(counts.inTransit.kpis?.map(k => k.label) || []))}
           onKpiClick={(label) => {
-              const filter = inTransitFilterMapping[label];
-              if (filter) {
-                  setActiveFilter(filter);
-              }
+              setActiveFilter(label as FilterStatus);
           }}
-          activeKpiLabel={getActiveInTransitKpiLabel()}
+          activeKpiLabel={isFilterActive('InTransit', ...(counts.inTransit.kpis?.map(k => k.label) || [])) ? activeFilter as string : undefined}
           layout="badges"
         />
       </div>
