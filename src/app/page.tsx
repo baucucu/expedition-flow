@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -164,6 +164,7 @@ export default function Home() {
         "Depozitare",
         "Avizat",
         "Ridicare ulterioara",
+        "Intrare sorter agentie",
     ];
     
     const awbByStatus = awbs.reduce((acc, awb) => {
@@ -258,7 +259,8 @@ export default function Home() {
       "Incarcat in OOH",
       "Depozitare",
       "Avizat",
-      "Ridicare ulterioara"
+      "Ridicare ulterioara",
+      "Intrare sorter agentie"
     ];
 
     if (activeFilter === 'InTransit') {
@@ -286,6 +288,7 @@ export default function Home() {
     if (activeFilter === 'Depozitare') return filterByAwbStatus("Depozitare");
     if (activeFilter === 'Avizat') return filterByAwbStatus('Avizat');
     if (activeFilter === 'Ridicare ulterioara') return filterByAwbStatus('Ridicare ulterioara');
+    if (activeFilter === 'IntrareSorterAgentie') return filterByAwbStatus('Intrare sorter agentie');
 
     if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
@@ -324,7 +327,7 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
     
-    if (activeFilter === 'LogisticsReady' || activeFilter === 'LogisticsNotReady') {
+    if (activeFilter === 'LogisticsReady') {
         const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
             if (!acc[recipient.shipmentId]) acc[recipient.shipmentId] = [];
             acc[recipient.shipmentId].push(recipient);
@@ -348,28 +351,12 @@ export default function Home() {
             const awbIsGenerated = !!shipmentAwb?.awb_data?.awbNumber;
             
             const isReady = allPvsGenerated && allInstructionsSynced && allInventoriesSynced && awbIsGenerated;
-            return activeFilter === 'LogisticsReady' ? isReady : !isReady;
+            return isReady;
         }).map(exp => exp.id);
 
         return allRecipientsWithFullData.filter(r => targetShipmentIds.includes(r.shipmentId));
     }
 
-
-    if (activeFilter === 'Issues') {
-        const issueExpeditionIds = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
-        const issueRecipientIds = allRecipientsWithFullData.filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed').map(r => r.id);
-        const failedAwbIds = new Set(awbs.filter(awb => awb.status === 'Failed').map(awb => awb.id));
-        const failedEmailAwbIds = new Set(awbs.filter(awb => awb.emailStatus === 'Failed').map(awb => awb.id));
-        
-        let issueRecipients = allRecipientsWithFullData.filter(r => 
-            issueExpeditionIds.includes(r.expeditionId!) || 
-            issueRecipientIds.includes(r.id) ||
-            (r.awbId && failedAwbIds.has(r.awbId)) ||
-            (r.awbId && failedEmailAwbIds.has(r.awbId))
-        );
-        
-        return issueRecipients;
-    }
 
     if (activeFilter === 'Delivered') {
         return filterByAwbStatus("Livrata cu succes");

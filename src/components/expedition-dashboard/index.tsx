@@ -315,43 +315,57 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const handleSendReminder = async () => {
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
-
-    const recipientsWithEmail = selectedRecipients.filter(
-      (r) => r.email && r.id
-    );
-
-    if (recipientsWithEmail.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No Recipients with Email",
-        description: "None of the selected recipients have an email address.",
-      });
-      return;
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Not Authenticated",
+            description: "You must be logged in to send reminders.",
+        });
+        return;
     }
 
-    const reminderPayload = recipientsWithEmail.map((r) => ({
-      documentId: r.id,
-      recipientEmail: r.email,
-    }));
+    const recipientsToProcess = selectedRecipients.filter(r => r.email && r.id && r.awbId);
+
+    if (recipientsToProcess.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "No valid recipients to process",
+            description: "Selected recipients must have an email, ID, and AWB ID.",
+        });
+        return;
+    }
 
     setIsSendingReminder(true);
-    const result = await sendReminder(reminderPayload);
+    const result = await sendReminder({
+        recipients: recipientsToProcess.map(r => ({
+            documentId: r.id,
+            recipientEmail: r.email,
+            awbId: r.awbId,
+            recipientName: r.name,
+        })),
+        user: {
+            id: user.uid,
+            name: user.email || "Unknown User",
+        },
+    });
     setIsSendingReminder(false);
 
     if (result.success) {
-      toast({
-        title: "Reminders Sent",
-        description: result.message,
-      });
-      table.resetRowSelection();
+        toast({
+            title: "Reminders Sent & Notes Created",
+            description: result.message,
+        });
+        table.resetRowSelection();
+        router.refresh(); // Refresh data to show new notes
     } else {
-      toast({
-        variant: "destructive",
-        title: "Failed to Send Reminders",
-        description: result.message,
-      });
+        toast({
+            variant: "destructive",
+            title: "Operation Failed",
+            description: result.message,
+        });
     }
-  };
+};
+
   
   const displayedRecipient = React.useMemo(() => {
     if (!selectedDocument) return null;

@@ -72,6 +72,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     "Depozitare": 'Depozitare',
     "Avizat": 'Avizat',
     "Ridicare ulterioara": 'Ridicare ulterioara',
+    "Intrare sorter agentie": 'IntrareSorterAgentie',
   };
 
   const getIconForStatus = (status: string) => {
@@ -90,6 +91,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         "Redirect Home to OOH": ParkingCircle,
         "Incarcat in OOH": ParkingCircle,
         "Depozitare": Archive,
+        "Intrare sorter agentie": ArrowRightLeft,
     }
     return map[status];
   }
@@ -196,7 +198,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 if (label === 'Not Completed') setActiveFilter('NotCompleted');
                 if (label === 'Completed') setActiveFilter('Completed');
             }}
-            activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'NotCompleted': 'Not Completed', 'Completed': 'Completed' })}
+            activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'Not Completed': 'Not Completed', 'Completed': 'Completed' })}
         />
        </div>
     </div>
