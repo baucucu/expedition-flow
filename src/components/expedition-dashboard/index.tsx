@@ -69,6 +69,25 @@ const formatNoteTimestamp = (timestamp: any): string => {
     return String(timestamp);
 };
 
+
+const formatHistoryTimestamp = (timestamp: any): string => {
+    if (!timestamp) return 'N/A';
+    // Check if it's a Firestore Timestamp-like object
+    if (timestamp && typeof timestamp.seconds === 'number') {
+        return format(new Date(timestamp.seconds * 1000), 'PPP p');
+    }
+    // Check if it's already a string that can be parsed
+    if (typeof timestamp === 'string') {
+        const date = new Date(timestamp);
+        if (!isNaN(date.getTime())) {
+            return format(date, 'PPP p');
+        }
+    }
+    // Fallback for any other format
+    return String(timestamp);
+}
+
+
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
     expeditions,
@@ -516,7 +535,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                 <div className="flex flex-col gap-4 py-4">
                                     {awbStatusHistory.map((historyItem, index) => (
                                         <div key={index} className="p-4 border rounded-lg bg-muted/50 text-sm">
-                                            <p><strong>Date:</strong> {historyItem.statusDate}</p>
+                                            <p><strong>Date:</strong> {formatHistoryTimestamp(historyItem.statusDate)}</p>
                                             <p><strong>Status:</strong> {historyItem.status}</p>
                                             <p><strong>Label:</strong> {historyItem.statusLabel}</p>
                                             <p><strong>State:</strong> {historyItem.statusState}</p>
