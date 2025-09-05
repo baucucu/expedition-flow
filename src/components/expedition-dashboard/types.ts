@@ -12,14 +12,6 @@ export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "se
 
 export const recipientStatuses: RecipientStatus[] = ['New', 'Documents Generated', 'Delivered', 'Completed', 'Returned'];
 
-export const awbStatusVariant: { [key in AWBStatus]: "default" | "secondary" | "outline" | "destructive" } = {
-  New: "outline",
-  Queued: "secondary",
-  Generated: "default",
-  AWB_CREATED: "default",
-  Failed: "destructive",
-};
-
 export const awbStatuses: AWBStatus[] = ['New', 'Queued', 'Generated', 'AWB_CREATED', 'Failed'];
 
 
@@ -37,6 +29,7 @@ export type RecipientRow = Recipient & {
 export interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
     expeditions: Expedition[];
+    gdprMode: boolean;
 }
 
 export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'History' | 'Notes';

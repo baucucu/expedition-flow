@@ -3,11 +3,18 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { LogOut, Box, Plus, File, ListChecks } from "lucide-react";
+import { LogOut, Box, Plus, File, ListChecks, ShieldCheck } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
+import { Label } from './ui/label';
+import { Switch } from './ui/switch';
 
-export const AppHeader = () => {
+interface AppHeaderProps {
+    gdprMode?: boolean;
+    onGdprModeChange?: (value: boolean) => void;
+}
+
+export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
     const router = useRouter();
 
     const handleSignOut = async () => {
@@ -22,6 +29,17 @@ export const AppHeader = () => {
                 <h1 className="text-xl font-bold tracking-tight">Expedition Manager</h1>
             </div>
             <div className="ml-auto flex items-center gap-4">
+                 {onGdprModeChange && (
+                    <div className="flex items-center space-x-2">
+                        <ShieldCheck className="h-5 w-5" />
+                        <Label htmlFor="gdpr-mode" className="text-sm font-medium">GDPR Mode</Label>
+                        <Switch
+                            id="gdpr-mode"
+                            checked={gdprMode}
+                            onCheckedChange={onGdprModeChange}
+                        />
+                    </div>
+                )}
                  <Button variant="outline" size="sm" onClick={() => router.push('/documents')}>
                     <File className="mr-2 h-4 w-4" />
                     Manage Documents

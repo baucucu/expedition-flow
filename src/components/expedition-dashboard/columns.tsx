@@ -3,11 +3,11 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { RecipientRow, awbStatuses, awbStatusVariant, docShortNames, DocType } from "./types";
+import { RecipientRow, awbStatuses, docShortNames, DocType } from "./types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Plane, AlertCircle, Clock, Warehouse, Truck, ArrowRightLeft, Package, Home, ParkingCircle, Archive } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
@@ -24,7 +24,21 @@ import { format } from "date-fns";
 const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
     if (typeof timestamp === 'string') {
-        return format(new Date(timestamp), 'PPP p');
+        try {
+            return format(new Date(timestamp), 'PPP p');
+        } catch (e) {
+             // Handle cases where string is not a valid date
+            if (timestamp.includes("seconds")) {
+                 try {
+                    const parsed = JSON.parse(timestamp.replace('Timestamp(seconds=', '').replace(', nanoseconds=', '|').replace(')',''));
+                    const [seconds, nanoseconds] = parsed.split('|');
+                    return format(new Date(seconds * 1000), 'PPP p');
+                 } catch (parseError) {
+                     return 'Invalid Date';
+                 }
+            }
+            return 'Invalid Date';
+        }
     }
     if (timestamp.seconds) { // It's a Firestore timestamp
         return format(new Date(timestamp.seconds * 1000), 'PPP p');
@@ -32,10 +46,12 @@ const formatTimestamp = (timestamp: any): string => {
     return 'Invalid Date';
 };
 
+const MASK = '[REDACTED]';
 
 export const columns = (
     handleOpenDocument: (recipient: RecipientRow, docType: DocType) => void,
     setRowSelection: React.Dispatch<React.SetStateAction<{}>>,
+    gdprMode: boolean,
 ): ColumnDef<RecipientRow>[] => {
     const { toast } = useToast();
 
@@ -134,15 +150,20 @@ export const columns = (
             header: "Shipment ID",
             cell: ({ row }) => <div>{row.getValue("expeditionId")}</div>,
         },
+         {
+            accessorKey: "numericId",
+            header: "Recipient ID",
+            cell: ({ row }) => <div>{row.getValue("numericId")}</div>,
+        },
         {
             accessorKey: "name",
             header: "Recipient Name",
-            cell: ({ row }) => <div>{row.getValue("name")}</div>,
+            cell: ({ row }) => <div>{gdprMode ? MASK : row.getValue("name")}</div>,
         },
         {
             accessorKey: "schoolName",
             header: "Location",
-            cell: ({ row }) => <div className="w-40">{row.original.schoolName}</div>,
+            cell: ({ row }) => <div className="w-40">{gdprMode ? MASK : row.original.schoolName}</div>,
         },
         {
             id: 'contact',
@@ -151,6 +172,7 @@ export const columns = (
                 <ContactCell 
                     recipient={row.original}
                     onSave={(field, value) => onSave(row.index, field, value, row.original.expeditionId)}
+                    gdprMode={gdprMode}
                 />
             )
         },
@@ -170,6 +192,14 @@ export const columns = (
                 const expeditionStatusObj = awb?.expeditionStatus;
                 const expeditionStatus = expeditionStatusObj?.status;
                 
+                const awbStatusVariant: { [key in AWBStatus]: "green" | "red" | "blue" | "yellow" } = {
+                    New: "yellow",
+                    Queued: "yellow",
+                    Generated: "green",
+                    AWB_CREATED: "green",
+                    Failed: "red",
+                };
+                
                 const getStatusVariant = (status: string | undefined): "green" | "red" | "blue" | "yellow" => {
                     if (!status) return "yellow";
                     if (status === "Livrata cu succes") return "green";
@@ -180,11 +210,11 @@ export const columns = (
 
                 return (
                     <div className="flex flex-wrap gap-1 items-center">
-                        {!awbNumber && <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
+                        {!awbNumber && <Badge variant={awbStatusVariant[status] || "yellow"} className="capitalize">
                             {status}
                         </Badge>}
                         
-                        {awbNumber && <Badge variant="blue">{awbNumber}</Badge>}
+                        {awbNumber && <Badge variant="blue">{gdprMode ? MASK : awbNumber}</Badge>}
                          
                         {expeditionStatus && (
                              <Badge 
@@ -285,7 +315,7 @@ export const columns = (
                                 {docShortNames['Email']}
                             </Badge>
                         )}
-                        {hasAwbHistory && (
+                         {hasAwbHistory && (
                             <Badge
                                 variant={"secondary"}
                                 className="cursor-pointer font-normal hover:bg-primary hover:text-primary-foreground"
@@ -315,7 +345,12 @@ export const columns = (
                 if (!notes || notes.length === 0) {
                     return null;
                 }
-                const lastNote = [...notes].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                const lastNote = [...notes].sort((a,b) => {
+                    const dateA = new Date(formatTimestamp(a.createdAt)).getTime();
+                    const dateB = new Date(formatTimestamp(b.createdAt)).getTime();
+                    return dateB - dateA;
+                })[0];
+                
                 return (
                     <TooltipProvider>
                         <Tooltip>

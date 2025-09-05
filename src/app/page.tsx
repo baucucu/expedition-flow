@@ -23,6 +23,7 @@ export default function Home() {
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [awbs, setAwbs] = useState<AWB[]>([]);
   const [loading, setLoading] = useState(true);
+  const [gdprMode, setGdprMode] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -158,9 +159,9 @@ export default function Home() {
         "Ridicata de la client",
         "Ridicare ulterioara",
         "Intrare sorter",
+        "Intrare sorter agentie",
         "Iesire din hub",
         "Intrare in HUB",
-        "Intrare sorter agentie",
         "Depozitare",
         "Intrare in agentie",
         "Iesire din agentie",
@@ -423,7 +424,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-background">
-      <AppHeader />
+      <AppHeader gdprMode={gdprMode} onGdprModeChange={setGdprMode} />
       <main className="flex flex-1 flex-col p-4 md:p-6 gap-6">
         <ScorecardGrid
           counts={scorecardCounts}
@@ -433,22 +434,9 @@ export default function Home() {
         <ExpeditionDashboard 
             initialData={filteredRecipients} 
             expeditions={expeditions}
+            gdprMode={gdprMode}
         />
       </main>
     </div>
   );
 }
-
-  
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    

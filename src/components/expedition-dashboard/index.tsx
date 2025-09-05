@@ -91,6 +91,7 @@ const formatHistoryTimestamp = (timestamp: any): string => {
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
     expeditions,
+    gdprMode,
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -122,7 +123,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const table = useReactTable({
     data,
-    columns: columns(handleOpenDocument, setRowSelection),
+    columns: columns(handleOpenDocument, setRowSelection, gdprMode),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -529,7 +530,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             <DocumentPlaceholder title={`Email has not been sent for this AWB.`} />
                          )}
                     </TabsContent>
-                    <TabsContent value="History">
+                     <TabsContent value="History">
                         {awbStatusHistory.length > 0 ? (
                             <ScrollArea className="h-[calc(100vh-10rem)] pr-4">
                                 <div className="flex flex-col gap-4 py-4">
@@ -537,10 +538,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                         <div key={index} className="p-4 border rounded-lg bg-muted/50 text-sm">
                                             <p><strong>Date:</strong> {formatHistoryTimestamp(historyItem.statusDate)}</p>
                                             <p><strong>Status:</strong> {historyItem.status}</p>
-                                            <p><strong>Label:</strong> {historyItem.statusLabel}</p>
-                                            <p><strong>State:</strong> {historyItem.statusState}</p>
+                                            <p><strong>Status Label:</strong> {historyItem.statusLabel}</p>
+                                            <p><strong>Status State:</strong> {historyItem.statusState}</p>
                                             <p><strong>County:</strong> {historyItem.county}</p>
-                                            <p><strong>Location:</strong> {historyItem.transitLocation}</p>
+                                            <p><strong>Transit Location:</strong> {historyItem.transitLocation}</p>
                                         </div>
                                     ))}
                                 </div>

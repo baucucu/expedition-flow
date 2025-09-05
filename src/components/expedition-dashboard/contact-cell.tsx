@@ -8,9 +8,16 @@ import { Phone } from "lucide-react";
 interface ContactCellProps {
     recipient: RecipientRow;
     onSave: (field: 'address' | 'city' | 'county', value: string) => void;
+    gdprMode: boolean;
 }
 
-export function ContactCell({ recipient, onSave }: ContactCellProps) {
+const MASK = '[REDACTED]';
+
+export function ContactCell({ recipient, onSave, gdprMode }: ContactCellProps) {
+    if (gdprMode) {
+        return <div>{MASK}</div>
+    }
+
     return (
         <div className="flex flex-col gap-1">
             <EditableCell
