@@ -49,6 +49,24 @@ import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
 
+// Helper to convert Firestore Timestamps
+const formatTimestamp = (timestamp: any): string => {
+    if (!timestamp) return '...';
+    if (typeof timestamp === 'string') {
+        return format(new Date(timestamp), 'PPP p');
+    }
+    // Check if it's a Firestore-like timestamp object
+    if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
+        return format(new Date(timestamp.seconds * 1000), 'PPP p');
+    }
+    // Fallback for any other unexpected format
+    try {
+      return format(new Date(timestamp), 'PPP p');
+    } catch {
+      return 'Invalid Date';
+    }
+};
+
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
     initialData, 
     expeditions,
@@ -392,7 +410,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const awbNotes = React.useMemo(() => {
       if (!displayedRecipient?.awb?.notes) return [];
-      return [...displayedRecipient.awb.notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return [...displayedRecipient.awb.notes].sort((a, b) => {
+            const dateA = a.createdAt ? new Date(typeof a.createdAt === 'string' ? a.createdAt : a.createdAt.seconds * 1000).getTime() : 0;
+            const dateB = b.createdAt ? new Date(typeof b.createdAt === 'string' ? b.createdAt : b.createdAt.seconds * 1000).getTime() : 0;
+            return dateB - dateA;
+      });
   }, [displayedRecipient]);
 
 
@@ -495,7 +517,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                             <p><strong>Status Label:</strong> {historyItem.statusLabel}</p>
                                             <p><strong>Status:</strong> {historyItem.status}</p>
                                             <p><strong>State:</strong> {historyItem.statusState}</p>
-                                            <p><strong>Date:</strong> {historyItem.statusDate}</p>
+                                            <p><strong>Date:</strong> {String(historyItem.statusDate)}</p>
                                             <p><strong>County:</strong> {historyItem.county}</p>
                                             {historyItem.transitLocation && <p><strong>Transit Location:</strong> {historyItem.transitLocation}</p>}
                                         </div>
@@ -513,7 +535,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                             <div key={note.id} className="p-3 border rounded-lg bg-muted/50">
                                                 <p className="text-sm whitespace-pre-wrap">{note.noteText}</p>
                                                 <p className="text-xs text-muted-foreground mt-2">
-                                                    By: {note.userName} for {note.recipientName} on {note.createdAt ? format(new Date(note.createdAt), 'PPP p') : '...'}
+                                                    By: {note.userName} for {note.recipientName} on {formatTimestamp(note.createdAt)}
                                                 </p>
                                             </div>
                                         ))

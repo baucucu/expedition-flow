@@ -7,7 +7,7 @@ import { RecipientRow, awbStatuses, awbStatusVariant, docShortNames, DocType } f
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plane, AlertCircle, Clock, Warehouse, Truck, ArrowRightLeft, Package, Home, ParkingCircle, Archive } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
@@ -17,6 +17,20 @@ import { updateRecipientVerificationAction } from "@/app/actions/recipient-actio
 import { useToast } from "@/hooks/use-toast";
 import { ContactCell } from "./contact-cell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { format } from "date-fns";
+
+
+// Helper to convert Firestore Timestamps
+const formatTimestamp = (timestamp: any): string => {
+    if (!timestamp) return '...';
+    if (typeof timestamp === 'string') {
+        return format(new Date(timestamp), 'PPP p');
+    }
+    if (timestamp.seconds) { // It's a Firestore timestamp
+        return format(new Date(timestamp.seconds * 1000), 'PPP p');
+    }
+    return 'Invalid Date';
+};
 
 
 export const columns = (

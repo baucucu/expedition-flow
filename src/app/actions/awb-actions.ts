@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { AWB } from "@/types";
 import { randomUUID } from "crypto";
@@ -129,6 +129,7 @@ export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActio
         const newNote = {
             ...noteData,
             id: randomUUID(),
+            createdAt: serverTimestamp(), // Use server timestamp for consistency
         };
 
         await updateDoc(awbRef, {

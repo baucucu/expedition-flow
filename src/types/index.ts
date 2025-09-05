@@ -70,7 +70,7 @@ export interface Recipient {
 }
 
 export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed' | 'AWB_CREATED';
-export type EmailStatus = 'Sent' | 'Failed' | 'Not Sent';
+export type EmailStatus = 'Sent' | 'Failed' | 'Not Sent' | 'Queued';
 
 export interface ExpeditionStatusInfo {
   statusId: number;
@@ -95,7 +95,7 @@ export interface Note {
     userName: string;
     recipientId: string;
     recipientName: string;
-    createdAt: string; // ISO string from client
+    createdAt: any; // Can be string or Firestore Timestamp
 }
 
 export interface AWB {
