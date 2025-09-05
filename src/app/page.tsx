@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -110,7 +110,11 @@ export default function Home() {
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
     
     const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
-    const notDeliveredCount = awbs.filter(awb => awb.awb_data && awb.expeditionStatus?.status !== "Livrata cu succes").length;
+    
+    const notCompletedCount = allRecipientsWithFullData.filter(r => 
+        r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl
+    ).length;
+    
     const completedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet').length;
 
     const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
@@ -225,7 +229,7 @@ export default function Home() {
         deliveredAndCompleted: {
             kpis: [
                 { value: deliveredCount, label: 'Delivered' },
-                { value: notDeliveredCount, label: 'Not Delivered' },
+                { value: notCompletedCount, label: 'Not Completed' },
                 { value: completedCount, label: 'Completed' },
             ],
         },
@@ -262,11 +266,12 @@ export default function Home() {
         return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
     
-    if (activeFilter === 'NotDelivered') {
-        const targetAwbIds = new Set(awbs.filter(awb => awb.awb_data && awb.expeditionStatus?.status !== "Livrata cu succes").map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+    if (activeFilter === 'NotCompleted') {
+        return allRecipientsWithFullData.filter(r => 
+            r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl
+        );
     }
-
+    
     if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");
     if (activeFilter === 'RidicataClient') return filterByAwbStatus("Ridicata de la client");
     if (activeFilter === 'IntrareSorter') return filterByAwbStatus("Intrare sorter");
@@ -445,4 +450,3 @@ export default function Home() {
     
 
     
-
