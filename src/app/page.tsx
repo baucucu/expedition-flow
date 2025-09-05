@@ -150,21 +150,28 @@ export default function Home() {
     });
     
     const inTransitStatuses = [
+        // 1. AWB Emis
         "AWB Emis",
+        // 2. Ridicare
         "Ridicata de la client",
+        "Ridicare ulterioara",
+        // 3. Sorter/Hub
         "Intrare sorter",
         "Iesire din hub",
         "Intrare in HUB",
+        "Intrare sorter agentie",
+        // 4. Depozitare
+        "Depozitare",
+        // 5. Agentie
         "Intrare in agentie",
         "Iesire din agentie",
+        // 6. Curier
         "In livrare la curier",
         "Redirectionare Home Delivery",
         "Redirect Home to OOH",
         "Incarcat in OOH",
-        "Depozitare",
+        // 7. Avizat (end of line before delivered/returned)
         "Avizat",
-        "Ridicare ulterioara",
-        "Intrare sorter agentie",
     ];
     
     const awbByStatus = awbs.reduce((acc, awb) => {
@@ -246,21 +253,28 @@ export default function Home() {
     };
 
     const inTransitStatuses = [
-      "AWB Emis",
-      "Ridicata de la client",
-      "Intrare sorter",
-      "Iesire din hub",
-      "Intrare in HUB",
-      "Intrare in agentie",
-      "Iesire din agentie",
-      "In livrare la curier",
-      "Redirectionare Home Delivery",
-      "Redirect Home to OOH",
-      "Incarcat in OOH",
-      "Depozitare",
-      "Avizat",
-      "Ridicare ulterioara",
-      "Intrare sorter agentie"
+        // 1. AWB Emis
+        "AWB Emis",
+        // 2. Ridicare
+        "Ridicata de la client",
+        "Ridicare ulterioara",
+        // 3. Sorter/Hub
+        "Intrare sorter",
+        "Iesire din hub",
+        "Intrare in HUB",
+        "Intrare sorter agentie",
+        // 4. Depozitare
+        "Depozitare",
+        // 5. Agentie
+        "Intrare in agentie",
+        "Iesire din agentie",
+        // 6. Curier
+        "In livrare la curier",
+        "Redirectionare Home Delivery",
+        "Redirect Home to OOH",
+        "Incarcat in OOH",
+        // 7. Avizat (end of line before delivered/returned)
+        "Avizat",
     ];
 
     if (activeFilter === 'InTransit') {
