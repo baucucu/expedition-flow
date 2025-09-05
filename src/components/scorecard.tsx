@@ -108,7 +108,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                         )}
                         onClick={(e) => handleKpiClick(e, kpi.label)}
                     >
-                        <span className="text-sm font-bold">{kpi.value}</span>
+                        <span className={cn("text-sm font-bold", kpi.color)}>{kpi.value}</span>
                         <span className="text-xs text-muted-foreground">{kpi.label}</span>
                     </div>
                 )

@@ -114,9 +114,7 @@ export default function Home() {
     const issuesCount = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length 
                 + recipientsWithFailedDocs.length
                 + awbGenerationFailedCount
-                + emailSendFailedCount
-                + avizatCount
-                + ridicareUlterioaraCount;
+                + emailSendFailedCount;
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
@@ -194,7 +192,9 @@ export default function Home() {
         value: awbByStatus[status] || 0,
     }));
     
-    const totalInTransit = inTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    let totalInTransit = inTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    totalInTransit += avizatCount;
+    totalInTransit += ridicareUlterioaraCount;
 
     return {
         overview: {
@@ -230,7 +230,11 @@ export default function Home() {
         },
         inTransit: {
             value: totalInTransit,
-            kpis: inTransitCounts,
+            kpis: [
+                ...inTransitCounts,
+                { value: avizatCount, label: 'Avizat', color: 'text-red-500' },
+                { value: ridicareUlterioaraCount, label: 'Ridicare ulterioara', color: 'text-red-500' },
+            ],
         },
         deliveredAndCompleted: {
             kpis: [
@@ -241,10 +245,7 @@ export default function Home() {
         },
         issues: {
             value: issuesCount,
-             kpis: [
-                { value: avizatCount, label: 'Avizat' },
-                { value: ridicareUlterioaraCount, label: 'Ridicare ulterioara' },
-            ]
+             kpis: []
         },
     }
   }, [allRecipientsWithFullData, expeditions, awbs]);
@@ -270,6 +271,8 @@ export default function Home() {
       "Redirect Home to OOH",
       "Incarcat in OOH",
       "Depozitare",
+      "Avizat",
+      "Ridicare ulterioara"
     ];
 
     if (activeFilter === 'InTransit') {
@@ -294,6 +297,8 @@ export default function Home() {
     if (activeFilter === 'RedirectionareHome') return filterByAwbStatus("Redirectionare Home Delivery");
     if (activeFilter === 'RedirectOOH') return filterByAwbStatus("Redirect Home to OOH");
     if (activeFilter === 'Depozitare') return filterByAwbStatus("Depozitare");
+    if (activeFilter === 'Avizat') return filterByAwbStatus('Avizat');
+    if (activeFilter === 'Ridicare ulterioara') return filterByAwbStatus('Ridicare ulterioara');
 
     if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
@@ -363,7 +368,7 @@ export default function Home() {
     }
 
 
-    if (activeFilter === 'Issues' || activeFilter === 'Avizat' || activeFilter === 'Ridicare ulterioara') {
+    if (activeFilter === 'Issues') {
         const issueExpeditionIds = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).map(e => e.id);
         const issueRecipientIds = allRecipientsWithFullData.filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed').map(r => r.id);
         const failedAwbIds = new Set(awbs.filter(awb => awb.status === 'Failed').map(awb => awb.id));
@@ -375,18 +380,8 @@ export default function Home() {
             (r.awbId && failedAwbIds.has(r.awbId)) ||
             (r.awbId && failedEmailAwbIds.has(r.awbId))
         );
-
-        if (activeFilter === 'Avizat') {
-            return filterByAwbStatus('Avizat');
-        }
-        if (activeFilter === 'Ridicare ulterioara') {
-            return filterByAwbStatus('Ridicare ulterioara');
-        }
         
-        const avizatRecipients = filterByAwbStatus('Avizat');
-        const ridicareRecipients = filterByAwbStatus('Ridicare ulterioara');
-
-        return [...issueRecipients, ...avizatRecipients, ...ridicareRecipients];
+        return issueRecipients;
     }
 
     if (activeFilter === 'Delivered') {
@@ -468,3 +463,4 @@ export default function Home() {
     
 
     
+

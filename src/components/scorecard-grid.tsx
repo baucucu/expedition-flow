@@ -63,6 +63,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     "Redirect Home to OOH": 'RedirectOOH',
     "Incarcat in OOH": 'IncarcatInOOH',
     "Depozitare": 'Depozitare',
+    "Avizat": 'Avizat',
+    "Ridicare ulterioara": 'Ridicare ulterioara',
   };
 
   const getActiveInTransitKpiLabel = () => {
@@ -149,35 +151,21 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
           activeKpiLabel={getActiveInTransitKpiLabel()}
         />
       </div>
-       <Scorecard
-        title="Delivered & Completed"
-        kpis={counts.deliveredAndCompleted.kpis}
-        iconMapping={{ 'Delivered': PackageCheck, 'Not Delivered': PackageX, 'Completed': CheckCircle2 }}
-        onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('Delivered', 'NotDelivered', 'Completed')}
-        onKpiClick={(label) => {
-          if (label === 'Delivered') setActiveFilter('Delivered');
-          if (label === 'Not Delivered') setActiveFilter('NotDelivered');
-          if (label === 'Completed') setActiveFilter('Completed');
-        }}
-        activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'NotDelivered': 'Not Delivered', 'Completed': 'Completed' })}
-        className="lg:col-span-1"
-      />
-      <Scorecard
-        title="Issues"
-        value={counts.issues.value}
-        kpis={counts.issues.kpis}
-        icon={AlertTriangle}
-        onClick={() => setActiveFilter('Issues')}
-        isActive={isFilterActive('Issues', 'Avizat', 'Ridicare ulterioara')}
-        variant="destructive"
-        onKpiClick={(label) => {
-            if (label === 'Avizat') setActiveFilter('Avizat');
-            if (label === 'Ridicare ulterioara') setActiveFilter('Ridicare ulterioara');
-        }}
-        activeKpiLabel={getActiveKpiLabel({ 'Avizat': 'Avizat', 'Ridicare ulterioara': 'Ridicare ulterioara'})}
-        className="lg:col-span-1"
-      />
+       <div className="lg:col-span-2">
+        <Scorecard
+            title="Delivered & Completed"
+            kpis={counts.deliveredAndCompleted.kpis}
+            iconMapping={{ 'Delivered': PackageCheck, 'Not Delivered': PackageX, 'Completed': CheckCircle2 }}
+            onClick={() => setActiveFilter('Total')}
+            isActive={isFilterActive('Delivered', 'NotDelivered', 'Completed')}
+            onKpiClick={(label) => {
+            if (label === 'Delivered') setActiveFilter('Delivered');
+            if (label === 'Not Delivered') setActiveFilter('NotDelivered');
+            if (label === 'Completed') setActiveFilter('Completed');
+            }}
+            activeKpiLabel={getActiveKpiLabel({ 'Delivered': 'Delivered', 'NotDelivered': 'Not Delivered', 'Completed': 'Completed' })}
+        />
+       </div>
     </div>
   );
 };
