@@ -52,19 +52,21 @@ import { format } from 'date-fns';
 // Helper to convert Firestore Timestamps
 const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
-    if (typeof timestamp === 'string') {
-        return format(new Date(timestamp), 'PPP p');
-    }
-    // Check if it's a Firestore-like timestamp object
+    // It's a firestore timestamp
     if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
         return format(new Date(timestamp.seconds * 1000), 'PPP p');
     }
-    // Fallback for any other unexpected format
-    try {
-      return format(new Date(timestamp), 'PPP p');
-    } catch {
-      return 'Invalid Date';
+     // It's already a Date object or a parsable string
+    if (timestamp instanceof Date || typeof timestamp === 'string' || typeof timestamp === 'number') {
+        try {
+            return format(new Date(timestamp), 'PPP p');
+        } catch (e) {
+            // If parsing fails, return the original value
+            return String(timestamp);
+        }
     }
+    // Fallback for any other unexpected format
+    return String(timestamp);
 };
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
@@ -411,8 +413,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const awbNotes = React.useMemo(() => {
       if (!displayedRecipient?.awb?.notes) return [];
       return [...displayedRecipient.awb.notes].sort((a, b) => {
-            const dateA = a.createdAt ? new Date(typeof a.createdAt === 'string' ? a.createdAt : a.createdAt.seconds * 1000).getTime() : 0;
-            const dateB = b.createdAt ? new Date(typeof b.createdAt === 'string' ? b.createdAt : b.createdAt.seconds * 1000).getTime() : 0;
+            const dateA = a.createdAt ? new Date(formatTimestamp(a.createdAt)).getTime() : 0;
+            const dateB = b.createdAt ? new Date(formatTimestamp(b.createdAt)).getTime() : 0;
             return dateB - dateA;
       });
   }, [displayedRecipient]);
