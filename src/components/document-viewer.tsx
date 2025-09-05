@@ -2,14 +2,18 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Loader2, AlertTriangle, FileWarning } from 'lucide-react';
+import { Loader2, AlertTriangle, FileWarning, Image } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from './ui/scroll-area';
+import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { formatPvSemnatAction } from '@/app/actions/pv-semnat-actions';
 
 interface DocumentViewerProps {
     url: string;
     docType: 'pdf' | 'excel' | 'gdrive-pdf' | 'gdrive-excel' | 'image';
+    recipientDocId?: string;
 }
 
 type SheetData = (string | number)[][];
@@ -21,10 +25,12 @@ const extractFileIdFromUrl = (url: string): string | null => {
 };
 
 
-export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
+export const DocumentViewer = ({ url, docType, recipientDocId }: DocumentViewerProps) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [excelData, setExcelData] = useState<SheetData | null>(null);
+    const [isFormatting, setIsFormatting] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         const fetchAndRenderExcel = async () => {
@@ -56,6 +62,34 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
             setLoading(false);
         }
     }, [url, docType]);
+    
+    const handleFormatImage = async () => {
+        if (!recipientDocId) {
+            toast({
+                variant: "destructive",
+                title: "Missing Information",
+                description: "The recipient document ID is missing, cannot format.",
+            });
+            return;
+        }
+
+        setIsFormatting(true);
+        const result = await formatPvSemnatAction({ recipientDocId, pvSemnatUrl: url });
+        setIsFormatting(false);
+
+        if (result.success) {
+            toast({
+                title: "Formatting Queued",
+                description: "The PV Semnat is being formatted. The view will update once it's complete.",
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Formatting Failed",
+                description: result.message,
+            });
+        }
+    };
 
     if (loading) {
         return (
@@ -72,6 +106,15 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
                 <AlertTriangle className="h-8 w-8 mb-4" />
                 <p className="text-center font-semibold">Error Loading Document</p>
                 <p className="text-center text-sm">{error}</p>
+                 {docType === 'image' && recipientDocId && (
+                    <div className="mt-4 text-center">
+                        <p className="text-sm text-muted-foreground mb-2">The image might be in an unsupported format (e.g., HEIC). You can try to format it.</p>
+                        <Button onClick={handleFormatImage} disabled={isFormatting}>
+                            {isFormatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Image className="mr-2 h-4 w-4" />}
+                            Format File
+                        </Button>
+                    </div>
+                )}
             </div>
         );
     }
@@ -110,7 +153,7 @@ export const DocumentViewer = ({ url, docType }: DocumentViewerProps) => {
     if (docType === 'image') {
         return (
             <div className="w-full h-[80vh] mt-4 flex items-center justify-center border rounded-md overflow-auto p-4 bg-muted/20">
-                <img src={url} alt="Document Preview" className="max-w-full max-h-full h-auto w-auto object-contain" />
+                <img src={url} alt="Document Preview" className="max-w-full max-h-full h-auto w-auto object-contain" onError={() => setError("This image format might not be supported by the browser.")} />
             </div>
         );
     }

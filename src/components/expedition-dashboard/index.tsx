@@ -339,8 +339,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     const result = await sendReminder({
         recipients: recipientsToProcess.map(r => ({
             documentId: r.id,
-            recipientEmail: r.email,
-            awbId: r.awbId,
+            recipientEmail: r.email!,
+            awbId: r.awbId!,
             recipientName: r.name,
         })),
         user: {
@@ -436,7 +436,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
                         <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
                         <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
-                        <TabsTrigger value="History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>History</TabsTrigger>
+                        <TabsTrigger value="AWB History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>AWB History</TabsTrigger>
                         <TabsTrigger value="Notes">Notes</TabsTrigger>
                     </TabsList>
                     <TabsContent value="PV">
@@ -446,7 +446,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                     </TabsContent>
                     <TabsContent value="PV Semnat">
                          {displayedRecipient.pvSemnatUrl ? (
-                            <DocumentViewer url={displayedRecipient.pvSemnatUrl} docType="image" />
+                            <DocumentViewer 
+                                url={displayedRecipient.pvSemnatUrl} 
+                                docType="image"
+                                recipientDocId={displayedRecipient.id} 
+                            />
                          ) : <DocumentPlaceholder title="PV Semnat (Signed) not available" />}
                     </TabsContent>
                     <TabsContent value="Instructions">
@@ -482,7 +486,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             <DocumentPlaceholder title={`Email has not been sent for this AWB.`} />
                          )}
                     </TabsContent>
-                    <TabsContent value="History">
+                    <TabsContent value="AWB History">
                         {awbStatusHistory.length > 0 ? (
                             <ScrollArea className="h-[calc(100vh-10rem)] pr-4">
                                 <div className="flex flex-col gap-4 py-4">

@@ -13,7 +13,7 @@ import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'Returns' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -118,6 +118,8 @@ export default function Home() {
     const completedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet').length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
+    
+    const returnsCount = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).length;
 
     const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
         if (!acc[recipient.shipmentId]) {
@@ -231,6 +233,7 @@ export default function Home() {
         },
         deliveredAndCompleted: {
             kpis: [
+                { value: returnsCount, label: 'Returns' },
                 { value: deliveredCount, label: 'Delivered' },
                 { value: notCompletedCount, label: 'Not Completed' },
                 { value: completedCount, label: 'Completed' },
@@ -279,6 +282,11 @@ export default function Home() {
     
     if (activeFilter === 'Verified') {
         return allRecipientsWithFullData.filter(r => r.verified === true);
+    }
+
+    if (activeFilter === 'Returns') {
+        const targetAwbIds = new Set(awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.id));
+        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
     }
     
     if (activeFilter === 'AwbEmis') return filterByAwbStatus("AWB Emis");
