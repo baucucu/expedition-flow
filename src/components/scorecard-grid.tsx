@@ -9,9 +9,17 @@ import {
   Send,
   Truck,
   PackageCheck,
-  AlertTriangle,
   CheckCircle2,
   PackageX,
+  Plane,
+  AlertCircle,
+  Clock,
+  Warehouse,
+  ArrowRightLeft,
+  Package,
+  Home,
+  ParkingCircle,
+  Archive,
 } from 'lucide-react';
 import { Scorecard, type Kpi } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -30,7 +38,6 @@ export interface ScorecardData {
   logisticsStatus: ScorecardInfo;
   inTransit: ScorecardInfo;
   deliveredAndCompleted: ScorecardInfo;
-  issues: ScorecardInfo;
 }
 
 interface ScorecardGridProps {
@@ -67,6 +74,26 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     "Ridicare ulterioara": 'Ridicare ulterioara',
   };
 
+  const getIconForStatus = (status: string) => {
+    const map: Record<string, React.ElementType> = {
+        "AWB Emis": Plane,
+        "Avizat": AlertCircle,
+        "Ridicare ulterioara": Clock,
+        "Intrare in HUB": Warehouse,
+        "Ridicata de la client": Truck,
+        "Iesire din hub": Warehouse,
+        "Intrare sorter": ArrowRightLeft,
+        "Intrare in agentie": Package,
+        "Iesire din agentie": Package,
+        "In livrare la curier": Truck,
+        "Redirectionare Home Delivery": Home,
+        "Redirect Home to OOH": ParkingCircle,
+        "Incarcat in OOH": ParkingCircle,
+        "Depozitare": Archive,
+    }
+    return map[status];
+  }
+
   const getActiveInTransitKpiLabel = () => {
     for (const [label, filter] of Object.entries(inTransitFilterMapping)) {
       if (activeFilter === filter) {
@@ -75,9 +102,15 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     }
     return undefined;
   }
+  
+  const inTransitKpisWithIcons = counts.inTransit.kpis?.map(kpi => ({
+      ...kpi,
+      icon: getIconForStatus(kpi.label)
+  }));
+
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
       <Scorecard
         title="Overview"
         kpis={counts.overview.kpis}
@@ -138,7 +171,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         <Scorecard
           title="In Transit"
           value={counts.inTransit.value}
-          kpis={counts.inTransit.kpis}
+          kpis={inTransitKpisWithIcons}
           icon={Truck}
           onClick={() => setActiveFilter('InTransit')}
           isActive={isFilterActive('InTransit', ...Object.values(inTransitFilterMapping))}
@@ -149,6 +182,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
               }
           }}
           activeKpiLabel={getActiveInTransitKpiLabel()}
+          layout="badges"
         />
       </div>
        <div className="lg:col-span-2">

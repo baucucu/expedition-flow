@@ -94,27 +94,13 @@ export default function Home() {
   }, [recipients, expeditions, awbs]);
 
   const scorecardCounts: ScorecardData = useMemo(() => {
-    const recipientsWithFailedDocs = allRecipientsWithFullData.filter(r => 
-        r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed'
-    );
-
     const awbNewCount = awbs.filter(e => e.status === 'New').length;
     const awbQueuedCount = awbs.filter(e => e.status === 'Queued').length;
-    const awbGenerationFailedCount = awbs.filter(e => e.status === 'Failed').length;
     
     const emailQueuedCount = awbs.filter(e => e.emailStatus === 'Queued').length;
     const emailSentCount = awbs.filter(awb => awb.emailStatus === 'Sent').length;
-    const emailSendFailedCount = awbs.filter(e => e.emailStatus === 'Failed').length;
     
     const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
-
-    const avizatCount = awbs.filter(awb => awb.expeditionStatus?.status === "Avizat").length;
-    const ridicareUlterioaraCount = awbs.filter(awb => awb.expeditionStatus?.status === "Ridicare ulterioara").length;
-
-    const issuesCount = expeditions.filter(e => ['Canceled', 'Lost or Damaged'].includes(e.status)).length 
-                + recipientsWithFailedDocs.length
-                + awbGenerationFailedCount
-                + emailSendFailedCount;
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
@@ -174,6 +160,8 @@ export default function Home() {
         "Redirect Home to OOH",
         "Incarcat in OOH",
         "Depozitare",
+        "Avizat",
+        "Ridicare ulterioara",
     ];
     
     const awbByStatus = awbs.reduce((acc, awb) => {
@@ -187,14 +175,19 @@ export default function Home() {
         return acc;
     }, {} as Record<string, number>);
 
+    const getColorForStatus = (status: string) => {
+        if (status === 'AWB Emis') return 'blue';
+        if (['Avizat', 'Ridicare ulterioara'].includes(status)) return 'red';
+        return 'yellow';
+    }
+
     const inTransitCounts = inTransitStatuses.map(status => ({
         label: status,
         value: awbByStatus[status] || 0,
-    }));
+        color: getColorForStatus(status),
+    })).filter(s => s.value > 0);
     
     let totalInTransit = inTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
-    totalInTransit += avizatCount;
-    totalInTransit += ridicareUlterioaraCount;
 
     return {
         overview: {
@@ -230,11 +223,7 @@ export default function Home() {
         },
         inTransit: {
             value: totalInTransit,
-            kpis: [
-                ...inTransitCounts,
-                { value: avizatCount, label: 'Avizat', color: 'text-red-500' },
-                { value: ridicareUlterioaraCount, label: 'Ridicare ulterioara', color: 'text-red-500' },
-            ],
+            kpis: inTransitCounts,
         },
         deliveredAndCompleted: {
             kpis: [
@@ -242,10 +231,6 @@ export default function Home() {
                 { value: notDeliveredCount, label: 'Not Delivered' },
                 { value: completedCount, label: 'Completed' },
             ],
-        },
-        issues: {
-            value: issuesCount,
-             kpis: []
         },
     }
   }, [allRecipientsWithFullData, expeditions, awbs]);
@@ -463,4 +448,3 @@ export default function Home() {
     
 
     
-
