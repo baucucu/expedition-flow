@@ -151,15 +151,6 @@ export const columns = (
                     if (["Avizat", "Ridicare ulterioara"].includes(status)) return "red";
                     return "yellow";
                 }
-                
-                const getStatusIcon = (status: string | undefined) => {
-                    if (!status) return null;
-                    if (status === "Livrata cu succes") return <CheckCircle2 className="w-3 h-3" />;
-                    if (status === "AWB Emis") return <Plane className="w-3 h-3" />;
-                    if (status === "Avizat") return <AlertCircle className="w-3 h-3" />;
-                    if (status === "Ridicare ulterioara") return <Clock className="w-3 h-3" />;
-                    return null;
-                }
 
                 return (
                     <div className="flex flex-wrap gap-1 items-center">
@@ -174,7 +165,6 @@ export const columns = (
                                 variant={getStatusVariant(expeditionStatus)}
                                 className="font-normal flex items-center gap-1"
                             >
-                                {getStatusIcon(expeditionStatus)}
                                 {expeditionStatus}
                             </Badge>
                         )}
