@@ -175,7 +175,7 @@ export const columns = (
                         {expeditionStatus && (
                              <Badge 
                                 variant={getStatusVariant(expeditionStatus)}
-                                className="font-normal flex items-center gap-1"
+                                className="font-normal"
                             >
                                 {expeditionStatus}
                             </Badge>
