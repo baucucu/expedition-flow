@@ -116,7 +116,7 @@ export const columns = (
         {
             accessorKey: "schoolName",
             header: "Location",
-            cell: ({ row }) => <div>{row.original.schoolName}</div>,
+            cell: ({ row }) => <div className="w-40">{row.original.schoolName}</div>,
         },
         {
             id: 'contact',
@@ -142,25 +142,30 @@ export const columns = (
                 const status: AWBStatus = awb?.status ?? 'New';
                 const awbNumber = awb?.awb_data?.awbNumber;
                 const expeditionStatusObj = awb?.expeditionStatus;
-                const isDelivered = expeditionStatusObj?.status === "Livrata cu succes";
+                const expeditionStatus = expeditionStatusObj?.status;
+                
+                const getStatusVariant = (status: string | undefined): "green" | "red" | "blue" | "yellow" => {
+                    if (!status) return "yellow";
+                    if (status === "Livrata cu succes") return "green";
+                    if (status === "AWB Emis") return "blue";
+                    if (["Avizat", "Ridicare ulterioara"].includes(status)) return "red";
+                    return "yellow";
+                }
 
                 return (
                     <div className="flex flex-wrap gap-1 items-center">
                         <Badge variant={awbStatusVariant[status] || "outline"} className="capitalize">
                             {status}
                         </Badge>
-                        {awbNumber && <Badge variant="secondary">{awbNumber}</Badge>}
-                         {isDelivered && (
-                            <Badge variant="default" className="font-normal bg-green-600 hover:bg-green-700">
-                                {expeditionStatusObj.status}
-                            </Badge>
-                        )}
-                        {expeditionStatusObj?.status && !isDelivered && (
+                        
+                        {awbNumber && <Badge variant="blue">{awbNumber}</Badge>}
+                         
+                        {expeditionStatus && (
                              <Badge 
-                                variant={"secondary"}
+                                variant={getStatusVariant(expeditionStatus)}
                                 className="font-normal"
                             >
-                                {expeditionStatusObj.status}
+                                {expeditionStatus}
                             </Badge>
                         )}
                     </div>
