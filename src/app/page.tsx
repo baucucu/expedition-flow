@@ -144,8 +144,6 @@ export default function Home() {
             readyForLogisticsCount++;
         }
     });
-
-    const notReadyForLogisticsCount = expeditions.length - readyForLogisticsCount - emailQueuedCount - emailSentCount;
     
     const inTransitStatuses = [
         "AWB Emis",
@@ -214,7 +212,6 @@ export default function Home() {
         },
         logisticsStatus: {
             kpis: [
-                { value: notReadyForLogisticsCount, label: 'Not Ready' },
                 { value: readyForLogisticsCount, label: 'Ready' },
                 { value: emailQueuedCount, label: 'Queued' },
                 { value: emailSentCount, label: 'Sent' },
@@ -448,3 +445,4 @@ export default function Home() {
     
 
     
+
