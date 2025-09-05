@@ -515,13 +515,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                             <ScrollArea className="h-[calc(100vh-10rem)] pr-4">
                                 <div className="flex flex-col gap-4 py-4">
                                     {awbStatusHistory.map((historyItem, index) => (
-                                        <div key={index} className="p-4 border rounded-lg bg-muted/50">
-                                            <p><strong>Status Label:</strong> {historyItem.statusLabel}</p>
-                                            <p><strong>Status:</strong> {historyItem.status}</p>
-                                            <p><strong>State:</strong> {historyItem.statusState}</p>
+                                        <div key={index} className="p-4 border rounded-lg bg-muted/50 text-sm">
                                             <p><strong>Date:</strong> {String(historyItem.statusDate)}</p>
+                                            <p><strong>Status:</strong> {historyItem.status}</p>
+                                            <p><strong>Label:</strong> {historyItem.statusLabel}</p>
+                                            <p><strong>State:</strong> {historyItem.statusState}</p>
                                             <p><strong>County:</strong> {historyItem.county}</p>
-                                            {historyItem.transitLocation && <p><strong>Transit Location:</strong> {historyItem.transitLocation}</p>}
+                                            {historyItem.transitLocation && <p><strong>Location:</strong> {historyItem.transitLocation}</p>}
                                         </div>
                                     ))}
                                 </div>
