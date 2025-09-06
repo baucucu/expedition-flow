@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp, writeBatch } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
 import type { AWB } from "@/types";
 import { randomUUID } from "crypto";
@@ -33,6 +33,13 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
         }));
 
         await tasks.batchTrigger("generate-awb", payloads);
+
+        const batch = writeBatch(db);
+        awbsToQueue.forEach(({ awbId }) => {
+            const awbRef = doc(db, "awbs", awbId);
+            batch.update(awbRef, { status: "Queued" });
+        });
+        await batch.commit();
 
         return {
             success: true,

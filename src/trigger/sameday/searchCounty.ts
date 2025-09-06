@@ -1,3 +1,4 @@
+
 import { schemaTask, logger } from "@trigger.dev/sdk";
 import { z } from "zod";
 
@@ -5,11 +6,8 @@ import { z } from "zod";
 const SearchCountyInputSchema = z.object({
   countyName: z.string(),
 });
-
 // Define the output schema for searchSamedayCounty task
-const SearchCountyOutputSchema = z.object({
-  countyId: z.string(),
-});
+const SearchCountyOutputSchema = z.string();
 
 export const searchCounty = schemaTask({
   id: "search-sameday-county",
@@ -21,6 +19,8 @@ export const searchCounty = schemaTask({
     const { countyName } = payload;
 
     logger.info("Searching for Sameday county", { countyName });
+
+    if(countyName === "Mureș" || countyName === "Mures") {return "29" }
 
     const apiUrl = process.env.SAMEDAY_API_URL;
     const apiToken = process.env.SAMEDAY_API_TOKEN;
@@ -50,13 +50,12 @@ export const searchCounty = schemaTask({
     const data = await response.json();
 
     if (!data || !Array.isArray(data.data) || data.data.length === 0 || !data.data[0].id) {
-      const error = new Error(`County \"${countyName}\" not found or unexpected API response.`);
+      const error = new Error(`County "${countyName}" not found or unexpected API response.`);
       logger.warn("County not found", { countyName, responseData: data });
       throw error;
     }
 
-    const countyId = data.data[0].id.toString();
-    logger.info("Sameday county search result", { countyId });
+    const countyId = String(data.data[0].id);
 
     return countyId;
   },

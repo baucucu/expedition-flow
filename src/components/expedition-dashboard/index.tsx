@@ -72,18 +72,15 @@ const formatNoteTimestamp = (timestamp: any): string => {
 
 const formatHistoryTimestamp = (timestamp: any): string => {
     if (!timestamp) return 'N/A';
-    // Check if it's a Firestore Timestamp-like object
     if (timestamp && typeof timestamp.seconds === 'number') {
         return format(new Date(timestamp.seconds * 1000), 'PPP p');
     }
-    // Check if it's already a string that can be parsed
     if (typeof timestamp === 'string') {
         const date = new Date(timestamp);
         if (!isNaN(date.getTime())) {
             return format(date, 'PPP p');
         }
     }
-    // Fallback for any other format
     return String(timestamp);
 }
 
@@ -167,7 +164,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     enableRowSelection: true,
     initialState: {
       pagination: {
-          pageSize: 50,
+          pageSize: 30,
       },
     },
   });
