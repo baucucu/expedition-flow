@@ -72,15 +72,20 @@ const formatNoteTimestamp = (timestamp: any): string => {
 
 const formatHistoryTimestamp = (timestamp: any): string => {
     if (!timestamp) return 'N/A';
-    if (timestamp && typeof timestamp.seconds === 'number') {
+    // It's a firestore timestamp
+    if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
         return format(new Date(timestamp.seconds * 1000), 'PPP p');
     }
-    if (typeof timestamp === 'string') {
-        const date = new Date(timestamp);
-        if (!isNaN(date.getTime())) {
-            return format(date, 'PPP p');
+     // It's already a Date object or a parsable string
+    if (timestamp instanceof Date || typeof timestamp === 'string' || typeof timestamp === 'number') {
+        try {
+            return format(new Date(timestamp), 'PPP p');
+        } catch (e) {
+            // If parsing fails, return the original value
+            return String(timestamp);
         }
     }
+    // Fallback for any other unexpected format
     return String(timestamp);
 }
 

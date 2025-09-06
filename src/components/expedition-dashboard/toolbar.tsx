@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { FileCheck, Loader2, Send, FileSignature, Hourglass, Mail, RefreshCw } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Pagination } from "./pagination";
 
 interface ToolbarProps {
   table: Table<RecipientRow>;
@@ -127,7 +129,7 @@ export function Toolbar({
                     : `Send Reminder for ${selectedRowCount} selected`}
             </Button>
         </div>
-        {/* Filters Row */}
+        {/* Filters and Top Pagination Row */}
         <div className="flex items-center">
             <Input
                 placeholder="Search all columns..."
@@ -136,7 +138,7 @@ export function Toolbar({
                 className="max-w-sm"
             />
             <div className="flex items-center gap-2 ml-auto">
-                <DropdownMenu>
+                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
                         variant="outline"
@@ -173,7 +175,6 @@ export function Toolbar({
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
-
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button
@@ -211,6 +212,49 @@ export function Toolbar({
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                {/* Top Pagination */}
+                <div className="flex items-center space-x-2">
+                    <Select
+                        value={`${table.getState().pagination.pageSize}`}
+                        onValueChange={(value) => {
+                            table.setPageSize(Number(value))
+                        }}
+                    >
+                        <SelectTrigger className="h-8 w-[70px]">
+                            <SelectValue placeholder={table.getState().pagination.pageSize} />
+                        </SelectTrigger>
+                        <SelectContent side="top">
+                            {[10, 20, 30, 40, 50].map((pageSize) => (
+                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                                {pageSize}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                     <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+                        Page {table.getState().pagination.pageIndex + 1} of{" "}
+                        {table.getPageCount()}
+                    </div>
+                    <div className="space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
             </div>
       </div>
     </div>
