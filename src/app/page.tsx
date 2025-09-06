@@ -105,7 +105,7 @@ export default function Home() {
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
-    const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus !== 'Generated' && r.pvStatus !== 'Queued').length;
+    const pvNewCount = allRecipientsWithFullData.filter(r => !r.pvUrl).length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
@@ -282,7 +282,7 @@ export default function Home() {
     
     if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
     if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
-    if(activeFilter === 'PVNew') return allRecipientsWithFullData.filter(r => r.pvStatus !== 'Generated' && r.pvStatus !== 'Queued');
+    if(activeFilter === 'PVNew') return allRecipientsWithFullData.filter(r => !r.pvUrl);
     if (activeFilter === 'Inventory') return allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated');
     if (activeFilter === 'Instructions') return allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated');
 
