@@ -10,7 +10,7 @@ type AwbGeneratorPayload = {
 }
 
 export const awbGenerator = task({
-  id: "awb-generator",
+  id: "generate-awb",
   // machine: {
   //   preset: "large-1x", // 4 vCPU, 8 GB RAM
   // },

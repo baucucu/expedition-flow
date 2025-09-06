@@ -23,6 +23,7 @@ export const updateAwbDataToDb = task({
   // machine: {
   //   preset: "large-1x", // 4 vCPU, 8 GB RAM
   // },
+  maxDuration: 30, // 300 seconds or 5 minutes
   run: async (payload: z.infer<typeof UpdateAwbPayloadSchema>) => {
     logger.info("Updating database via n8n webhook");
     const { shipmentId, awbData } = payload;
