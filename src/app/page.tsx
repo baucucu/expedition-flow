@@ -19,6 +19,8 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('Total');
+  const [pvFilter, setPvFilter] = useState<'all' | 'has_pv' | 'no_pv'>('all');
+  const [emailFilter, setEmailFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
   const [expeditions, setExpeditions] = useState<Expedition[]>([]);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [awbs, setAwbs] = useState<AWB[]>([]);
@@ -235,136 +237,120 @@ export default function Home() {
   }, [allRecipientsWithFullData, expeditions, awbs]);
 
   const filteredRecipients = useMemo(() => {
-    if (!activeFilter || activeFilter === 'Total' || activeFilter === 'Recipients' || activeFilter === 'Shipments') return allRecipientsWithFullData;
-    
-    const filterByAwbStatus = (status: string) => {
-        const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === status).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-    };
+    let filteredData = allRecipientsWithFullData;
 
-    const finalStatuses = ["Livrata cu succes"];
-    const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
-    const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
-    const allInTransitStatuses = Object.keys(awbs.reduce((acc, awb) => {
-        if (awb.expeditionStatus?.status && !excludedStatuses.has(awb.expeditionStatus.status)) {
-            acc[awb.expeditionStatus.status] = true;
-        }
-        return acc;
-    }, {} as Record<string, boolean>));
+    // Main scorecard filter
+    if (activeFilter && activeFilter !== 'Total' && activeFilter !== 'Recipients' && activeFilter !== 'Shipments') {
+        const filterByAwbStatus = (status: string) => {
+            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === status).map(awb => awb.id));
+            return filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        };
 
-    if (activeFilter === 'InTransit') {
-        const targetAwbIds = new Set(awbs.filter(awb => allInTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-    }
-    
-    // Handle dynamic in-transit statuses
-    if (allInTransitStatuses.includes(activeFilter)) {
-        return filterByAwbStatus(activeFilter);
-    }
-    
-    if (activeFilter === 'NotCompleted') {
-        return allRecipientsWithFullData.filter(r => 
-            r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl
-        );
-    }
-    
-    if (activeFilter === 'Verified') {
-        return allRecipientsWithFullData.filter(r => r.verified === true);
-    }
-    if (activeFilter === 'NotVerified') {
-        return allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true);
-    }
-
-    if (activeFilter === 'Returns') {
-        const targetAwbIds = new Set(awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-    }
-    
-    if (activeFilter === 'PVGenerated') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated');
-    if (activeFilter === 'PVQueued') return allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
-    if(activeFilter === 'PVNew') return allRecipientsWithFullData.filter(r => !r.pvUrl);
-    if (activeFilter === 'Inventory') return allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated');
-    if (activeFilter === 'Instructions') return allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated');
-
-    if (activeFilter === 'DocsFailed') {
-         return allRecipientsWithFullData.filter(r => 
-            r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed'
-        );
-    }
-
-    if (['AwbFailed', 'AwbNew', 'AwbQueued', 'AwbGenerated'].includes(activeFilter)) {
-        const statusMap = { 'AwbFailed': 'Failed', 'AwbNew': 'New', 'AwbQueued': 'Queued', 'AwbGenerated': 'Generated' };
-        const awbStatus = statusMap[activeFilter as keyof typeof statusMap];
-
-        if (awbStatus === 'Generated') {
-            const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber).map(awb => awb.id));
-            return allRecipientsWithFullData.filter(r => r.awbId && generatedAwbIds.has(r.awbId));
-        }
-
-        const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-    }
-    
-    if (activeFilter === 'AwbNeedsUpdate') {
-        const targetAwbIds = new Set(awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-    }
-
-    if (['EmailQueued', 'Sent', 'EmailFailed'].includes(activeFilter)) {
-        const statusMap = { 'EmailQueued': 'Queued', 'Sent': 'Sent', 'EmailFailed': 'Failed' };
-        const emailStatus = statusMap[activeFilter as keyof typeof statusMap];
-        const targetAwbIds = new Set(awbs.filter(awb => awb.emailStatus === emailStatus).map(awb => awb.id));
-        return allRecipientsWithFullData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-    }
-    
-    if (activeFilter === 'LogisticsReady') {
-        const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
-            if (!acc[recipient.shipmentId]) acc[recipient.shipmentId] = [];
-            acc[recipient.shipmentId].push(recipient);
+        const finalStatuses = ["Livrata cu succes"];
+        const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
+        const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
+        const allInTransitStatuses = Object.keys(awbs.reduce((acc, awb) => {
+            if (awb.expeditionStatus?.status && !excludedStatuses.has(awb.expeditionStatus.status)) {
+                acc[awb.expeditionStatus.status] = true;
+            }
             return acc;
-        }, {} as Record<string, typeof allRecipientsWithFullData>);
-        const awbsByShipment = awbs.reduce((acc, awb) => {
-            acc[awb.shipmentId] = awb;
-            return acc;
-        }, {} as Record<string, AWB>);
-        const shipmentsWithEmailStatus = new Set(awbs.filter(a => a.emailStatus === 'Queued' || a.emailStatus === 'Sent').map(a => a.shipmentId));
+        }, {} as Record<string, boolean>));
 
-        const targetShipmentIds = expeditions.filter(expedition => {
-            if (shipmentsWithEmailStatus.has(expedition.id)) return false;
-            
-            const shipmentRecipients = recipientsByShipment[expedition.id] || [];
-            const shipmentAwb = awbsByShipment[expedition.id];
-            
-            const allPvsGenerated = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.pvStatus === 'Generated');
-            const allInstructionsSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.instructionsStatus === 'Generated');
-            const allInventoriesSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.inventoryStatus === 'Generated');
-            const awbIsGenerated = !!shipmentAwb?.awb_data?.awbNumber;
-            
-            const isReady = allPvsGenerated && allInstructionsSynced && allInventoriesSynced && awbIsGenerated;
-            return isReady;
-        }).map(exp => exp.id);
-
-        return allRecipientsWithFullData.filter(r => targetShipmentIds.includes(r.shipmentId));
+        if (activeFilter === 'InTransit') {
+            const targetAwbIds = new Set(awbs.filter(awb => allInTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (allInTransitStatuses.includes(activeFilter)) {
+            filteredData = filterByAwbStatus(activeFilter);
+        } else if (activeFilter === 'NotCompleted') {
+            filteredData = filteredData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl);
+        } else if (activeFilter === 'Verified') {
+            filteredData = filteredData.filter(r => r.verified === true);
+        } else if (activeFilter === 'NotVerified') {
+            filteredData = filteredData.filter(r => r.pvStatus === 'Complet' && r.verified !== true);
+        } else if (activeFilter === 'Returns') {
+            const targetAwbIds = new Set(awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (activeFilter === 'PVGenerated') {
+            filteredData = filteredData.filter(r => r.pvStatus === 'Generated');
+        } else if (activeFilter === 'PVQueued') {
+            filteredData = filteredData.filter(r => r.pvStatus === 'Queued');
+        } else if (activeFilter === 'PVNew') {
+            filteredData = filteredData.filter(r => !r.pvUrl);
+        } else if (activeFilter === 'Inventory') {
+            filteredData = filteredData.filter(r => r.inventoryStatus === 'Generated');
+        } else if (activeFilter === 'Instructions') {
+            filteredData = filteredData.filter(r => r.instructionsStatus === 'Generated');
+        } else if (activeFilter === 'DocsFailed') {
+            filteredData = filteredData.filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed');
+        } else if (['AwbFailed', 'AwbNew', 'AwbQueued', 'AwbGenerated'].includes(activeFilter)) {
+            const statusMap = { 'AwbFailed': 'Failed', 'AwbNew': 'New', 'AwbQueued': 'Queued', 'AwbGenerated': 'Generated' };
+            const awbStatus = statusMap[activeFilter as keyof typeof statusMap];
+            if (awbStatus === 'Generated') {
+                const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber).map(awb => awb.id));
+                filteredData = filteredData.filter(r => r.awbId && generatedAwbIds.has(r.awbId));
+            } else {
+                const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
+                filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+            }
+        } else if (activeFilter === 'AwbNeedsUpdate') {
+            const targetAwbIds = new Set(awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (['EmailQueued', 'Sent', 'EmailFailed'].includes(activeFilter)) {
+            const statusMap = { 'EmailQueued': 'Queued', 'Sent': 'Sent', 'EmailFailed': 'Failed' };
+            const emailStatus = statusMap[activeFilter as keyof typeof statusMap];
+            const targetAwbIds = new Set(awbs.filter(awb => awb.emailStatus === emailStatus).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (activeFilter === 'LogisticsReady') {
+            const recipientsByShipment = filteredData.reduce((acc, recipient) => {
+                if (!acc[recipient.shipmentId]) acc[recipient.shipmentId] = [];
+                acc[recipient.shipmentId].push(recipient);
+                return acc;
+            }, {} as Record<string, typeof allRecipientsWithFullData>);
+            const awbsByShipment = awbs.reduce((acc, awb) => {
+                acc[awb.shipmentId] = awb;
+                return acc;
+            }, {} as Record<string, AWB>);
+            const shipmentsWithEmailStatus = new Set(awbs.filter(a => a.emailStatus === 'Queued' || a.emailStatus === 'Sent').map(a => a.shipmentId));
+            const targetShipmentIds = expeditions.filter(expedition => {
+                if (shipmentsWithEmailStatus.has(expedition.id)) return false;
+                const shipmentRecipients = recipientsByShipment[expedition.id] || [];
+                const shipmentAwb = awbsByShipment[expedition.id];
+                const allPvsGenerated = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.pvStatus === 'Generated');
+                const allInstructionsSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.instructionsStatus === 'Generated');
+                const allInventoriesSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.inventoryStatus === 'Generated');
+                const awbIsGenerated = !!shipmentAwb?.awb_data?.awbNumber;
+                return allPvsGenerated && allInstructionsSynced && allInventoriesSynced && awbIsGenerated;
+            }).map(exp => exp.id);
+            filteredData = filteredData.filter(r => targetShipmentIds.includes(r.shipmentId));
+        } else if (activeFilter === 'Delivered') {
+            filteredData = filterByAwbStatus("Livrata cu succes");
+        } else if (['NewRecipient', 'Returned'].includes(activeFilter)) {
+            const statusMap = { 'NewRecipient': 'New', 'Returned': 'Returned' };
+            const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
+            filteredData = filteredData.filter(r => r.status === recipientStatus);
+        } else if (activeFilter === 'Completed') {
+            filteredData = filteredData.filter(r => r.pvStatus === 'Complet');
+        } else {
+            const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
+            filteredData = filteredData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
+        }
     }
 
-
-    if (activeFilter === 'Delivered') {
-        return filterByAwbStatus("Livrata cu succes");
+    // Toolbar filters
+    if (pvFilter === 'has_pv') {
+        filteredData = filteredData.filter(r => r.pvUrl);
+    } else if (pvFilter === 'no_pv') {
+        filteredData = filteredData.filter(r => !r.pvUrl);
     }
 
-    if (['NewRecipient', 'Returned'].includes(activeFilter)) {
-        const statusMap = { 'NewRecipient': 'New', 'Returned': 'Returned' };
-        const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
-        return allRecipientsWithFullData.filter(r => r.status === recipientStatus);
-    }
-    
-    if (activeFilter === 'Completed') {
-        return allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet');
+    if (emailFilter === 'sent') {
+        filteredData = filteredData.filter(r => r.emailStatus === 'Sent');
+    } else if (emailFilter === 'not_sent') {
+        filteredData = filteredData.filter(r => r.emailStatus !== 'Sent');
     }
 
-    const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
-    return allRecipientsWithFullData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
-  }, [activeFilter, allRecipientsWithFullData, expeditions, awbs]);
+    return filteredData;
+  }, [activeFilter, pvFilter, emailFilter, allRecipientsWithFullData, expeditions, awbs]);
 
   if (authLoading || loading || !user) {
     return (
@@ -409,10 +395,12 @@ export default function Home() {
             initialData={filteredRecipients} 
             expeditions={expeditions}
             gdprMode={gdprMode}
+            pvFilter={pvFilter}
+            setPvFilter={setPvFilter}
+            emailFilter={emailFilter}
+            setEmailFilter={setEmailFilter}
         />
       </main>
     </div>
   );
 }
-
-    

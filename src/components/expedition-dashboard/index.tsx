@@ -94,6 +94,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     initialData, 
     expeditions,
     gdprMode,
+    pvFilter,
+    setPvFilter,
+    emailFilter,
+    setEmailFilter
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -109,14 +113,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isSavingNote, setIsSavingNote] = React.useState(false);
   const [isSendingReminder, setIsSendingReminder] = React.useState(false);
   const [newNote, setNewNote] = React.useState("");
-  const [pvFilter, setPvFilter] = React.useState<'all' | 'has_pv' | 'no_pv'>('all');
-  const [emailFilter, setEmailFilter] = React.useState<'all' | 'sent' | 'not_sent'>('all');
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useAuth();
 
   React.useEffect(() => {
     setData(initialData);
+    table.resetRowSelection();
   }, [initialData]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {

@@ -30,6 +30,10 @@ export interface ExpeditionDashboardProps {
     initialData: RecipientRow[];
     expeditions: Expedition[];
     gdprMode: boolean;
+    pvFilter: 'all' | 'has_pv' | 'no_pv';
+    setPvFilter: (value: 'all' | 'has_pv' | 'no_pv') => void;
+    emailFilter: 'all' | 'sent' | 'not_sent';
+    setEmailFilter: (value: 'all' | 'sent' | 'not_sent') => void;
 }
 
 export type DocType = AppDocumentType | 'Email' | 'AWB' | 'PV' | 'Instructions' | 'Inventory' | 'PV Semnat' | 'History' | 'Notes';
