@@ -72,22 +72,12 @@ const formatNoteTimestamp = (timestamp: any): string => {
 
 const formatHistoryTimestamp = (timestamp: any): string => {
     if (!timestamp) return 'N/A';
-    // It's a firestore timestamp
-    if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
+    if (typeof timestamp === 'string') return timestamp; // Already a string
+    if (timestamp && typeof timestamp.seconds === 'number') { // Firestore Timestamp
         return format(new Date(timestamp.seconds * 1000), 'PPP p');
     }
-     // It's already a Date object or a parsable string
-    if (timestamp instanceof Date || typeof timestamp === 'string' || typeof timestamp === 'number') {
-        try {
-            return format(new Date(timestamp), 'PPP p');
-        } catch (e) {
-            // If parsing fails, return the original value
-            return String(timestamp);
-        }
-    }
-    // Fallback for any other unexpected format
-    return String(timestamp);
-}
+    return 'Invalid Date';
+};
 
 
 export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({ 
@@ -274,10 +264,55 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
 
-    const recipientIds = selectedRecipients.map(r => r.id);
+    // Group recipients by shipment
+    const shipmentsMap = new Map<string, RecipientRow[]>();
+    selectedRecipients.forEach(r => {
+        if (!shipmentsMap.has(r.shipmentId)) {
+            shipmentsMap.set(r.shipmentId, []);
+        }
+        shipmentsMap.get(r.shipmentId)!.push(r);
+    });
+
+    const emailPayloads = [];
+
+    // Create a payload for each shipment
+    for (const [shipmentId, recipients] of shipmentsMap.entries()) {
+        const firstRecipient = recipients[0];
+        const awbData = firstRecipient.awb;
+
+        if (!awbData) {
+            console.warn(`Skipping shipment ${shipmentId} because it has no AWB data.`);
+            continue;
+        }
+
+        const payload = {
+            logisticsEmail: process.env.NEXT_PUBLIC_EMAIL_DEPOZIT,
+            shipmentId: shipmentId,
+            awbNumber: awbData.awb_data?.awbNumber,
+            awbUrl: awbData.awbUrl,
+            awbDocumentId: awbData.id,
+            awbNumberOfParcels: awbData.parcelCount,
+            inventoryDocumentId: firstRecipient.inventoryFileId,
+            instructionsDocumentId: firstRecipient.instructionsFileId,
+            recipients: recipients.map(r => ({
+                recipientId: r.id,
+                numericId: r.numericId,
+                uuid: r.uuid,
+                name: r.name,
+                pvDocumentId: r.pvId || null,
+                pvUrl: r.pvUrl || null,
+            })),
+        };
+        emailPayloads.push(payload);
+    }
+    
+    if (emailPayloads.length === 0) {
+      toast({ variant: 'destructive', title: 'Nothing to send', description: 'Could not construct valid email payloads for the selected items.' });
+      return;
+    }
 
     setIsSendingEmail(true);
-    const result = await sendEmailToLogisticsAction({ recipientIds });
+    const result = await sendEmailToLogisticsAction({ payloads: emailPayloads });
     setIsSendingEmail(false);
 
     if (result.success) {
