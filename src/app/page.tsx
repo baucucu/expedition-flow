@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -125,37 +126,11 @@ export default function Home() {
     
     const returnsCount = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).length;
 
-    const recipientsByShipment = allRecipientsWithFullData.reduce((acc, recipient) => {
-        if (!acc[recipient.shipmentId]) {
-            acc[recipient.shipmentId] = [];
-        }
-        acc[recipient.shipmentId].push(recipient);
-        return acc;
-    }, {} as Record<string, typeof allRecipientsWithFullData>);
-
-    const awbsByShipment = awbs.reduce((acc, awb) => {
-        acc[awb.shipmentId] = awb;
-        return acc;
-    }, {} as Record<string, AWB>);
-
-    let readyForLogisticsCount = 0;
-    const shipmentsWithEmailStatus = new Set(awbs.filter(a => a.emailStatus === 'Queued' || a.emailStatus === 'Sent').map(a => a.shipmentId));
-
-    expeditions.forEach(expedition => {
-        if (shipmentsWithEmailStatus.has(expedition.id)) return;
-
-        const shipmentRecipients = recipientsByShipment[expedition.id] || [];
-        const shipmentAwb = awbsByShipment[expedition.id];
-
-        const allPvsGenerated = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.pvStatus === 'Generated');
-        const allInstructionsSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.instructionsStatus === 'Generated');
-        const allInventoriesSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.inventoryStatus === 'Generated');
-        const awbIsGenerated = !!shipmentAwb?.awb_data?.awbNumber;
-        
-        if (allPvsGenerated && allInstructionsSynced && allInventoriesSynced && awbIsGenerated) {
-            readyForLogisticsCount++;
-        }
-    });
+    const readyForLogisticsCount = awbs.filter(awb => 
+        !!awb.awb_data?.awbNumber && 
+        awb.emailStatus !== 'Queued' && 
+        awb.emailStatus !== 'Sent'
+    ).length;
     
      const awbByStatus = awbs.reduce((acc, awb) => {
         const status = awb.expeditionStatus?.status;
@@ -301,27 +276,12 @@ export default function Home() {
             const targetAwbIds = new Set(awbs.filter(awb => awb.emailStatus === emailStatus).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (activeFilter === 'LogisticsReady') {
-            const recipientsByShipment = filteredData.reduce((acc, recipient) => {
-                if (!acc[recipient.shipmentId]) acc[recipient.shipmentId] = [];
-                acc[recipient.shipmentId].push(recipient);
-                return acc;
-            }, {} as Record<string, typeof allRecipientsWithFullData>);
-            const awbsByShipment = awbs.reduce((acc, awb) => {
-                acc[awb.shipmentId] = awb;
-                return acc;
-            }, {} as Record<string, AWB>);
-            const shipmentsWithEmailStatus = new Set(awbs.filter(a => a.emailStatus === 'Queued' || a.emailStatus === 'Sent').map(a => a.shipmentId));
-            const targetShipmentIds = expeditions.filter(expedition => {
-                if (shipmentsWithEmailStatus.has(expedition.id)) return false;
-                const shipmentRecipients = recipientsByShipment[expedition.id] || [];
-                const shipmentAwb = awbsByShipment[expedition.id];
-                const allPvsGenerated = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.pvStatus === 'Generated');
-                const allInstructionsSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.instructionsStatus === 'Generated');
-                const allInventoriesSynced = shipmentRecipients.length > 0 && shipmentRecipients.every(r => r.inventoryStatus === 'Generated');
-                const awbIsGenerated = !!shipmentAwb?.awb_data?.awbNumber;
-                return allPvsGenerated && allInstructionsSynced && allInventoriesSynced && awbIsGenerated;
-            }).map(exp => exp.id);
-            filteredData = filteredData.filter(r => targetShipmentIds.includes(r.shipmentId));
+             const targetAwbIds = new Set(awbs.filter(awb => 
+                !!awb.awb_data?.awbNumber && 
+                awb.emailStatus !== 'Queued' && 
+                awb.emailStatus !== 'Sent'
+            ).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (activeFilter === 'Delivered') {
             filteredData = filterByAwbStatus("Livrata cu succes");
         } else if (['NewRecipient', 'Returned'].includes(activeFilter)) {
