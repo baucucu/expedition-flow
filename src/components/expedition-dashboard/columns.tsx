@@ -251,20 +251,40 @@ export const columns = (
             },
         },
         {
-            id: 'emailCount',
-            header: 'Email Count',
+            accessorKey: 'awb.emailSentCount',
+            header: ({ column }) => (
+                <DataTableColumnFilter
+                    column={column}
+                    title="Email Count"
+                    options={Array.from({ length: 6 }, (_, i) => ({ value: String(i), label: String(i) }))}
+                />
+            ),
             cell: ({ row }) => {
                 const count = row.original.awb?.emailSentCount ?? 0;
                 return <div className="text-center">{count}</div>
-            }
+            },
+            filterFn: (row, id, value) => {
+                const count = row.original.awb?.emailSentCount ?? 0;
+                return value.includes(String(count));
+            },
         },
         {
-            id: 'reminderCount',
-            header: 'Reminder Count',
+            accessorKey: 'reminderCount',
+            header: ({ column }) => (
+                 <DataTableColumnFilter
+                    column={column}
+                    title="Reminder Count"
+                    options={Array.from({ length: 6 }, (_, i) => ({ value: String(i), label: String(i) }))}
+                />
+            ),
             cell: ({ row }) => {
                 const count = row.original.reminderCount ?? 0;
                 return <div className="text-center">{count}</div>
-            }
+            },
+            filterFn: (row, id, value) => {
+                const count = row.original.reminderCount ?? 0;
+                return value.includes(String(count));
+            },
         },
         {
             id: "documents",
