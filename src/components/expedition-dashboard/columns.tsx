@@ -375,8 +375,8 @@ export const columns = (
                     return null;
                 }
                 const lastNote = [...notes].sort((a,b) => {
-                    const dateA = a.createdAt ? new Date(formatTimestamp(String(a.createdAt))).getTime() : 0;
-                    const dateB = b.createdAt ? new Date(formatTimestamp(String(b.createdAt))).getTime() : 0;
+                    const dateA = new Date(a.createdAt).getTime();
+                    const dateB = new Date(b.createdAt).getTime();
                     return dateB - dateA;
                 })[0];
                 

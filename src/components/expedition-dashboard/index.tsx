@@ -474,8 +474,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const awbNotes = React.useMemo(() => {
       if (!displayedRecipient?.awb?.notes) return [];
       return [...displayedRecipient.awb.notes].sort((a, b) => {
-            const dateA = a.createdAt ? new Date(formatNoteTimestamp(a.createdAt)).getTime() : 0;
-            const dateB = b.createdAt ? new Date(formatNoteTimestamp(b.createdAt)).getTime() : 0;
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
             return dateB - dateA;
       });
   }, [displayedRecipient]);
