@@ -67,6 +67,7 @@ export interface Recipient {
   telephone?: string; // from 'phone'
   awbWebviewUrl?: string;
   awbPdfFileId?: string;
+  reminderCount?: number;
 }
 
 export type AWBStatus = 'New' | 'Queued' | 'Generated' | 'Failed' | 'AWB_CREATED';

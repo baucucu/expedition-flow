@@ -4,12 +4,15 @@
 import { sendReminderTask } from "@/trigger/email/send-reminder";
 import { addNoteToAwbAction } from "./awb-actions";
 import { z } from "zod";
+import { tasks } from "@trigger.dev/sdk/v3";
 
 const ReminderRecipientSchema = z.object({
-  documentId: z.string(),
+  instructionsDocumentId: z.string(),
+  pvUrl: z.string(),
   recipientEmail: z.string(),
   awbId: z.string(),
   recipientName: z.string(),
+  recipientId: z.string(),
 });
 
 const sendReminderParams = z.object({
@@ -26,15 +29,25 @@ export async function sendReminder(
   const parsedParams = sendReminderParams.parse(params);
   const { recipients, user } = parsedParams;
 
-  // 1. Trigger the reminder tasks
-  const runs = await Promise.all(
-    recipients.map((recipient) =>
-      sendReminderTask.trigger({
-        documentId: recipient.documentId,
-        recipientEmail: recipient.recipientEmail,
-      })
-    )
-  );
+  if (recipients.length === 0) {
+    return {
+      success: false,
+      message: "No recipients to process.",
+    };
+  }
+
+  // 1. Trigger the reminder tasks in a batch
+  const events = recipients.map((recipient) => ({
+    payload: {
+      instructionsDocumentId: recipient.instructionsDocumentId,
+      pvUrl: recipient.pvUrl,
+      recipientEmail: recipient.recipientEmail,
+      recipientName: recipient.recipientName,
+      recipientId: recipient.recipientId,
+    },
+  }));
+  
+  const runs = await tasks.batchTrigger("send-reminder", events);
 
   // 2. Create a note for each
   const notePromises = recipients.map((recipient) => {
@@ -43,7 +56,7 @@ export async function sendReminder(
       noteText: "Email reminder sent",
       userId: user.id,
       userName: user.name,
-      recipientId: recipient.documentId,
+      recipientId: recipient.recipientId,
       recipientName: recipient.recipientName,
       createdAt: new Date().toISOString(),
     };
@@ -54,7 +67,6 @@ export async function sendReminder(
 
   return {
     success: true,
-    message: "Reminders sent and notes created successfully",
-    runs: runs.map((run) => run.id),
+    message: "Reminder tasks have been successfully queued.",
   };
 }

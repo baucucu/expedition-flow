@@ -418,10 +418,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setIsSendingReminder(true);
     const result = await sendReminder({
         recipients: recipientsToProcess.map(r => ({
-            documentId: r.id,
+            instructionsDocumentId: r.instructionsFileId!,
+            pvUrl: r.pvUrl!,
             recipientEmail: r.email!,
             awbId: r.awbId!,
             recipientName: r.name,
+            recipientId: r.id,
         })),
         user: {
             id: user.uid,
@@ -475,7 +477,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       return [...displayedRecipient.awb.notes].sort((a, b) => {
             const dateA = a.createdAt ? new Date(formatNoteTimestamp(a.createdAt)).getTime() : 0;
             const dateB = b.createdAt ? new Date(formatNoteTimestamp(b.createdAt)).getTime() : 0;
-            return dateB - dateA;
+            return dateB - a.getTime();
       });
   }, [displayedRecipient]);
 
