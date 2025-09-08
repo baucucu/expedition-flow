@@ -20,23 +20,25 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/
 import { format } from "date-fns";
 
 
+const toDate = (timestamp: any): Date => {
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
+    return new Date(timestamp.seconds * 1000);
+  }
+  return new Date(timestamp);
+};
+
+
 // Helper to convert Firestore Timestamps
 const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
-    // It's a firestore timestamp
-    if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
-        return format(new Date(timestamp.seconds * 1000), 'PPP p');
+    try {
+        return format(toDate(timestamp), 'PPP p');
+    } catch (e) {
+        return 'Invalid Date';
     }
-     // It's already a Date object or a parsable string
-    if (timestamp instanceof Date || typeof timestamp === 'string' || typeof timestamp === 'number') {
-        try {
-            return format(new Date(timestamp), 'PPP p');
-        } catch (e) {
-             // Handle cases where string is not a valid date
-             return 'Invalid Date';
-        }
-    }
-    return 'Invalid Date';
 };
 
 const MASK = '[REDACTED]';
@@ -374,10 +376,10 @@ export const columns = (
                 if (!notes || notes.length === 0) {
                     return null;
                 }
-                const lastNote = [...notes].sort((a,b) => {
-                    const dateA = new Date(a.createdAt).getTime();
-                    const dateB = new Date(b.createdAt).getTime();
-                    return dateB - dateA;
+                const lastNote = [...notes].sort((a, b) => {
+                    const dateA = toDate(a.createdAt);
+                    const dateB = toDate(b.createdAt);
+                    return dateB.getTime() - dateA.getTime();
                 })[0];
                 
                 return (

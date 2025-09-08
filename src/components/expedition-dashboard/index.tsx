@@ -49,24 +49,25 @@ import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
 
+const toDate = (timestamp: any): Date => {
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
+    return new Date(timestamp.seconds * 1000);
+  }
+  return new Date(timestamp);
+};
+
+
 // Helper to convert Firestore Timestamps for notes
 const formatNoteTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
-    // It's a firestore timestamp
-    if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
-        return format(new Date(timestamp.seconds * 1000), 'PPP p');
+    try {
+        return format(toDate(timestamp), 'PPP p');
+    } catch (e) {
+        return 'Invalid Date';
     }
-     // It's already a Date object or a parsable string
-    if (timestamp instanceof Date || typeof timestamp === 'string' || typeof timestamp === 'number') {
-        try {
-            return format(new Date(timestamp), 'PPP p');
-        } catch (e) {
-            // If parsing fails, return the original value
-            return String(timestamp);
-        }
-    }
-    // Fallback for any other unexpected format
-    return String(timestamp);
 };
 
 
@@ -474,9 +475,9 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const awbNotes = React.useMemo(() => {
       if (!displayedRecipient?.awb?.notes) return [];
       return [...displayedRecipient.awb.notes].sort((a, b) => {
-            const dateA = new Date(a.createdAt).getTime();
-            const dateB = new Date(b.createdAt).getTime();
-            return dateB - dateA;
+            const dateA = toDate(a.createdAt);
+            const dateB = toDate(b.createdAt);
+            return dateB.getTime() - dateA.getTime();
       });
   }, [displayedRecipient]);
 
