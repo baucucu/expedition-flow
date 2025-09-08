@@ -106,7 +106,7 @@ export default function Home() {
     
     const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
     
-    const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
+    const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvUrl != null).length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
     const pvNewCount = allRecipientsWithFullData.filter(r => !r.pvUrl).length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
@@ -119,7 +119,7 @@ export default function Home() {
         r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl
     ).length;
     
-    const completedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet').length;
+    const completedCount = allRecipientsWithFullData.filter(r => r.pvSemnatUrl != null).length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
     const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
@@ -289,7 +289,7 @@ export default function Home() {
             const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
             filteredData = filteredData.filter(r => r.status === recipientStatus);
         } else if (activeFilter === 'Completed') {
-            filteredData = filteredData.filter(r => r.pvStatus === 'Complet');
+            filteredData = filteredData.filter(r => r.pvSemnatUrl != null);
         } else {
             const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
             filteredData = filteredData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
