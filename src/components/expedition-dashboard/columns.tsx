@@ -251,6 +251,14 @@ export const columns = (
             },
         },
         {
+            id: 'emailCount',
+            header: 'Email Count',
+            cell: ({ row }) => {
+                const count = row.original.awb?.emailSentCount ?? 0;
+                return <div className="text-center">{count}</div>
+            }
+        },
+        {
             id: "documents",
             header: "Documents",
             cell: ({ row }) => {

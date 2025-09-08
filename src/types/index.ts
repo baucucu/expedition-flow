@@ -113,6 +113,7 @@ export interface AWB {
     awbFileId?: string; // The GDrive file ID for the AWB PDF
     emailStatus?: EmailStatus;
     emailId?: string;
+    emailSentCount?: number;
     notes?: Note[];
     awb_data?: {
       awbNumber: string;

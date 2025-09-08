@@ -14,7 +14,7 @@ const RecipientSchema = z.object({
 });
 
 const SendEmailPayloadSchema = z.object({
-  logisticsEmail: z.string().optional(),
+  logisticsEmail: z.string(),
   shipmentId: z.string(),
   awbNumber: z.string().optional(),
   awbUrl: z.string().optional().nullable(),
@@ -23,10 +23,10 @@ const SendEmailPayloadSchema = z.object({
   inventoryDocumentId: z.string().nullable().optional(),
   instructionsDocumentId: z.string().nullable().optional(),
   recipients: z.array(RecipientSchema),
+  emailSentCount: z.number().default(0),
 });
 
 const N8N_EMAIL_WEBHOOK_URL = process.env.N8N_EMAIL_WEBHOOK_URL;
-const LOGISTICS_EMAIL = process.env.EMAIL_DEPOZIT;
 
 export const sendEmailTask = task({
   id: "send-email",
@@ -40,24 +40,14 @@ export const sendEmailTask = task({
         logger.error("N8N_EMAIL_WEBHOOK_URL is not configured. Cannot send email.");
         throw new Error("N8N_EMAIL_WEBHOOK_URL is not configured.");
     }
-    
-    if (!LOGISTICS_EMAIL) {
-        logger.error("EMAIL_DEPOZIT is not configured in environment variables.");
-        throw new Error("EMAIL_DEPOZIT is not configured.");
-    }
 
     try {
-        const payloadForN8n = {
-            ...payload,
-            logisticsEmail: LOGISTICS_EMAIL,
-        };
-
-        logger.info(`Sending payload to n8n for shipment ${payload.shipmentId}`, { payload: payloadForN8n });
+        logger.info(`Sending payload to n8n for shipment ${payload.shipmentId}`, { payload });
         
         const response = await fetch(N8N_EMAIL_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payloadForN8n),
+            body: JSON.stringify(payload),
         });
 
         const responseBody = await response.text();

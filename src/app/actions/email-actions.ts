@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { tasks } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/firebase";
-import { writeBatch, doc } from "firebase/firestore";
+import { writeBatch, doc, collection, query, where, getDocs, getDoc } from "firebase/firestore";
 
 const RecipientSchemaForEmail = z.object({
   recipientId: z.string(),
@@ -16,7 +16,6 @@ const RecipientSchemaForEmail = z.object({
 });
 
 const EmailPayloadSchema = z.object({
-  logisticsEmail: z.string().optional(),
   shipmentId: z.string(),
   awbNumber: z.string().optional(),
   awbUrl: z.string().optional().nullable(),
@@ -31,6 +30,7 @@ const sendEmailToLogisticsActionInputSchema = z.object({
   payloads: z.array(EmailPayloadSchema),
 });
 
+const LOGISTICS_EMAIL = process.env.EMAIL_DEPOZIT;
 
 export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmailToLogisticsActionInputSchema>) {
     const validatedInput = sendEmailToLogisticsActionInputSchema.safeParse(input);
@@ -38,18 +38,67 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
         return { success: false, message: "Invalid input for sending email." };
     }
 
+    if (!LOGISTICS_EMAIL) {
+        throw new Error("EMAIL_DEPOZIT is not configured.");
+    }
+
     const { payloads } = validatedInput.data;
 
     if (!payloads || payloads.length === 0) {
         return { success: false, message: "No email payloads to process." };
     }
-
+    
     try {
-        const eventsToTrigger = payloads.map(p => ({ payload: p }));
+        const shipmentIds = [...new Set(payloads.map(p => p.shipmentId))];
+        if (shipmentIds.length === 0) {
+            return { success: false, message: "No shipments to process." };
+        }
+
+        // Fetch emailSentCount for each awb
+        const finalPayloads = new Map<string, any>();
+
+        for (const originalPayload of payloads) {
+            if (!finalPayloads.has(originalPayload.shipmentId)) {
+                let emailSentCount = 0;
+                if (originalPayload.awbDocumentId) {
+                    const awbDocRef = doc(db, 'awbs', originalPayload.awbDocumentId);
+                    const awbDocSnap = await getDoc(awbDocRef);
+                    if (awbDocSnap.exists()) {
+                        const awbData = awbDocSnap.data();
+                        // Default to 0 if the field is null or doesn't exist
+                        emailSentCount = awbData.emailSentCount || 0;
+                    }
+                }
+                
+                const recipientsQuery = query(collection(db, "recipients"), where("shipmentId", "==", originalPayload.shipmentId));
+                const recipientsSnapshot = await getDocs(recipientsQuery);
+                const allRecipients = recipientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const newPayload = {
+                    ...originalPayload,
+                    emailSentCount, // Add the count here
+                    recipients: allRecipients.map(r => ({
+                        recipientId: r.id,
+                        numericId: r.numericId,
+                        uuid: r.uuid,
+                        name: r.name,
+                        pvDocumentId: r.pvId || null,
+                        pvUrl: r.pvUrl || null,
+                    })),
+                };
+                finalPayloads.set(originalPayload.shipmentId, newPayload);
+            }
+        }
+
+        const eventsToTrigger = Array.from(finalPayloads.values()).map(p => ({ 
+            payload: {
+                ...p,
+                logisticsEmail: LOGISTICS_EMAIL
+            } 
+        }));
         
         await tasks.batchTrigger("send-email", eventsToTrigger);
         
-        // After successfully queueing the tasks, update the emailStatus for the corresponding AWBs
         const batch = writeBatch(db);
         const awbIdsToUpdate = payloads
             .map(p => p.awbDocumentId)
@@ -63,7 +112,7 @@ export async function sendEmailToLogisticsAction(input: z.infer<typeof sendEmail
 
         return { 
             success: true, 
-            message: `Successfully queued email jobs for ${payloads.length} shipment(s).`
+            message: `Successfully queued email jobs for ${finalPayloads.size} shipment(s).`
         };
 
     } catch (error: any) {
