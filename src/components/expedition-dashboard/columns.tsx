@@ -23,25 +23,18 @@ import { format } from "date-fns";
 // Helper to convert Firestore Timestamps
 const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
-    if (typeof timestamp === 'string') {
+    // It's a firestore timestamp
+    if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
+        return format(new Date(timestamp.seconds * 1000), 'PPP p');
+    }
+     // It's already a Date object or a parsable string
+    if (timestamp instanceof Date || typeof timestamp === 'string' || typeof timestamp === 'number') {
         try {
             return format(new Date(timestamp), 'PPP p');
         } catch (e) {
              // Handle cases where string is not a valid date
-            if (timestamp.includes("seconds")) {
-                 try {
-                    const parsed = JSON.parse(timestamp.replace('Timestamp(seconds=', '').replace(', nanoseconds=', '|').replace(')',''));
-                    const [seconds, nanoseconds] = parsed.split('|');
-                    return format(new Date(seconds * 1000), 'PPP p');
-                 } catch (parseError) {
-                     return 'Invalid Date';
-                 }
-            }
-            return 'Invalid Date';
+             return 'Invalid Date';
         }
-    }
-    if (timestamp.seconds) { // It's a Firestore timestamp
-        return format(new Date(timestamp.seconds * 1000), 'PPP p');
     }
     return 'Invalid Date';
 };

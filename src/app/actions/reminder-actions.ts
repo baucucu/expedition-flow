@@ -58,7 +58,7 @@ export async function sendReminder(
       userName: user.name,
       recipientId: recipient.recipientId,
       recipientName: recipient.recipientName,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     return addNoteToAwbAction(noteData);
   });

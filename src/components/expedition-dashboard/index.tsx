@@ -286,7 +286,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         }
 
         const payload = {
-            logisticsEmail: process.env.NEXT_PUBLIC_EMAIL_DEPOZIT,
             shipmentId: shipmentId,
             awbNumber: awbData.awb_data?.awbNumber,
             awbUrl: awbData.awbUrl,
@@ -378,7 +377,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         userName: user.email || 'Unknown User',
         recipientId: selectedDocument.recipient.id,
         recipientName: selectedDocument.recipient.name,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
     };
 
     const result = await addNoteToAwbAction(noteData);
@@ -477,7 +476,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       return [...displayedRecipient.awb.notes].sort((a, b) => {
             const dateA = a.createdAt ? new Date(formatNoteTimestamp(a.createdAt)).getTime() : 0;
             const dateB = b.createdAt ? new Date(formatNoteTimestamp(b.createdAt)).getTime() : 0;
-            return dateB - a.getTime();
+            return dateB - dateA;
       });
   }, [displayedRecipient]);
 

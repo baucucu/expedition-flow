@@ -96,7 +96,7 @@ export interface Note {
     userName: string;
     recipientId: string;
     recipientName: string;
-    createdAt: any; // Can be string or Firestore Timestamp
+    createdAt: Date; 
 }
 
 export interface AWB {

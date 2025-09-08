@@ -120,12 +120,13 @@ const addNoteToAwbActionInputSchema = z.object({
     userName: z.string(),
     recipientId: z.string(),
     recipientName: z.string(),
-    createdAt: z.string(), // Expecting ISO string from client
+    createdAt: z.date(),
 });
 
 export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActionInputSchema>) {
     const validation = addNoteToAwbActionInputSchema.safeParse(input);
     if (!validation.success) {
+        console.error("Invalid input for adding note:", validation.error);
         return { success: false, message: "Invalid input for adding note." };
     }
     const { awbId, ...noteData } = validation.data;
@@ -136,7 +137,6 @@ export async function addNoteToAwbAction(input: z.infer<typeof addNoteToAwbActio
         const newNote = {
             ...noteData,
             id: randomUUID(),
-            createdAt: serverTimestamp(), // Use server timestamp for consistency
         };
 
         await updateDoc(awbRef, {
