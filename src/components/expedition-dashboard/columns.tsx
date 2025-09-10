@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ContactCell } from "./contact-cell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
 
 
 const toDate = (timestamp: any): Date => {
@@ -56,6 +57,7 @@ export const columns = (
     gdprMode: boolean,
 ): ColumnDef<RecipientRow>[] => {
     const { toast } = useToast();
+    const { isReadOnly } = useAuth();
 
     const onSave = async (rowIndex: number, field: string, value: string, shipmentId: string) => {
         const res = await updateShipmentDetails(shipmentId, { [field]: value });
@@ -392,9 +394,10 @@ export const columns = (
                 if (!notes || notes.length === 0) {
                     return null;
                 }
-                const lastNote = [...notes].sort((a, b) => {
+                const sortedNotes = [...notes].sort((a, b) => {
                     return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
-                })[0];
+                });
+                const lastNote = sortedNotes[0];
                 
                 return (
                     <TooltipProvider>
@@ -418,6 +421,7 @@ export const columns = (
                     checked={row.original.verified}
                     onCheckedChange={(value) => handleVerificationChange(row.original.id, !!value)}
                     aria-label="Toggle verification"
+                    disabled={isReadOnly}
                 />
             ),
         },
