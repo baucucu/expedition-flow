@@ -3,7 +3,8 @@
 
 import { RecipientRow } from "./types";
 import { EditableCell } from "./editable-cell";
-import { Phone } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 interface ContactCellProps {
     recipient: RecipientRow;
@@ -19,7 +20,7 @@ export function ContactCell({ recipient, onSave, gdprMode }: ContactCellProps) {
     }
 
     return (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-56">
             <EditableCell
                 value={recipient.awb?.address ?? 'N/A'}
                 onSave={(value) => onSave('address', value)}
@@ -32,12 +33,20 @@ export function ContactCell({ recipient, onSave, gdprMode }: ContactCellProps) {
                 value={recipient.awb?.county ?? 'N/A'}
                 onSave={(value) => onSave('county', value)}
             />
-            {recipient.telephone && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
-                    <Phone className="w-3 h-3" />
-                    <span>{recipient.telephone}</span>
-                </div>
-            )}
+            <div className="flex flex-wrap items-center gap-1 pt-1">
+                {recipient.telephone && (
+                     <Badge variant="secondary" className="font-normal">
+                        <Phone className="w-3 h-3 mr-1.5" />
+                        <span>{recipient.telephone}</span>
+                    </Badge>
+                )}
+                 {recipient.email && (
+                     <Badge variant="secondary" className="font-normal">
+                        <Mail className="w-3 h-3 mr-1.5" />
+                        <span>{recipient.email}</span>
+                    </Badge>
+                )}
+            </div>
         </div>
     );
 }

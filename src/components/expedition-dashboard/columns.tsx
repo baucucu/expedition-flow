@@ -7,7 +7,7 @@ import { RecipientRow, awbStatuses, docShortNames, DocType } from "./types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Mail, Phone, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
@@ -27,15 +27,22 @@ const toDate = (timestamp: any): Date => {
   if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
     return new Date(timestamp.seconds * 1000);
   }
-  return new Date(timestamp);
+   if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    const date = new Date(timestamp);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  // Return a default invalid date if parsing fails
+  return new Date(NaN);
 };
-
 
 // Helper to convert Firestore Timestamps
 const formatTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
     try {
-        return format(toDate(timestamp), 'PPP p');
+        const date = toDate(timestamp);
+        return format(date, 'PPP p');
     } catch (e) {
         return 'Invalid Date';
     }
@@ -204,20 +211,29 @@ export const columns = (
                 }
 
                 return (
-                    <div className="flex flex-wrap gap-1 items-center">
-                        {!awbNumber && <Badge variant={awbStatusVariant[status] || "yellow"} className="capitalize">
-                            {status}
-                        </Badge>}
-                        
-                        {awbNumber && <Badge variant="blue">{gdprMode ? MASK : awbNumber}</Badge>}
-                         
-                        {expeditionStatus && (
-                             <Badge 
-                                variant={getStatusVariant(expeditionStatus)}
-                                className="font-normal"
-                            >
-                                {expeditionStatus}
-                            </Badge>
+                    <div className="flex flex-col gap-1 items-start">
+                        <div className="flex flex-wrap gap-1 items-center">
+                           {!awbNumber && <Badge variant={awbStatusVariant[status] || "yellow"} className="capitalize">
+                                {status}
+                            </Badge>}
+                            
+                            {awbNumber && <Badge variant="blue">{gdprMode ? MASK : awbNumber}</Badge>}
+                            
+                            {expeditionStatus && (
+                                <Badge 
+                                    variant={getStatusVariant(expeditionStatus)}
+                                    className="font-normal"
+                                >
+                                    {expeditionStatus}
+                                </Badge>
+                            )}
+                        </div>
+                         {awb && (
+                            <div className="flex flex-col items-start gap-1 text-xs text-muted-foreground pt-1">
+                               {awb.mainRecipientName && <div className="flex items-center gap-1.5"><User className="h-3 w-3" /><span>{awb.mainRecipientName}</span></div>}
+                               {awb.mainRecipientEmail && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" /><span>{awb.mainRecipientEmail}</span></div>}
+                               {awb.mainRecipientTelephone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" /><span>{awb.mainRecipientTelephone}</span></div>}
+                            </div>
                         )}
                     </div>
                 );
@@ -377,9 +393,7 @@ export const columns = (
                     return null;
                 }
                 const lastNote = [...notes].sort((a, b) => {
-                    const dateA = toDate(a.createdAt);
-                    const dateB = toDate(b.createdAt);
-                    return dateB.getTime() - dateA.getTime();
+                    return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
                 })[0];
                 
                 return (

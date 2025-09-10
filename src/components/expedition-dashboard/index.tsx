@@ -163,10 +163,14 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             row.original.awb?.city,
             row.original.awb?.county,
             row.original.telephone,
+            row.original.email,
             row.original.schoolName,
             row.original.status,
             row.original.awb?.status,
             row.original.awb?.mainRecipientName,
+            row.original.awb?.mainRecipientEmail,
+            row.original.awb?.mainRecipientTelephone,
+            row.original.awb?.awb_data?.awbNumber,
             row.original.awb?.id
         ].filter(Boolean).join(' ').toLowerCase();
 
