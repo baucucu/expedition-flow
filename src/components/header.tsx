@@ -8,6 +8,7 @@ import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
+import { useAuth } from '@/hooks/use-auth';
 
 interface AppHeaderProps {
     gdprMode?: boolean;
@@ -16,6 +17,7 @@ interface AppHeaderProps {
 
 export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
     const router = useRouter();
+    const { isReadOnly } = useAuth();
 
     const handleSignOut = async () => {
         await auth.signOut();
@@ -40,18 +42,22 @@ export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
                         />
                     </div>
                 )}
-                 <Button variant="outline" size="sm" onClick={() => router.push('/documents')}>
-                    <File className="mr-2 h-4 w-4" />
-                    Manage Documents
-                </Button>
-                 <Button variant="outline" size="sm" onClick={() => router.push('/awb-statuses')}>
-                    <ListChecks className="mr-2 h-4 w-4" />
-                    AWB Statuses
-                </Button>
-                 <Button onClick={() => router.push('/expeditions/new')}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Expedition
-                </Button>
+                 {!isReadOnly && (
+                    <>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/documents')}>
+                            <File className="mr-2 h-4 w-4" />
+                            Manage Documents
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => router.push('/awb-statuses')}>
+                            <ListChecks className="mr-2 h-4 w-4" />
+                            AWB Statuses
+                        </Button>
+                        <Button onClick={() => router.push('/expeditions/new')}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            New Expedition
+                        </Button>
+                    </>
+                 )}
                 <Button variant="ghost" size="icon" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4" />
                     <span className="sr-only">Sign Out</span>

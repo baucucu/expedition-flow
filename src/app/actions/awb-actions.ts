@@ -28,11 +28,15 @@ export async function queueShipmentAwbGenerationAction(input: z.infer<typeof que
     }
 
     try {
-        const payloads = awbsToQueue.map(({ shipmentId, awbId }) => ({
-            payload: { shipmentId, awbId },
+        const shipmentIds = [...new Set(awbsToQueue.map(awb => awb.shipmentId))];
+
+        const payloads = shipmentIds.map(shipmentId => ({
+            payload: { shipmentId },
         }));
 
-        await tasks.batchTrigger("generate-awb", payloads);
+        if (payloads.length > 0) {
+            await tasks.batchTrigger("generate-awb", payloads);
+        }
 
         const batch = writeBatch(db);
         awbsToQueue.forEach(({ awbId }) => {

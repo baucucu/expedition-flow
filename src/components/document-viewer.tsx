@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Loader2, AlertTriangle, FileWarning, Image } from 'lucide-react';
+import { Loader2, AlertTriangle, FileWarning, Image, ExternalLink } from 'lucide-react';
 import * as xlsx from 'xlsx';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from './ui/scroll-area';
@@ -109,10 +109,16 @@ export const DocumentViewer = ({ url, docType, recipientDocId }: DocumentViewerP
                  {docType === 'image' && recipientDocId && (
                     <div className="mt-4 text-center">
                         <p className="text-sm text-muted-foreground mb-2">The image might be in an unsupported format (e.g., HEIC). You can try to format it.</p>
-                        <Button onClick={handleFormatImage} disabled={isFormatting}>
-                            {isFormatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Image className="mr-2 h-4 w-4" />}
-                            Format File
-                        </Button>
+                        <div className="flex justify-center gap-2">
+                            <Button onClick={handleFormatImage} disabled={isFormatting}>
+                                {isFormatting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Image className="mr-2 h-4 w-4" />}
+                                Format File
+                            </Button>
+                            <Button variant="outline" onClick={() => window.open(url, '_blank')}>
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                Open in New Tab
+                            </Button>
+                        </div>
                     </div>
                 )}
             </div>

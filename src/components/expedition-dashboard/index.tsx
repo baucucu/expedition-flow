@@ -23,6 +23,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+  } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "../document-viewer";
@@ -56,15 +66,22 @@ const toDate = (timestamp: any): Date => {
   if (timestamp && typeof timestamp.seconds === 'number' && typeof timestamp.nanoseconds === 'number') {
     return new Date(timestamp.seconds * 1000);
   }
-  return new Date(timestamp);
+   if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+    const date = new Date(timestamp);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  // Return a default invalid date if parsing fails
+  return new Date(NaN);
 };
-
 
 // Helper to convert Firestore Timestamps for notes
 const formatNoteTimestamp = (timestamp: any): string => {
     if (!timestamp) return '...';
     try {
-        return format(toDate(timestamp), 'PPP p');
+        const date = toDate(timestamp);
+        return format(date, 'PPP p');
     } catch (e) {
         return 'Invalid Date';
     }
@@ -104,9 +121,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isSavingNote, setIsSavingNote] = React.useState(false);
   const [isSendingReminder, setIsSendingReminder] = React.useState(false);
   const [newNote, setNewNote] = React.useState("");
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = React.useState(false);
+  const [recipientsForEmail, setRecipientsForEmail] = React.useState<RecipientRow[]>([]);
   const { toast } = useToast();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isReadOnly } = useAuth();
 
   React.useEffect(() => {
     setData(initialData);
@@ -261,73 +280,88 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   }
 
-  const handleSendEmails = async () => {
+  const handleSendEmails = async (confirmed = false) => {
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
 
-    // Group recipients by shipment
-    const shipmentsMap = new Map<string, RecipientRow[]>();
-    selectedRecipients.forEach(r => {
-        if (!shipmentsMap.has(r.shipmentId)) {
-            shipmentsMap.set(r.shipmentId, []);
-        }
-        shipmentsMap.get(r.shipmentId)!.push(r);
-    });
+    const alreadySentRecipients = selectedRecipients.filter(r => r.awb?.emailSentCount && r.awb.emailSentCount > 0);
 
-    const emailPayloads = [];
-
-    // Create a payload for each shipment
-    for (const [shipmentId, recipients] of shipmentsMap.entries()) {
-        const firstRecipient = recipients[0];
-        const awbData = firstRecipient.awb;
-
-        if (!awbData) {
-            console.warn(`Skipping shipment ${shipmentId} because it has no AWB data.`);
-            continue;
-        }
-
-        const payload = {
-            shipmentId: shipmentId,
-            awbNumber: awbData.awb_data?.awbNumber,
-            awbUrl: awbData.awbUrl,
-            awbDocumentId: awbData.id,
-            awbNumberOfParcels: awbData.parcelCount,
-            inventoryDocumentId: firstRecipient.inventoryFileId,
-            instructionsDocumentId: firstRecipient.instructionsFileId,
-            recipients: recipients.map(r => ({
-                recipientId: r.id,
-                numericId: r.numericId,
-                uuid: r.uuid,
-                name: r.name,
-                pvDocumentId: r.pvId || null,
-                pvUrl: r.pvUrl || null,
-            })),
-        };
-        emailPayloads.push(payload);
+    if (alreadySentRecipients.length > 0 && !confirmed) {
+        setRecipientsForEmail(selectedRecipients);
+        setIsConfirmationDialogOpen(true);
+        return;
     }
     
-    if (emailPayloads.length === 0) {
-      toast({ variant: 'destructive', title: 'Nothing to send', description: 'Could not construct valid email payloads for the selected items.' });
-      return;
+    const processEmails = async (recipients: RecipientRow[]) => {
+        // Group recipients by shipment
+        const shipmentsMap = new Map<string, RecipientRow[]>();
+        recipients.forEach(r => {
+            if (!shipmentsMap.has(r.shipmentId)) {
+                shipmentsMap.set(r.shipmentId, []);
+            }
+            shipmentsMap.get(r.shipmentId)!.push(r);
+        });
+
+        const emailPayloads = [];
+
+        // Create a payload for each shipment
+        for (const [shipmentId, shipmentRecipients] of shipmentsMap.entries()) {
+            const firstRecipient = shipmentRecipients[0];
+            const awbData = firstRecipient.awb;
+
+            if (!awbData) {
+                console.warn(`Skipping shipment ${shipmentId} because it has no AWB data.`);
+                continue;
+            }
+
+            const payload = {
+                shipmentId: shipmentId,
+                awbNumber: awbData.awb_data?.awbNumber,
+                awbUrl: awbData.awbUrl,
+                awbDocumentId: awbData.id,
+                awbNumberOfParcels: awbData.parcelCount,
+                inventoryDocumentId: firstRecipient.inventoryFileId,
+                instructionsDocumentId: firstRecipient.instructionsFileId,
+                recipients: shipmentRecipients.map(r => ({
+                    recipientId: r.id,
+                    numericId: r.numericId,
+                    uuid: r.uuid,
+                    name: r.name,
+                    pvDocumentId: r.pvId || null,
+                    pvUrl: r.pvUrl || null,
+                })),
+                 // This will be added in the trigger task
+            };
+            emailPayloads.push(payload);
+        }
+        
+        if (emailPayloads.length === 0) {
+          toast({ variant: 'destructive', title: 'Nothing to send', description: 'Could not construct valid email payloads for the selected items.' });
+          return;
+        }
+
+        setIsSendingEmail(true);
+        const result = await sendEmailToLogisticsAction({ payloads: emailPayloads });
+        setIsSendingEmail(false);
+        setIsConfirmationDialogOpen(false);
+        setRecipientsForEmail([]);
+
+        if (result.success) {
+            toast({
+                title: "Email Process Queued",
+                description: result.message
+            });
+            table.resetRowSelection();
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Failed to Queue Emails",
+                description: result.message,
+            });
+        }
     }
 
-    setIsSendingEmail(true);
-    const result = await sendEmailToLogisticsAction({ payloads: emailPayloads });
-    setIsSendingEmail(false);
-
-    if (result.success) {
-        toast({
-            title: "Email Process Queued",
-            description: result.message
-        });
-        table.resetRowSelection();
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Failed to Queue Emails",
-            description: result.message,
-        });
-    }
+    await processEmails(confirmed ? recipientsForEmail : selectedRecipients);
   }
 
   const handleUpdateAwbStatus = async () => {
@@ -474,11 +508,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const awbNotes = React.useMemo(() => {
       if (!displayedRecipient?.awb?.notes) return [];
-      return [...displayedRecipient.awb.notes].sort((a, b) => {
-            const dateA = toDate(a.createdAt);
-            const dateB = toDate(b.createdAt);
-            return dateB.getTime() - dateA.getTime();
-      });
+      // Ensure all createdAt are Date objects before sorting
+      const notesWithDates = displayedRecipient.awb.notes.map(note => ({
+        ...note,
+        createdAt: toDate(note.createdAt),
+      }));
+
+      return notesWithDates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [displayedRecipient]);
 
 
@@ -491,7 +527,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             emailFilter={emailFilter}
             setEmailFilter={setEmailFilter}
             isSendingEmail={isSendingEmail}
-            handleSendEmails={handleSendEmails}
+            handleSendEmails={() => handleSendEmails(false)}
             isGeneratingPv={isGeneratingPv}
             handleGeneratePvs={handleGeneratePvs}
             isQueuingAwb={isQueuingAwb}
@@ -503,6 +539,25 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         />
       <DataTable table={table} />
       <Pagination table={table} />
+      <AlertDialog open={isConfirmationDialogOpen} onOpenChange={setIsConfirmationDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Resend</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Some of the selected shipments have already been sent to logistics. Are you sure you want to send them again?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => {
+                        setIsConfirmationDialogOpen(false);
+                        setRecipientsForEmail([]);
+                    }}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleSendEmails(true)}>
+                        Send Again
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
         <SheetContent className="sm:max-w-[80vw]">

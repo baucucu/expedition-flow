@@ -16,7 +16,7 @@ import { FileCheck, Loader2, Send, FileSignature, Hourglass, Mail, RefreshCw } f
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Pagination } from "./pagination";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ToolbarProps {
   table: Table<RecipientRow>;
@@ -54,6 +54,8 @@ export function Toolbar({
   handleSendReminder,
 }: ToolbarProps) {
   const selectedRowCount = Object.keys(table.getState().rowSelection).length;
+  const { isReadOnly } = useAuth();
+  
   const emailFilterText = {
     sent: "Sent",
     not_sent: "Not Sent",
@@ -62,73 +64,75 @@ export function Toolbar({
   return (
     <div className="flex flex-col gap-4 mb-4">
         {/* Actions Row */}
-        <div className="flex items-center gap-2">
-             <Button
-                onClick={handleGeneratePvs}
-                disabled={isGeneratingPv || selectedRowCount === 0}
-                >
-                {isGeneratingPv ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <FileSignature className="mr-2 h-4 w-4" />
-                )}
-                {isGeneratingPv
-                    ? "Generating..."
-                    : `Generate PV for ${selectedRowCount} selected`}
-            </Button>
-            <Button
-                onClick={handleQueueAwbs}
-                disabled={isQueuingAwb || selectedRowCount === 0}
-                >
-                {isQueuingAwb ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Hourglass className="mr-2 h-4 w-4" />
-                )}
-                {isQueuingAwb
-                    ? "Queuing..."
-                    : `Generate AWB(s) for ${selectedRowCount} selected`}
-            </Button>
-            <Button
-                onClick={handleSendEmails}
-                disabled={isSendingEmail || selectedRowCount === 0}
-                >
-                {isSendingEmail ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Send className="mr-2 h-4 w-4" />
-                )}
-                {isSendingEmail
-                    ? "Queuing..."
-                    : `Send Email for ${selectedRowCount} selected`}
-            </Button>
-            <Button
-                onClick={handleUpdateAwbStatus}
-                disabled={isUpdatingAwbStatus || selectedRowCount === 0}
-                >
-                {isUpdatingAwbStatus ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                {isUpdatingAwbStatus
-                    ? "Updating..."
-                    : `Update AWB Status for ${selectedRowCount} selected`}
-            </Button>
-            <Button
-                onClick={handleSendReminder}
-                disabled={isSendingReminder || selectedRowCount === 0}
-                >
-                {isSendingReminder ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Send className="mr-2 h-4 w-4" />
-                )}
-                {isSendingReminder
-                    ? "Sending..."
-                    : `Send Reminder for ${selectedRowCount} selected`}
-            </Button>
-        </div>
+        {!isReadOnly && (
+            <div className="flex items-center gap-2">
+                <Button
+                    onClick={handleGeneratePvs}
+                    disabled={isGeneratingPv || selectedRowCount === 0}
+                    >
+                    {isGeneratingPv ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <FileSignature className="mr-2 h-4 w-4" />
+                    )}
+                    {isGeneratingPv
+                        ? "Generating..."
+                        : `Generate PV for ${selectedRowCount} selected`}
+                </Button>
+                <Button
+                    onClick={handleQueueAwbs}
+                    disabled={isQueuingAwb || selectedRowCount === 0}
+                    >
+                    {isQueuingAwb ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Hourglass className="mr-2 h-4 w-4" />
+                    )}
+                    {isQueuingAwb
+                        ? "Queuing..."
+                        : `Generate AWB(s) for ${selectedRowCount} selected`}
+                </Button>
+                <Button
+                    onClick={handleSendEmails}
+                    disabled={isSendingEmail || selectedRowCount === 0}
+                    >
+                    {isSendingEmail ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                    )}
+                    {isSendingEmail
+                        ? "Queuing..."
+                        : `Send Email for ${selectedRowCount} selected`}
+                </Button>
+                <Button
+                    onClick={handleUpdateAwbStatus}
+                    disabled={isUpdatingAwbStatus || selectedRowCount === 0}
+                    >
+                    {isUpdatingAwbStatus ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    {isUpdatingAwbStatus
+                        ? "Updating..."
+                        : `Update AWB Status for ${selectedRowCount} selected`}
+                </Button>
+                <Button
+                    onClick={handleSendReminder}
+                    disabled={isSendingReminder || selectedRowCount === 0}
+                    >
+                    {isSendingReminder ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Send className="mr-2 h-4 w-4" />
+                    )}
+                    {isSendingReminder
+                        ? "Sending..."
+                        : `Send Reminder for ${selectedRowCount} selected`}
+                </Button>
+            </div>
+        )}
         {/* Filters and Top Pagination Row */}
         <div className="flex items-center">
             <Input
