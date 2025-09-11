@@ -118,12 +118,13 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         kpis={counts.awbStatus.kpis}
         icon={Hourglass}
         onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('AwbNew', 'AwbQueued', 'AwbGenerated')}
-        activeKpiLabel={getActiveKpiLabel({ 'AwbNew': 'New', 'AwbQueued': 'Queued', 'AwbGenerated': 'Generated' })}
+        isActive={isFilterActive('AwbNew', 'AwbQueued', 'AwbGenerated', 'AwbRegenerated')}
+        activeKpiLabel={getActiveKpiLabel({ 'AwbNew': 'New', 'AwbQueued': 'Queued', 'AwbGenerated': 'Generated', 'AwbRegenerated': 'Regenerated' })}
         onKpiClick={(label) => {
             if (label === 'New') setActiveFilter('AwbNew');
             if (label === 'Queued') setActiveFilter('AwbQueued');
             if (label === 'Generated') setActiveFilter('AwbGenerated');
+            if (label === 'Regenerated') setActiveFilter('AwbRegenerated');
         }}
       />
       <Scorecard

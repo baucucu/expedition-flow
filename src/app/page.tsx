@@ -15,7 +15,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { RecipientRow } from "@/components/expedition-dashboard/types";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -121,11 +121,13 @@ export default function Home() {
     const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
-    const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
+    const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
     const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated' || !r.pvStatus).length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
-    const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
+    
+    const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !awb.originalShipmentId).length;
+    const awbRegeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).length;
     
     const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
     const deliveredParcelsCount = allRecipientsWithFullData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes").length;
@@ -199,6 +201,7 @@ export default function Home() {
                 { value: awbNewCount, label: 'New' },
                 { value: awbQueuedCount, label: 'Queued' },
                 { value: awbGeneratedCount, label: 'Generated' },
+                { value: awbRegeneratedCount, label: 'Regenerated' },
             ]
         },
         logisticsStatus: {
@@ -273,16 +276,17 @@ export default function Home() {
             filteredData = filteredData.filter(r => r.instructionsStatus === 'Generated');
         } else if (activeFilter === 'DocsFailed') {
             filteredData = filteredData.filter(r => r.pvStatus === 'Failed' || r.inventoryStatus === 'Failed' || r.instructionsStatus === 'Failed');
-        } else if (['AwbFailed', 'AwbNew', 'AwbQueued', 'AwbGenerated'].includes(activeFilter)) {
-            const statusMap = { 'AwbFailed': 'Failed', 'AwbNew': 'New', 'AwbQueued': 'Queued', 'AwbGenerated': 'Generated' };
+        } else if (['AwbFailed', 'AwbNew', 'AwbQueued'].includes(activeFilter)) {
+            const statusMap = { 'AwbFailed': 'Failed', 'AwbNew': 'New', 'AwbQueued': 'Queued' };
             const awbStatus = statusMap[activeFilter as keyof typeof statusMap];
-            if (awbStatus === 'Generated') {
-                const generatedAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber).map(awb => awb.id));
-                filteredData = filteredData.filter(r => r.awbId && generatedAwbIds.has(r.awbId));
-            } else {
-                const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
-                filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-            }
+            const targetAwbIds = new Set(awbs.filter(awb => awb.status === awbStatus).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (activeFilter === 'AwbGenerated') {
+            const targetAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber && !awb.originalShipmentId).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (activeFilter === 'AwbRegenerated') {
+            const targetAwbIds = new Set(awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (activeFilter === 'AwbNeedsUpdate') {
             const targetAwbIds = new Set(awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
