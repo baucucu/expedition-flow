@@ -15,7 +15,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { RecipientRow } from "@/components/expedition-dashboard/types";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -181,17 +181,25 @@ export default function Home() {
     let totalInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
 
     const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
+    const regeneratedExpeditions = expeditions.filter(e => e.originalShipmentId);
+    
     const originalExpeditionIds = new Set(originalExpeditions.map(e => e.id));
+    const regeneratedExpeditionIds = new Set(regeneratedExpeditions.map(e => e.id));
+
     const originalRecipients = allRecipientsWithFullData.filter(r => originalExpeditionIds.has(r.shipmentId!));
+    const regeneratedRecipients = allRecipientsWithFullData.filter(r => regeneratedExpeditionIds.has(r.shipmentId!));
+    
+    const originalAwbs = awbs.filter(awb => originalExpeditionIds.has(awb.shipmentId));
+    const regeneratedAwbs = awbs.filter(awb => regeneratedExpeditionIds.has(awb.shipmentId));
 
 
     return {
         overview: {
             kpis: [
-                { value: originalRecipients.length, label: 'Recipients' },
-                { value: originalExpeditions.length, label: 'Shipments' },
-                { value: inventoryGeneratedCount, label: 'Inventories' },
-                { value: instructionsGeneratedCount, label: 'Instructions' },
+                { value: originalRecipients.length, label: 'Orig. Recip.' },
+                { value: regeneratedRecipients.length, label: 'Regen. Recip.' },
+                { value: originalExpeditions.length, label: 'Orig. Ship.' },
+                { value: regeneratedExpeditions.length, label: 'Regen. Ship.' },
             ]
         },
         pvStatus: {
@@ -237,6 +245,9 @@ export default function Home() {
 
   const filteredRecipients = useMemo(() => {
     let filteredData = allRecipientsWithFullData;
+    
+    const originalExpeditionIds = new Set(expeditions.filter(e => !e.originalShipmentId).map(e => e.id));
+    const regeneratedExpeditionIds = new Set(expeditions.filter(e => e.originalShipmentId).map(e => e.id));
 
     // Main scorecard filter
     if (activeFilter && activeFilter !== 'Total' && activeFilter !== 'Recipients' && activeFilter !== 'Shipments') {
@@ -255,7 +266,17 @@ export default function Home() {
             return acc;
         }, {} as Record<string, boolean>));
 
-        if (activeFilter === 'InTransit') {
+        if (activeFilter === 'OriginalRecipients') {
+            filteredData = filteredData.filter(r => originalExpeditionIds.has(r.shipmentId));
+        } else if (activeFilter === 'RegenRecipients') {
+            filteredData = filteredData.filter(r => regeneratedExpeditionIds.has(r.shipmentId));
+        } else if (activeFilter === 'OriginalShipments') {
+            const originalAwbIds = new Set(awbs.filter(awb => originalExpeditionIds.has(awb.shipmentId)).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && originalAwbIds.has(r.awbId));
+        } else if (activeFilter === 'RegenShipments') {
+            const regenAwbIds = new Set(awbs.filter(awb => regeneratedExpeditionIds.has(awb.shipmentId)).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && regenAwbIds.has(r.awbId));
+        } else if (activeFilter === 'InTransit') {
             const targetAwbIds = new Set(awbs.filter(awb => allInTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (allInTransitStatuses.includes(activeFilter)) {

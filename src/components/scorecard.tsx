@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React from 'react';
@@ -71,14 +72,14 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 <React.Fragment key={kpi.label}>
                     <div 
                         className={cn(
-                            "text-center p-2 rounded-md transition-colors w-full", 
+                            "text-center p-1 rounded-md transition-colors w-full", 
                             onKpiClick && "cursor-pointer hover:bg-accent",
                             isKpiActive && 'bg-muted'
                         )}
                         onClick={(e) => handleKpiClick(e, kpi.label)}
                     >
                         {KpiIcon && <KpiIcon className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />}
-                        <div className={cn("text-2xl font-bold", kpi.color)}>{kpi.value}</div>
+                        <div className={cn("text-xl font-bold", kpi.color)}>{kpi.value}</div>
                         <p className="text-xs text-muted-foreground whitespace-normal">{kpi.label}</p>
                     </div>
                     {index < kpis.length - 1 && <Separator orientation="vertical" className="h-10 self-center" />}

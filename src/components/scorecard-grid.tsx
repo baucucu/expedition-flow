@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React from 'react';
@@ -91,13 +92,13 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         kpis={counts.overview.kpis}
         icon={Box}
         onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('Total', 'Recipients', 'Shipments', 'Inventory', 'Instructions')}
-        activeKpiLabel={getActiveKpiLabel({ 'Recipients': 'Recipients', 'Shipments': 'Shipments', 'Inventory': 'Inventories', 'Instructions': 'Instructions' })}
+        isActive={isFilterActive('Total', 'OriginalRecipients', 'RegenRecipients', 'OriginalShipments', 'RegenShipments')}
+        activeKpiLabel={getActiveKpiLabel({ 'OriginalRecipients': 'Orig. Recip.', 'RegenRecipients': 'Regen. Recip.', 'OriginalShipments': 'Orig. Ship.', 'RegenShipments': 'Regen. Ship.' })}
         onKpiClick={(label) => {
-            if (label === 'Recipients') setActiveFilter('Recipients');
-            if (label === 'Shipments') setActiveFilter('Shipments');
-            if (label === 'Inventories') setActiveFilter('Inventory');
-            if (label === 'Instructions') setActiveFilter('Instructions');
+            if (label === 'Orig. Recip.') setActiveFilter('OriginalRecipients');
+            if (label === 'Regen. Recip.') setActiveFilter('RegenRecipients');
+            if (label === 'Orig. Ship.') setActiveFilter('OriginalShipments');
+            if (label === 'Regen. Ship.') setActiveFilter('RegenShipments');
         }}
       />
        <Scorecard
