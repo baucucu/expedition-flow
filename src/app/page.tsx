@@ -120,7 +120,7 @@ export default function Home() {
     
     const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
     
-    const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
+    const pvGeneratedCount = allRecipientsWithFullData.filter(r => !!r.pvUrl).length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
     const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated').length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
@@ -338,7 +338,7 @@ export default function Home() {
             const targetAwbIds = new Set(awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (activeFilter === 'PVGenerated') {
-            filteredData = filteredData.filter(r => r.pvStatus === 'Generated');
+            filteredData = filteredData.filter(r => !!r.pvUrl);
         } else if (activeFilter === 'PVQueued') {
             filteredData = filteredData.filter(r => r.pvStatus === 'Queued');
         } else if (activeFilter === 'PVNew') {
