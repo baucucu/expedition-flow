@@ -129,13 +129,13 @@ export default function Home() {
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !awb.originalShipmentId).length;
     const awbRegeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).length;
     
-    const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
+    const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
+    const deliveredCount = deliveredAwbs.length;
     
-    const deliveredRecipients = allRecipientsWithFullData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes");
-    const deliveredParcelsCount = deliveredRecipients.length;
+    const deliveredParcelsCount = deliveredAwbs.reduce((sum, awb) => sum + (awb.parcelCount || 0), 0);
 
     const completedCount = allRecipientsWithFullData.filter(r => !!r.pvSemnatUrl).length;
-    const notCompletedCount = deliveredRecipients.filter(r => !r.pvSemnatUrl).length;
+    const notCompletedCount = deliveredParcelsCount - completedCount;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
     const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
@@ -328,7 +328,9 @@ export default function Home() {
         } else if (allIssueReasons.includes(activeFilter)) {
             filteredData = filterByAwbReason(activeFilter);
         } else if (activeFilter === 'NotCompleted') {
-            filteredData = filteredData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl);
+            const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
+            const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl);
         } else if (activeFilter === 'Verified') {
             filteredData = filteredData.filter(r => r.verified === true);
         } else if (activeFilter === 'NotVerified') {
@@ -456,5 +458,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
