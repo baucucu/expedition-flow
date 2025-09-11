@@ -24,6 +24,8 @@ export type RecipientRow = Recipient & {
     awbStatus?: DocumentStatus;
     emailStatus?: EmailStatus;
     emailId?: string;
+    originalShipmentId?: string;
+    regeneratedShipmentId?: string;
 };
 
 export interface ExpeditionDashboardProps {

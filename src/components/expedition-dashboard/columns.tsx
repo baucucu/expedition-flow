@@ -157,7 +157,17 @@ export const columns = (
         {
             accessorKey: "expeditionId",
             header: "Shipment ID",
-            cell: ({ row }) => <div>{row.getValue("expeditionId")}</div>,
+            cell: ({ row }) => (
+                <div className="flex flex-col gap-1">
+                    <span>{row.original.expeditionId}</span>
+                    {row.original.originalShipmentId && (
+                        <Badge variant="blue">Orig: {row.original.originalShipmentId}</Badge>
+                    )}
+                    {row.original.regeneratedShipmentId && (
+                        <Badge variant="yellow">Regen: {row.original.regeneratedShipmentId}</Badge>
+                    )}
+                </div>
+            ),
         },
         {
             accessorKey: "name",
@@ -395,7 +405,9 @@ export const columns = (
                     return null;
                 }
                 const sortedNotes = [...notes].sort((a, b) => {
-                    return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
+                    const dateA = toDate(a.createdAt);
+                    const dateB = toDate(b.createdAt);
+                    return dateB.getTime() - dateA.getTime();
                 });
                 const lastNote = sortedNotes[0];
                 

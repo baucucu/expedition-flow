@@ -13,6 +13,7 @@ import { AppHeader } from "@/components/header";
 import { Box } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { RecipientRow } from "@/components/expedition-dashboard/types";
 
 export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | null;
 
@@ -73,6 +74,16 @@ export default function Home() {
     const expeditionsMap = new Map(expeditions.map(exp => [exp.id, exp]));
     const awbsMap = new Map(awbs.map(awb => [awb.id, awb]));
 
+    // Find all regenerated shipments and map them to their original ID
+    const regeneratedShipmentsMap = new Map<string, string>();
+    expeditions.forEach(exp => {
+        if (exp.originalShipmentId) {
+            // In case of multiple regenerations, we might want to store an array
+            // For now, we'll just store the latest one found.
+            regeneratedShipmentsMap.set(exp.originalShipmentId, exp.id);
+        }
+    });
+
     return recipients.map(rec => {
         const expedition = expeditionsMap.get(rec.shipmentId!);
         const awb = awbsMap.get(rec.awbId);
@@ -84,7 +95,7 @@ export default function Home() {
             awbStatus = 'Failed';
         }
 
-        return {
+        const recipientRow: RecipientRow = {
             ...rec,
             expeditionId: expedition?.id || rec.shipmentId,
             expeditionStatus: awb?.expeditionStatus,
@@ -92,8 +103,11 @@ export default function Home() {
             awbUrl: awb?.awb_data?.pdfLink,
             awbStatus: awbStatus,
             emailStatus: awb?.emailStatus,
-            emailId: awb?.emailId
+            emailId: awb?.emailId,
+            originalShipmentId: expedition?.originalShipmentId,
+            regeneratedShipmentId: regeneratedShipmentsMap.get(rec.shipmentId),
         };
+        return recipientRow;
     });
   }, [recipients, expeditions, awbs]);
 
@@ -366,5 +380,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
