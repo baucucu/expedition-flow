@@ -218,7 +218,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             activeKpiLabel={getActiveKpiLabel({ 
                 'Returns': 'Returns', 
                 'Delivered': 'Delivered AWBs', 
-                'Not Completed': 'Not Completed', 
+                'NotCompleted': 'Not Completed', 
                 'Completed': 'Completed', 
                 'Verified': 'Verified',
                 'NotVerified': 'Not Verified' 
