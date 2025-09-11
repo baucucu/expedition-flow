@@ -15,7 +15,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { RecipientRow } from "@/components/expedition-dashboard/types";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | 'OriginalAwbs' | 'RegenAwbs' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -202,11 +202,13 @@ export default function Home() {
                 { value: regeneratedExpeditions.length, label: 'Regen. Ship.' },
             ]
         },
-        pvStatus: {
-            kpis: [
-                { value: pvNewCount, label: 'New' },
-                { value: pvQueuedCount, label: 'Queued' },
-                { value: pvGeneratedCount, label: 'Generated' },
+        documentStatus: {
+             kpis: [
+                { value: pvNewCount, label: 'PV New' },
+                { value: pvQueuedCount, label: 'PV Queued' },
+                { value: pvGeneratedCount, label: 'PV Generated' },
+                { value: inventoryGeneratedCount, label: 'Inventory' },
+                { value: instructionsGeneratedCount, label: 'Instructions' },
             ]
         },
         awbStatus: {

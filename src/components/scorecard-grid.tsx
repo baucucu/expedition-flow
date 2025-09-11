@@ -22,6 +22,7 @@ import {
   Archive,
   CheckCircle2,
   BadgeCheck,
+  File,
 } from 'lucide-react';
 import { Scorecard, type Kpi } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -35,7 +36,7 @@ interface ScorecardInfo {
 
 export interface ScorecardData {
   overview: ScorecardInfo;
-  pvStatus: ScorecardInfo;
+  documentStatus: ScorecardInfo;
   awbStatus: ScorecardInfo;
   logisticsStatus: ScorecardInfo;
   inTransit: ScorecardInfo;
@@ -86,7 +87,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
 
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {/* Layer 1 */}
       <Scorecard
         title="Overview"
         kpis={counts.overview.kpis}
@@ -101,19 +103,23 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             if (label === 'Regen. Ship.') setActiveFilter('RegenShipments');
         }}
       />
-       <Scorecard
-        title="PV Status"
-        kpis={counts.pvStatus.kpis}
-        icon={FileCheck2}
+      <Scorecard
+        title="Documents Status"
+        kpis={counts.documentStatus.kpis}
+        icon={File}
         onClick={() => setActiveFilter('Total')}
-        isActive={isFilterActive('PVNew', 'PVQueued', 'PVGenerated')}
-        activeKpiLabel={getActiveKpiLabel({ 'PVNew': 'New', 'PVQueued': 'Queued', 'PVGenerated': 'Generated' })}
+        isActive={isFilterActive('PVNew', 'PVQueued', 'PVGenerated', 'Inventory', 'Instructions')}
+        activeKpiLabel={getActiveKpiLabel({ 'PVNew': 'PV New', 'PVQueued': 'PV Queued', 'PVGenerated': 'PV Generated', 'Inventory': 'Inventory', 'Instructions': 'Instructions' })}
         onKpiClick={(label) => {
-            if (label === 'New') setActiveFilter('PVNew');
-            if (label === 'Queued') setActiveFilter('PVQueued');
-            if (label === 'Generated') setActiveFilter('PVGenerated');
+            if (label === 'PV New') setActiveFilter('PVNew');
+            if (label === 'PV Queued') setActiveFilter('PVQueued');
+            if (label === 'PV Generated') setActiveFilter('PVGenerated');
+            if (label === 'Inventory') setActiveFilter('Inventory');
+            if (label === 'Instructions') setActiveFilter('Instructions');
         }}
-       />
+      />
+
+      {/* Layer 2 */}
       <Scorecard
         title="AWB Status"
         kpis={counts.awbStatus.kpis}
@@ -143,7 +149,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         }}
       />
 
-      <div className="lg:col-span-2">
+      {/* Layer 3 */}
+      <div className="md:col-span-2">
         <Scorecard
           title="In Transit"
           value={counts.inTransit.value}
@@ -158,7 +165,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
           layout="badges"
         />
       </div>
-       <div className="lg:col-span-2">
+       <div className="md:col-span-2">
         <Scorecard
             title="Delivered & Completed"
             kpis={counts.deliveredAndCompleted.kpis}
