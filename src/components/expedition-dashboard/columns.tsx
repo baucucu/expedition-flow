@@ -412,16 +412,19 @@ export const columns = (
                 const lastNote = sortedNotes[0];
                 
                 return (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div className="w-48 truncate">{lastNote.noteText}</div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p className="max-w-xs whitespace-pre-wrap">{lastNote.noteText}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <div className="flex flex-col gap-1.5 w-48">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="truncate">{lastNote.noteText}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="max-w-xs whitespace-pre-wrap">{lastNote.noteText}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                        <Badge variant="secondary" className="font-normal w-fit">{lastNote.recipientName}</Badge>
+                    </div>
                 )
             }
         },
