@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { FileCheck, Loader2, Send, FileSignature, Hourglass, Mail, RefreshCw } from "lucide-react";
+import { FileCheck, Loader2, Send, FileSignature, Hourglass, Mail, RefreshCw, CopyPlus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
@@ -34,6 +34,8 @@ interface ToolbarProps {
   handleUpdateAwbStatus: () => void;
   isSendingReminder: boolean;
   handleSendReminder: () => void;
+  isRegenerating: boolean;
+  handleRegenerateAwbs: () => void;
 }
 
 export function Toolbar({
@@ -52,6 +54,8 @@ export function Toolbar({
   handleUpdateAwbStatus,
   isSendingReminder,
   handleSendReminder,
+  isRegenerating,
+  handleRegenerateAwbs,
 }: ToolbarProps) {
   const selectedRowCount = Object.keys(table.getState().rowSelection).length;
   const { isReadOnly } = useAuth();
@@ -65,7 +69,7 @@ export function Toolbar({
     <div className="flex flex-col gap-4 mb-4">
         {/* Actions Row */}
         {!isReadOnly && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <Button
                     onClick={handleGeneratePvs}
                     disabled={isGeneratingPv || selectedRowCount === 0}
@@ -90,7 +94,21 @@ export function Toolbar({
                     )}
                     {isQueuingAwb
                         ? "Queuing..."
-                        : `Generate AWB(s) for ${selectedRowCount} selected`}
+                        : `Generate AWB for ${selectedRowCount} selected`}
+                </Button>
+                 <Button
+                    variant="outline"
+                    onClick={handleRegenerateAwbs}
+                    disabled={isRegenerating || selectedRowCount === 0}
+                    >
+                    {isRegenerating ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <CopyPlus className="mr-2 h-4 w-4" />
+                    )}
+                    {isRegenerating
+                        ? "Regenerating..."
+                        : `Regenerate AWB for ${selectedRowCount} selected`}
                 </Button>
                 <Button
                     onClick={handleSendEmails}
@@ -264,3 +282,5 @@ export function Toolbar({
     </div>
   );
 }
+
+    

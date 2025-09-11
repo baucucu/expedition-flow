@@ -120,6 +120,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isUpdatingAwbStatus, setIsUpdatingAwbStatus] = React.useState(false);
   const [isSavingNote, setIsSavingNote] = React.useState(false);
   const [isSendingReminder, setIsSendingReminder] = React.useState(false);
+  const [isRegenerating, setIsRegenerating] = React.useState(false);
   const [newNote, setNewNote] = React.useState("");
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = React.useState(false);
   const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = React.useState(false);
@@ -244,7 +245,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   };
 
-  const handleQueueAwbs = async (isRegeneration = false) => {
+  const handleQueueAwbs = async () => {
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
   
@@ -252,31 +253,22 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       (r) => r.awb?.status === 'Generated' || r.awb?.status === 'AWB_CREATED'
     );
   
-    if (recipientsWithGeneratedAwb && !isRegeneration) {
-      setIsRegenerateDialogOpen(true);
-      return;
+    if (recipientsWithGeneratedAwb) {
+        toast({
+            variant: 'destructive',
+            title: 'Action Not Allowed',
+            description: 'One or more selected items already have a generated AWB. Please use the "Regenerate AWB" action instead.',
+        });
+        return;
     }
   
     setIsQueuingAwb(true);
   
     try {
-      let awbsToQueue = [];
-  
-      if (isRegeneration) {
-        const uniqueAwbIds = [...new Set(selectedRecipients.map(r => r.awbId).filter(id => !!id))];
-        const regenResult = await regenerateAwbAction({ awbIds: uniqueAwbIds as string[] });
-        if (regenResult.success && regenResult.newData) {
-          toast({ title: 'AWB Regeneration Started', description: regenResult.message });
-          awbsToQueue = regenResult.newData;
-        } else {
-          throw new Error(regenResult.message || 'Failed to clone AWBs.');
-        }
-      } else {
-        awbsToQueue = selectedRecipients.map(recipient => ({
+      let awbsToQueue = selectedRecipients.map(recipient => ({
           shipmentId: recipient.expeditionId,
           awbId: recipient.awbId,
         }));
-      }
   
       if (awbsToQueue.length > 0) {
         const result = await queueShipmentAwbGenerationAction({ awbsToQueue: awbsToQueue as any });
@@ -298,9 +290,32 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
       });
     } finally {
       setIsQueuingAwb(false);
-      setIsRegenerateDialogOpen(false);
     }
   };
+
+  const handleRegenerateAwbs = async () => {
+    const selectedRecipients = getSelectedRecipients();
+    if (selectedRecipients.length === 0) return;
+
+    const uniqueAwbIds = [...new Set(selectedRecipients.map(r => r.awbId).filter(Boolean))] as string[];
+    if (uniqueAwbIds.length === 0) {
+        toast({ variant: 'destructive', title: 'No AWBs to Regenerate', description: 'Could not find AWB IDs in selected rows.' });
+        return;
+    }
+
+    setIsRegenerating(true);
+    const result = await regenerateAwbAction({ awbIds: uniqueAwbIds });
+    setIsRegenerating(false);
+
+    if (result.success) {
+        toast({ title: 'AWB Regeneration Successful', description: result.message });
+        table.resetRowSelection();
+        router.refresh();
+    } else {
+        toast({ variant: 'destructive', title: 'AWB Regeneration Failed', description: result.message });
+    }
+  };
+
 
   const handleSendEmails = async (confirmed = false) => {
     const selectedRecipients = getSelectedRecipients();
@@ -507,8 +522,18 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   
   const displayedRecipient = React.useMemo(() => {
     if (!selectedDocument) return null;
-    return data.find(d => d.id === selectedDocument.recipient.id) || selectedDocument.recipient;
-  }, [selectedDocument, data]);
+    // Find the latest version of the recipient in the live data
+    const updatedRecipient = data.find(d => d.id === selectedDocument.recipient.id);
+    if (updatedRecipient) {
+        // Find the latest AWB data for this recipient
+        const updatedAwb = data.find(d => d.awbId === updatedRecipient.awbId)?.awb;
+        return {
+            ...updatedRecipient,
+            awb: updatedAwb || updatedRecipient.awb,
+        };
+    }
+    return selectedDocument.recipient;
+}, [selectedDocument, data]);
 
 
   const awbStatusHistory: ExpeditionStatusInfo[] = React.useMemo(() => {
@@ -530,12 +555,20 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const awbNotes = React.useMemo(() => {
     if (!displayedRecipient?.awb?.notes) return [];
+    
+    // Ensure all createdAt are Date objects before sorting
     const notesWithDates = displayedRecipient.awb.notes.map(note => ({
       ...note,
       createdAt: toDate(note.createdAt),
     }));
-    return notesWithDates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }, [displayedRecipient]);
+
+    // Sort by the Date object's time value
+    return notesWithDates.sort((a, b) => {
+        const timeA = a.createdAt?.getTime() || 0;
+        const timeB = b.createdAt?.getTime() || 0;
+        return timeB - timeA;
+    });
+}, [displayedRecipient]);
 
 
   return (
@@ -551,11 +584,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             isGeneratingPv={isGeneratingPv}
             handleGeneratePvs={handleGeneratePvs}
             isQueuingAwb={isQueuingAwb}
-            handleQueueAwbs={() => handleQueueAwbs(false)}
+            handleQueueAwbs={handleQueueAwbs}
             isUpdatingAwbStatus={isUpdatingAwbStatus}
             handleUpdateAwbStatus={handleUpdateAwbStatus}
             isSendingReminder={isSendingReminder}
             handleSendReminder={handleSendReminder}
+            isRegenerating={isRegenerating}
+            handleRegenerateAwbs={handleRegenerateAwbs}
         />
       <DataTable table={table} />
       <Pagination table={table} />
@@ -569,7 +604,10 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleQueueAwbs(true)}>Regenerate AWB</AlertDialogAction>
+            <AlertDialogAction onClick={() => {
+                setIsRegenerateDialogOpen(false);
+                handleRegenerateAwbs();
+            }}>Regenerate AWB</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -723,3 +761,5 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    

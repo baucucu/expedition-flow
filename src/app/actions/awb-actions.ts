@@ -3,9 +3,9 @@
 
 import { z } from "zod";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp, writeBatch } from "firebase/firestore";
+import { collection, query, where, getDocs, documentId, doc, updateDoc, arrayUnion, serverTimestamp, writeBatch, getDoc } from "firebase/firestore";
 import { tasks } from "@trigger.dev/sdk/v3";
-import type { AWB } from "@/types";
+import type { AWB, Recipient } from "@/types";
 import { randomUUID } from "crypto";
 
 const queueShipmentAwbGenerationActionInputSchema = z.object({
@@ -164,37 +164,47 @@ export async function regenerateAwbAction(input: z.infer<typeof regenerateAwbAct
         return { success: false, message: "Invalid input for regenerating AWBs." };
     }
     const { awbIds } = validation.data;
+    if (awbIds.length === 0) {
+        return { success: false, message: "No AWBs selected for regeneration." };
+    }
 
     try {
-        const newShipmentsToQueue = [];
-
+        let clonedCount = 0;
         for (const awbId of awbIds) {
             const batch = writeBatch(db);
 
             // 1. Fetch original documents
             const originalAwbRef = doc(db, "awbs", awbId);
-            const originalAwbSnap = await getDocs(query(collection(db, "awbs"), where(documentId(), "==", awbId)));
-            if (originalAwbSnap.empty) continue;
-            const originalAwb = originalAwbSnap.docs[0].data() as AWB;
+            const originalAwbSnap = await getDoc(originalAwbRef);
+            if (!originalAwbSnap.exists()) {
+                console.warn(`AWB ${awbId} not found, skipping.`);
+                continue;
+            }
+            const originalAwb = originalAwbSnap.data() as AWB;
 
             const originalShipmentRef = doc(db, "shipments", originalAwb.shipmentId);
-            const originalShipmentSnap = await getDocs(query(collection(db, "shipments"), where(documentId(), "==", originalAwb.shipmentId)));
-            if (originalShipmentSnap.empty) continue;
-            const originalShipment = originalShipmentSnap.docs[0].data();
+            const originalShipmentSnap = await getDoc(originalShipmentRef);
+            if (!originalShipmentSnap.exists()) {
+                 console.warn(`Shipment for AWB ${awbId} not found, skipping.`);
+                 continue;
+            }
+            const originalShipment = originalShipmentSnap.data();
 
             const recipientsQuery = query(collection(db, "recipients"), where("awbId", "==", awbId));
             const originalRecipientsSnap = await getDocs(recipientsQuery);
-            const originalRecipients = originalRecipientsSnap.docs.map(d => d.data());
+            const originalRecipients = originalRecipientsSnap.docs.map(d => d.data() as Recipient);
 
-            // 2. Determine new shipment ID
-            let counter = 1;
-            let newShipmentId = `${originalAwb.shipmentId}_${counter}`;
-            while(true) {
-                const existingShipment = await getDocs(query(collection(db, "shipments"), where(documentId(), "==", newShipmentId)));
-                if (existingShipment.empty) break;
-                counter++;
-                newShipmentId = `${originalAwb.shipmentId}_${counter}`;
+            // 2. Determine new shipment ID and count
+            const newCount = (originalShipment.count || 0) + 1;
+            const newShipmentId = `${originalShipment.id.split('_')[0]}_${newCount}`;
+            
+            // Check if new shipment ID already exists (as a safeguard)
+            const existingShipmentCheck = await getDoc(doc(db, "shipments", newShipmentId));
+            if (existingShipmentCheck.exists()) {
+                console.error(`Generated new shipment ID ${newShipmentId} already exists. Skipping AWB ${awbId}.`);
+                continue;
             }
+
 
             // 3. Clone Shipment
             const newShipmentRef = doc(db, "shipments", newShipmentId);
@@ -203,6 +213,8 @@ export async function regenerateAwbAction(input: z.infer<typeof regenerateAwbAct
                 id: newShipmentId,
                 status: "Ready for AWB",
                 createdAt: serverTimestamp(),
+                originalShipmentId: originalShipment.id.split('_')[0],
+                count: newCount
             });
 
             // 4. Clone AWB
@@ -241,14 +253,19 @@ export async function regenerateAwbAction(input: z.infer<typeof regenerateAwbAct
             });
 
             await batch.commit();
-
-            newShipmentsToQueue.push({ shipmentId: newShipmentId, awbId: newAwbId });
+            clonedCount++;
         }
 
-        return { success: true, message: `Cloned ${awbIds.length} AWB(s) successfully.`, newData: newShipmentsToQueue };
+        if (clonedCount === 0) {
+             return { success: false, message: `Could not clone any of the selected AWBs. See server logs for details.` };
+        }
+
+        return { success: true, message: `Cloned ${clonedCount} AWB(s) successfully. You can now generate a new AWB for the cloned records.` };
 
     } catch (error: any) {
         console.error("Error regenerating AWBs:", error);
         return { success: false, message: `Failed to regenerate AWBs: ${error.message}` };
     }
 }
+
+    

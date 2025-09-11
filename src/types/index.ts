@@ -146,6 +146,8 @@ export interface Expedition {
   recipientCount: number;
   awbCount: number;
   createdAt: any; // Firestore serverTimestamp
+  originalShipmentId?: string;
+  count?: number;
 }
 
 export interface Shipment {
@@ -157,3 +159,5 @@ export interface Shipment {
     status: ExpeditionStatus;
     // Add any other fields from your shipments collection that might be needed
 }
+
+    
