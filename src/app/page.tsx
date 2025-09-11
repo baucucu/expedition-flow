@@ -133,10 +133,11 @@ export default function Home() {
     const deliveredCount = deliveredAwbs.length;
     const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
 
-    const deliveredParcelsCount = deliveredAwbs.reduce((sum, awb) => sum + (awb.parcelCount || 0), 0);
-
-    const completedCount = allRecipientsWithFullData.filter(r => !!r.pvSemnatUrl).length;
+    // This is the correct logic as per the user's request.
+    const deliveredParcelsCount = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId)).length;
     
+    // Base the completed/not completed counts on all recipients.
+    const completedCount = allRecipientsWithFullData.filter(r => !!r.pvSemnatUrl).length;
     const notCompletedCount = allRecipientsWithFullData.filter(r => 
         deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl
     ).length;
