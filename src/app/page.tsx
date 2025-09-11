@@ -134,7 +134,7 @@ export default function Home() {
     const deliveredRecipients = allRecipientsWithFullData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes");
     const deliveredParcelsCount = deliveredRecipients.length;
 
-    const completedCount = deliveredRecipients.filter(r => !!r.pvSemnatUrl).length;
+    const completedCount = allRecipientsWithFullData.filter(r => !!r.pvSemnatUrl).length;
     const notCompletedCount = deliveredRecipients.filter(r => !r.pvSemnatUrl).length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
@@ -456,3 +456,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
