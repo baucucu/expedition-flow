@@ -232,9 +232,9 @@ export const columns = (
                         </div>
                          {awb && (
                             <div className="flex flex-col items-start gap-1 text-xs text-muted-foreground pt-1">
-                               {awb.mainRecipientName && <div className="flex items-center gap-1.5"><User className="h-3 w-3" /><span>{awb.mainRecipientName}</span></div>}
-                               {awb.mainRecipientEmail && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" /><span>{awb.mainRecipientEmail}</span></div>}
-                               {awb.mainRecipientTelephone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" /><span>{awb.mainRecipientTelephone}</span></div>}
+                               {awb.mainRecipientName && <div className="flex items-center gap-1.5"><User className="h-3 w-3" /><span>{gdprMode ? MASK : awb.mainRecipientName}</span></div>}
+                               {awb.mainRecipientEmail && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" /><span>{gdprMode ? MASK : awb.mainRecipientEmail}</span></div>}
+                               {awb.mainRecipientTelephone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" /><span>{gdprMode ? MASK : awb.mainRecipientTelephone}</span></div>}
                             </div>
                         )}
                     </div>
