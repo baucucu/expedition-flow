@@ -40,6 +40,7 @@ export interface ScorecardData {
   awbStatus: ScorecardInfo;
   logisticsStatus: ScorecardInfo;
   inTransit: ScorecardInfo;
+  issues: ScorecardInfo;
   deliveredAndCompleted: ScorecardInfo;
 }
 
@@ -150,20 +151,40 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       />
 
       {/* Layer 3 */}
-      <div className="md:col-span-2">
-        <Scorecard
-          title="In Transit"
-          value={counts.inTransit.value}
-          kpis={inTransitKpisWithIcons}
-          icon={Truck}
-          onClick={() => setActiveFilter('InTransit')}
-          isActive={isFilterActive('InTransit', ...(counts.inTransit.kpis?.map(k => k.label) || []))}
-          onKpiClick={(label) => {
-              setActiveFilter(label as FilterStatus);
-          }}
-          activeKpiLabel={isFilterActive('InTransit', ...(counts.inTransit.kpis?.map(k => k.label) || [])) ? activeFilter as string : undefined}
-          layout="badges"
-        />
+      <div className="md:col-span-2 flex flex-col md:flex-row gap-4">
+        <div className="md:w-2/3">
+          <Scorecard
+            title="In Transit"
+            value={counts.inTransit.value}
+            kpis={inTransitKpisWithIcons}
+            icon={Truck}
+            onClick={() => setActiveFilter('InTransit')}
+            isActive={isFilterActive('InTransit', ...(counts.inTransit.kpis?.map(k => k.label) || []))}
+            onKpiClick={(label) => {
+                setActiveFilter(label as FilterStatus);
+            }}
+            activeKpiLabel={isFilterActive('InTransit', ...(counts.inTransit.kpis?.map(k => k.label) || [])) ? activeFilter as string : undefined}
+            layout="badges"
+            className="h-full"
+          />
+        </div>
+        <div className="md:w-1/3">
+           <Scorecard
+            title="Issues"
+            value={counts.issues.value}
+            kpis={counts.issues.kpis}
+            icon={AlertCircle}
+            onClick={() => setActiveFilter('Issues')}
+            isActive={isFilterActive('Issues', ...(counts.issues.kpis?.map(k => k.label) || []))}
+            onKpiClick={(label) => {
+                setActiveFilter(label as FilterStatus);
+            }}
+            activeKpiLabel={isFilterActive('Issues', ...(counts.issues.kpis?.map(k => k.label) || [])) ? activeFilter as string : undefined}
+            layout="badges"
+            variant="destructive"
+            className="h-full"
+          />
+        </div>
       </div>
        <div className="md:col-span-2">
         <Scorecard

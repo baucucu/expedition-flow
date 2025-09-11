@@ -180,6 +180,28 @@ export default function Home() {
 
     let totalInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
 
+    const issuesByReason = awbs.reduce((acc, awb) => {
+        const reason = awb.expeditionStatus?.reason;
+        if (reason && reason.trim() !== '') {
+            if (!acc[reason]) {
+                acc[reason] = 0;
+            }
+            acc[reason]++;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    const dynamicIssueCounts = Object.entries(issuesByReason)
+        .map(([reason, count]) => ({
+            label: reason,
+            value: count,
+            color: 'red',
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    const totalIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
+
+
     const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
     const regeneratedExpeditions = expeditions.filter(e => e.originalShipmentId);
     
@@ -231,6 +253,10 @@ export default function Home() {
             value: totalInTransit,
             kpis: dynamicInTransitCounts,
         },
+        issues: {
+            value: totalIssues,
+            kpis: dynamicIssueCounts,
+        },
         deliveredAndCompleted: {
             kpis: [
                 { value: returnsCount, label: 'Returns' },
@@ -257,6 +283,11 @@ export default function Home() {
             const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === status).map(awb => awb.id));
             return filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         };
+        
+        const filterByAwbReason = (reason: string) => {
+            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.reason === reason).map(awb => awb.id));
+            return filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        };
 
         const finalStatuses = ["Livrata cu succes"];
         const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
@@ -267,6 +298,14 @@ export default function Home() {
             }
             return acc;
         }, {} as Record<string, boolean>));
+
+        const allIssueReasons = Object.keys(awbs.reduce((acc, awb) => {
+            if (awb.expeditionStatus?.reason && awb.expeditionStatus.reason.trim() !== '') {
+                acc[awb.expeditionStatus.reason] = true;
+            }
+            return acc;
+        }, {} as Record<string, boolean>));
+
 
         if (activeFilter === 'OriginalRecipients') {
             filteredData = filteredData.filter(r => originalExpeditionIds.has(r.shipmentId));
@@ -283,6 +322,11 @@ export default function Home() {
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (allInTransitStatuses.includes(activeFilter)) {
             filteredData = filterByAwbStatus(activeFilter);
+        } else if (activeFilter === 'Issues') {
+            const targetAwbIds = new Set(awbs.filter(awb => allIssueReasons.includes(awb.expeditionStatus?.reason!)).map(awb => awb.id));
+            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+        } else if (allIssueReasons.includes(activeFilter)) {
+            filteredData = filterByAwbReason(activeFilter);
         } else if (activeFilter === 'NotCompleted') {
             filteredData = filteredData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl);
         } else if (activeFilter === 'Verified') {
