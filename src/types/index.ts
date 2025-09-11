@@ -102,6 +102,7 @@ export interface Note {
 export interface AWB {
     id: string; // Firestore auto-generated ID
     shipmentId: string;
+    originalShipmentId?: string;
     awbNumber?: string; // The number received from the courier API
     mainRecipientName: string; // Nume_awb
     mainRecipientTelephone?: string; // Nr_tel_awb

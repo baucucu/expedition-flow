@@ -38,7 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "../document-viewer";
 import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 import { generateProcesVerbalAction } from "@/app/actions/document-actions";
-import { queueShipmentAwbGenerationAction, updateAwbStatusAction, addNoteToAwbAction } from "@/app/actions/awb-actions";
+import { queueShipmentAwbGenerationAction, updateAwbStatusAction, addNoteToAwbAction, regenerateAwbAction } from "@/app/actions/awb-actions";
 import { sendReminder } from "@/app/actions/reminder-actions";
 import { 
     RecipientRow, 
@@ -122,6 +122,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isSendingReminder, setIsSendingReminder] = React.useState(false);
   const [newNote, setNewNote] = React.useState("");
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = React.useState(false);
+  const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = React.useState(false);
   const [recipientsForEmail, setRecipientsForEmail] = React.useState<RecipientRow[]>([]);
   const { toast } = useToast();
   const router = useRouter();
@@ -243,46 +244,63 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     }
   };
 
-  const handleQueueAwbs = async () => {
+  const handleQueueAwbs = async (isRegeneration = false) => {
     const selectedRecipients = getSelectedRecipients();
     if (selectedRecipients.length === 0) return;
-
-    const awbsToProcess = selectedRecipients
-      .filter((recipient) => {
-        const status = recipient.awb?.status;
-        return status !== 'Generated' && status !== 'AWB_CREATED';
-      })
-      .map(recipient => ({
-          shipmentId: recipient.expeditionId,
-          awbId: recipient.awbId
-      }));
-
-    if (awbsToProcess.length === 0) {
-        toast({
-            title: "Nothing to Queue",
-            description: "All selected recipients already have a generated AWB.",
-        });
-        return;
+  
+    const recipientsWithGeneratedAwb = selectedRecipients.some(
+      (r) => r.awb?.status === 'Generated' || r.awb?.status === 'AWB_CREATED'
+    );
+  
+    if (recipientsWithGeneratedAwb && !isRegeneration) {
+      setIsRegenerateDialogOpen(true);
+      return;
     }
-
+  
     setIsQueuingAwb(true);
-    const result = await queueShipmentAwbGenerationAction({ awbsToQueue: awbsToProcess });
-    setIsQueuingAwb(false);
-    
-    if (result.success) {
-        toast({
-            title: "AWB Generation Queued",
-            description: result.message,
-        });
-        table.resetRowSelection();
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Failed to Queue AWB Generation",
-            description: result.message,
-        });
+  
+    try {
+      let awbsToQueue = [];
+  
+      if (isRegeneration) {
+        const uniqueAwbIds = [...new Set(selectedRecipients.map(r => r.awbId).filter(id => !!id))];
+        const regenResult = await regenerateAwbAction({ awbIds: uniqueAwbIds as string[] });
+        if (regenResult.success && regenResult.newData) {
+          toast({ title: 'AWB Regeneration Started', description: regenResult.message });
+          awbsToQueue = regenResult.newData;
+        } else {
+          throw new Error(regenResult.message || 'Failed to clone AWBs.');
+        }
+      } else {
+        awbsToQueue = selectedRecipients.map(recipient => ({
+          shipmentId: recipient.expeditionId,
+          awbId: recipient.awbId,
+        }));
+      }
+  
+      if (awbsToQueue.length > 0) {
+        const result = await queueShipmentAwbGenerationAction({ awbsToQueue: awbsToQueue as any });
+        if (result.success) {
+          toast({ title: 'AWB Generation Queued', description: result.message });
+          table.resetRowSelection();
+          router.refresh();
+        } else {
+          throw new Error(result.message);
+        }
+      } else {
+        toast({ title: 'Nothing to Queue', description: 'No new AWBs were created for queueing.' });
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'AWB Operation Failed',
+        description: error.message,
+      });
+    } finally {
+      setIsQueuingAwb(false);
+      setIsRegenerateDialogOpen(false);
     }
-  }
+  };
 
   const handleSendEmails = async (confirmed = false) => {
     const selectedRecipients = getSelectedRecipients();
@@ -511,14 +529,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }, [displayedRecipient]);
 
   const awbNotes = React.useMemo(() => {
-      if (!displayedRecipient?.awb?.notes) return [];
-      // Ensure all createdAt are Date objects before sorting
-      const notesWithDates = displayedRecipient.awb.notes.map(note => ({
-        ...note,
-        createdAt: toDate(note.createdAt),
-      }));
-
-      return notesWithDates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    if (!displayedRecipient?.awb?.notes) return [];
+    const notesWithDates = displayedRecipient.awb.notes.map(note => ({
+      ...note,
+      createdAt: toDate(note.createdAt),
+    }));
+    return notesWithDates.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }, [displayedRecipient]);
 
 
@@ -535,7 +551,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             isGeneratingPv={isGeneratingPv}
             handleGeneratePvs={handleGeneratePvs}
             isQueuingAwb={isQueuingAwb}
-            handleQueueAwbs={handleQueueAwbs}
+            handleQueueAwbs={() => handleQueueAwbs(false)}
             isUpdatingAwbStatus={isUpdatingAwbStatus}
             handleUpdateAwbStatus={handleUpdateAwbStatus}
             isSendingReminder={isSendingReminder}
@@ -543,6 +559,20 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         />
       <DataTable table={table} />
       <Pagination table={table} />
+       <AlertDialog open={isRegenerateDialogOpen} onOpenChange={setIsRegenerateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm AWB Regeneration</AlertDialogTitle>
+            <AlertDialogDescription>
+              One or more selected items already have a generated AWB. Regenerating will create new shipment and AWB records to preserve history. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => handleQueueAwbs(true)}>Regenerate AWB</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={isConfirmationDialogOpen} onOpenChange={setIsConfirmationDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
