@@ -121,7 +121,7 @@ export default function Home() {
     const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
-    const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued');
+    const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
     const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated' || !r.pvStatus).length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
@@ -180,11 +180,16 @@ export default function Home() {
 
     let totalInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
 
+    const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
+    const originalExpeditionIds = new Set(originalExpeditions.map(e => e.id));
+    const originalRecipients = allRecipientsWithFullData.filter(r => originalExpeditionIds.has(r.shipmentId!));
+
+
     return {
         overview: {
             kpis: [
-                { value: allRecipientsWithFullData.length, label: 'Recipients' },
-                { value: expeditions.length, label: 'Shipments' },
+                { value: originalRecipients.length, label: 'Recipients' },
+                { value: originalExpeditions.length, label: 'Shipments' },
                 { value: inventoryGeneratedCount, label: 'Inventories' },
                 { value: instructionsGeneratedCount, label: 'Instructions' },
             ]
