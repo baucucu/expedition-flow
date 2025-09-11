@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
-const READ_ONLY_USER_ID = "EHU0KtmxX3ZVKpkeW7RuMuo7LXn2";
+const READ_ONLY_USER_IDS = ["EHU0KtmxX3ZVKpkeW7RuMuo7LXn2", "jHacXqv5eMUAh116naGkzawIujf2"];
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setIsReadOnly(user?.uid === READ_ONLY_USER_ID);
+      setIsReadOnly(user ? READ_ONLY_USER_IDS.includes(user.uid) : false);
       setLoading(false);
     });
 
