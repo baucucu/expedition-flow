@@ -131,11 +131,15 @@ export default function Home() {
     
     const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
     const deliveredCount = deliveredAwbs.length;
-    
+    const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
+
     const deliveredParcelsCount = deliveredAwbs.reduce((sum, awb) => sum + (awb.parcelCount || 0), 0);
 
     const completedCount = allRecipientsWithFullData.filter(r => !!r.pvSemnatUrl).length;
-    const notCompletedCount = deliveredParcelsCount - completedCount;
+    
+    const notCompletedCount = allRecipientsWithFullData.filter(r => 
+        deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl
+    ).length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
     const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
