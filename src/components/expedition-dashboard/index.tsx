@@ -58,6 +58,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
+import { Badge } from "../ui/badge";
 
 const toDate = (timestamp: any): Date => {
   if (timestamp instanceof Date) {
@@ -713,9 +714,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                         awbNotes.map((note: Note) => (
                                             <div key={note.id} className="p-3 border rounded-lg bg-muted/50">
                                                 <p className="text-sm whitespace-pre-wrap">{note.noteText}</p>
-                                                <p className="text-xs text-muted-foreground mt-2">
-                                                    By: {note.userName} for {note.recipientName} on {formatNoteTimestamp(note.createdAt)}
-                                                </p>
+                                                <div className="flex items-center justify-between mt-2">
+                                                    <Badge variant="secondary" className="font-normal">{note.recipientName}</Badge>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        By: {note.userName} on {formatNoteTimestamp(note.createdAt)}
+                                                    </p>
+                                                </div>
                                             </div>
                                         ))
                                     ) : (
