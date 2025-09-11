@@ -122,7 +122,7 @@ export default function Home() {
     
     const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
-    const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated' || !r.pvStatus).length;
+    const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated').length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     
@@ -167,14 +167,15 @@ export default function Home() {
             const recipientCount = allRecipientsWithFullData.filter(r => awbIds.includes(r.awbId)).length;
             return {
                 label: status,
-                value: recipientCount,
-                secondaryValue: awbIds.length,
+                value: awbIds.length,
+                secondaryValue: recipientCount,
                 color: 'yellow',
             };
         })
         .sort((a, b) => b.value - a.value);
 
-    const totalRecipientsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const totalAwbsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const totalRecipientsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + (curr.secondaryValue || 0), 0);
 
     const awbsWithIssuesByReason = awbs.reduce((acc, awb) => {
         const reason = awb.expeditionStatus?.reason;
@@ -190,14 +191,16 @@ export default function Home() {
             const recipientCount = allRecipientsWithFullData.filter(r => awbIds.includes(r.awbId)).length;
             return {
                 label: reason,
-                value: recipientCount,
-                secondaryValue: awbIds.length,
+                value: awbIds.length,
+                secondaryValue: recipientCount,
                 color: 'red',
             };
         })
         .sort((a, b) => b.value - a.value);
 
-    const totalRecipientsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const totalAwbsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const totalRecipientsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + (curr.secondaryValue || 0), 0);
+
 
     const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
     const regeneratedExpeditions = expeditions.filter(e => e.originalShipmentId);
@@ -246,13 +249,13 @@ export default function Home() {
             ]
         },
         inTransit: {
-            value: totalRecipientsInTransit,
-            secondaryValue: Object.values(awbsInTransitByStatus).flat().length,
+            value: totalAwbsInTransit,
+            secondaryValue: totalRecipientsInTransit,
             kpis: dynamicInTransitCounts,
         },
         issues: {
-            value: totalRecipientsWithIssues,
-            secondaryValue: Object.values(awbsWithIssuesByReason).flat().length,
+            value: totalAwbsWithIssues,
+            secondaryValue: totalRecipientsWithIssues,
             kpis: dynamicIssueCounts,
         },
         deliveredAndCompleted: {
@@ -339,7 +342,7 @@ export default function Home() {
         } else if (activeFilter === 'PVQueued') {
             filteredData = filteredData.filter(r => r.pvStatus === 'Queued');
         } else if (activeFilter === 'PVNew') {
-            filteredData = filteredData.filter(r => r.pvStatus === 'Not Generated' || !r.pvStatus);
+            filteredData = filteredData.filter(r => r.pvStatus === 'Not Generated');
         } else if (activeFilter === 'Inventory') {
             filteredData = filteredData.filter(r => r.inventoryStatus === 'Generated');
         } else if (activeFilter === 'Instructions') {
@@ -454,5 +457,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

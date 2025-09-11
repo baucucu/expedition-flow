@@ -137,7 +137,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center">
         {showValue && (
-            <div className="text-center">
+            <div className="text-center py-4">
                 <span className="text-3xl font-bold">{value}</span>
                 {secondaryValue !== undefined && (
                     <span className="ml-2 text-base font-medium text-muted-foreground">
@@ -156,5 +156,3 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     </Card>
   );
 };
-
-    

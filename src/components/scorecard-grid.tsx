@@ -153,12 +153,12 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
 
       {/* Layer 3 */}
       <div className="md:col-span-2 flex flex-col md:flex-row gap-4">
-        <div className="md:w-2/3">
+        <div className="md:w-1/2">
           <Scorecard
-            title="Recipients In Transit"
+            title="In Transit"
             value={counts.inTransit.value}
             secondaryValue={counts.inTransit.secondaryValue}
-            secondaryValueLabel="AWBs"
+            secondaryValueLabel="Recipients"
             kpis={inTransitKpisWithIcons}
             icon={Truck}
             onClick={() => setActiveFilter('InTransit')}
@@ -171,12 +171,12 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             className="h-full"
           />
         </div>
-        <div className="md:w-1/3">
+        <div className="md:w-1/2">
            <Scorecard
-            title="Recipients with Issues"
+            title="Issues"
             value={counts.issues.value}
             secondaryValue={counts.issues.secondaryValue}
-            secondaryValueLabel="AWBs"
+            secondaryValueLabel="Recipients"
             kpis={counts.issues.kpis}
             icon={AlertCircle}
             onClick={() => setActiveFilter('Issues')}
@@ -228,5 +228,3 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     </div>
   );
 };
-
-    
