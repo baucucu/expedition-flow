@@ -218,14 +218,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         numericId: row.numericId
     }));
 
-    const selectedIds = new Set(recipientsToProcess.map(r => r.id));
-    setData(prevData =>
-      prevData.map(row =>
-        selectedIds.has(row.id) ? { ...row, pvStatus: 'Queued' } : row
-      )
-    );
-
-    console.log("selected recipients for pv generation",{recipientsToProcess})
     setIsGeneratingPv(true);
     const result = await generateProcesVerbalAction(recipientsToProcess);
     setIsGeneratingPv(false);
@@ -757,6 +749,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    
 
     
 

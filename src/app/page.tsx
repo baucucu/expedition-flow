@@ -106,9 +106,9 @@ export default function Home() {
     
     const awbsToBeUpdatedCount = awbs.filter(awb => awb.awb_data && !awb.expeditionStatus).length;
     
-    const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvUrl != null).length;
+    const pvGeneratedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Generated').length;
     const pvQueuedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Queued').length;
-    const pvNewCount = allRecipientsWithFullData.filter(r => !r.pvUrl).length;
+    const pvNewCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Not Generated' || !r.pvStatus).length;
     const instructionsGeneratedCount = allRecipientsWithFullData.filter(r => r.instructionsStatus === 'Generated').length;
     const inventoryGeneratedCount = allRecipientsWithFullData.filter(r => r.inventoryStatus === 'Generated').length;
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber).length;
@@ -252,7 +252,7 @@ export default function Home() {
         } else if (activeFilter === 'PVQueued') {
             filteredData = filteredData.filter(r => r.pvStatus === 'Queued');
         } else if (activeFilter === 'PVNew') {
-            filteredData = filteredData.filter(r => !r.pvUrl);
+            filteredData = filteredData.filter(r => r.pvStatus === 'Not Generated' || !r.pvStatus);
         } else if (activeFilter === 'Inventory') {
             filteredData = filteredData.filter(r => r.inventoryStatus === 'Generated');
         } else if (activeFilter === 'Instructions') {
@@ -366,3 +366,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
