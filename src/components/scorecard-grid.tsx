@@ -29,6 +29,7 @@ import type { FilterStatus } from '@/app/page';
 
 interface ScorecardInfo {
     value?: number;
+    secondaryValue?: number;
     kpis?: Kpi[];
     footerText?: string;
     errorCount?: number;
@@ -154,8 +155,10 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       <div className="md:col-span-2 flex flex-col md:flex-row gap-4">
         <div className="md:w-2/3">
           <Scorecard
-            title="In Transit"
+            title="Recipients In Transit"
             value={counts.inTransit.value}
+            secondaryValue={counts.inTransit.secondaryValue}
+            secondaryValueLabel="AWBs"
             kpis={inTransitKpisWithIcons}
             icon={Truck}
             onClick={() => setActiveFilter('InTransit')}
@@ -170,8 +173,10 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         </div>
         <div className="md:w-1/3">
            <Scorecard
-            title="Issues"
+            title="Recipients with Issues"
             value={counts.issues.value}
+            secondaryValue={counts.issues.secondaryValue}
+            secondaryValueLabel="AWBs"
             kpis={counts.issues.kpis}
             icon={AlertCircle}
             onClick={() => setActiveFilter('Issues')}
@@ -223,3 +228,5 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     </div>
   );
 };
+
+    

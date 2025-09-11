@@ -10,6 +10,7 @@ import { Badge } from './ui/badge';
 
 export interface Kpi {
   value: number;
+  secondaryValue?: number;
   label: string;
   color?: string;
   icon?: React.ElementType;
@@ -18,6 +19,8 @@ export interface Kpi {
 interface ScorecardProps {
   title: string;
   value?: number;
+  secondaryValue?: number;
+  secondaryValueLabel?: string;
   kpis?: Kpi[];
   icon?: React.ElementType;
   iconMapping?: Record<string, React.ElementType>;
@@ -33,6 +36,8 @@ interface ScorecardProps {
 export const Scorecard: React.FC<ScorecardProps> = ({
   title,
   value,
+  secondaryValue,
+  secondaryValueLabel,
   kpis,
   icon: Icon,
   iconMapping,
@@ -107,6 +112,9 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 >
                     {KpiIcon && <KpiIcon className="h-4 w-4" />}
                     <span className="font-semibold">{kpi.value}</span>
+                     {kpi.secondaryValue !== undefined && (
+                        <span className="text-xs text-muted-foreground">({kpi.secondaryValue})</span>
+                    )}
                     <span className="text-xs">{kpi.label}</span>
                 </Badge>
             )
@@ -129,7 +137,14 @@ export const Scorecard: React.FC<ScorecardProps> = ({
       </CardHeader>
       <CardContent className="flex-grow flex flex-col justify-center">
         {showValue && (
-            <div className="text-3xl font-bold text-center">{value}</div>
+            <div className="text-center">
+                <span className="text-3xl font-bold">{value}</span>
+                {secondaryValue !== undefined && (
+                    <span className="ml-2 text-base font-medium text-muted-foreground">
+                        ({secondaryValue} {secondaryValueLabel})
+                    </span>
+                )}
+            </div>
         )}
         {hasKpis && layout === 'default' && (
             renderDefaultKpis()
@@ -141,3 +156,5 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     </Card>
   );
 };
+
+    

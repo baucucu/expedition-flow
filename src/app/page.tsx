@@ -148,59 +148,56 @@ export default function Home() {
         awb.emailStatus !== 'Queued' && 
         awb.emailStatus !== 'Sent'
     ).length;
-    
-     const awbByStatus = awbs.reduce((acc, awb) => {
-        const status = awb.expeditionStatus?.status;
-        if (status) {
-            if (!acc[status]) {
-                acc[status] = 0;
-            }
-            acc[status]++;
-        }
-        return acc;
-    }, {} as Record<string, number>);
 
     const finalStatuses = ["Livrata cu succes"];
     const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
     const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
 
-    const dynamicInTransitCounts = Object.entries(awbByStatus)
-        .filter(([status, count]) => !excludedStatuses.has(status) && count > 0)
-        .map(([status, count]) => {
-            let color = 'yellow';
-            if (status === 'AWB Emis') color = 'blue';
-            if (['Avizat', 'Ridicare ulterioara'].includes(status)) color = 'red';
+    const awbsInTransitByStatus = awbs.reduce((acc, awb) => {
+        const status = awb.expeditionStatus?.status;
+        if (status && !excludedStatuses.has(status)) {
+            if (!acc[status]) acc[status] = [];
+            acc[status].push(awb.id);
+        }
+        return acc;
+    }, {} as Record<string, string[]>);
+    
+    const dynamicInTransitCounts = Object.entries(awbsInTransitByStatus)
+        .map(([status, awbIds]) => {
+            const recipientCount = allRecipientsWithFullData.filter(r => awbIds.includes(r.awbId)).length;
             return {
                 label: status,
-                value: count,
-                color: color,
+                value: recipientCount,
+                secondaryValue: awbIds.length,
+                color: 'yellow',
             };
         })
         .sort((a, b) => b.value - a.value);
 
-    let totalInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const totalRecipientsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
 
-    const issuesByReason = awbs.reduce((acc, awb) => {
+    const awbsWithIssuesByReason = awbs.reduce((acc, awb) => {
         const reason = awb.expeditionStatus?.reason;
         if (reason && reason.trim() !== '') {
-            if (!acc[reason]) {
-                acc[reason] = 0;
-            }
-            acc[reason]++;
+            if (!acc[reason]) acc[reason] = [];
+            acc[reason].push(awb.id);
         }
         return acc;
-    }, {} as Record<string, number>);
+    }, {} as Record<string, string[]>);
 
-    const dynamicIssueCounts = Object.entries(issuesByReason)
-        .map(([reason, count]) => ({
-            label: reason,
-            value: count,
-            color: 'red',
-        }))
+    const dynamicIssueCounts = Object.entries(awbsWithIssuesByReason)
+        .map(([reason, awbIds]) => {
+            const recipientCount = allRecipientsWithFullData.filter(r => awbIds.includes(r.awbId)).length;
+            return {
+                label: reason,
+                value: recipientCount,
+                secondaryValue: awbIds.length,
+                color: 'red',
+            };
+        })
         .sort((a, b) => b.value - a.value);
 
-    const totalIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
-
+    const totalRecipientsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
 
     const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
     const regeneratedExpeditions = expeditions.filter(e => e.originalShipmentId);
@@ -213,7 +210,6 @@ export default function Home() {
     
     const originalAwbs = awbs.filter(awb => originalExpeditionIds.has(awb.shipmentId));
     const regeneratedAwbs = awbs.filter(awb => regeneratedExpeditionIds.has(awb.shipmentId));
-
 
     return {
         overview: {
@@ -250,11 +246,13 @@ export default function Home() {
             ]
         },
         inTransit: {
-            value: totalInTransit,
+            value: totalRecipientsInTransit,
+            secondaryValue: Object.values(awbsInTransitByStatus).flat().length,
             kpis: dynamicInTransitCounts,
         },
         issues: {
-            value: totalIssues,
+            value: totalRecipientsWithIssues,
+            secondaryValue: Object.values(awbsWithIssuesByReason).flat().length,
             kpis: dynamicIssueCounts,
         },
         deliveredAndCompleted: {
@@ -456,3 +454,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
