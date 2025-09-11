@@ -130,13 +130,12 @@ export default function Home() {
     const awbRegeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).length;
     
     const deliveredCount = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes").length;
-    const deliveredParcelsCount = allRecipientsWithFullData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes").length;
     
-    const notCompletedCount = allRecipientsWithFullData.filter(r => 
-        r.awb?.expeditionStatus?.status === "Livrata cu succes" && !r.pvSemnatUrl
-    ).length;
-    
-    const completedCount = allRecipientsWithFullData.filter(r => r.pvSemnatUrl != null).length;
+    const deliveredRecipients = allRecipientsWithFullData.filter(r => r.awb?.expeditionStatus?.status === "Livrata cu succes");
+    const deliveredParcelsCount = deliveredRecipients.length;
+
+    const completedCount = deliveredRecipients.filter(r => !!r.pvSemnatUrl).length;
+    const notCompletedCount = deliveredRecipients.filter(r => !r.pvSemnatUrl).length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
     const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
