@@ -295,17 +295,22 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const handleRegenerateAwbs = async () => {
     const selectedRecipients = getSelectedRecipients();
-    if (selectedRecipients.length === 0) return;
+    if (selectedRecipients.length === 0) {
+        setIsRegenerateDialogOpen(false);
+        return;
+    }
 
     const uniqueAwbIds = [...new Set(selectedRecipients.map(r => r.awbId).filter(Boolean))] as string[];
     if (uniqueAwbIds.length === 0) {
         toast({ variant: 'destructive', title: 'No AWBs to Regenerate', description: 'Could not find AWB IDs in selected rows.' });
+        setIsRegenerateDialogOpen(false);
         return;
     }
 
     setIsRegenerating(true);
     const result = await regenerateAwbAction({ awbIds: uniqueAwbIds });
     setIsRegenerating(false);
+    setIsRegenerateDialogOpen(false);
 
     if (result.success) {
         toast({ title: 'AWB Regeneration Successful', description: result.message });
@@ -556,17 +561,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const awbNotes = React.useMemo(() => {
     if (!displayedRecipient?.awb?.notes) return [];
     
-    // Ensure all createdAt are Date objects before sorting
-    const notesWithDates = displayedRecipient.awb.notes.map(note => ({
-      ...note,
-      createdAt: toDate(note.createdAt),
-    }));
-
-    // Sort by the Date object's time value
-    return notesWithDates.sort((a, b) => {
-        const timeA = a.createdAt?.getTime() || 0;
-        const timeB = b.createdAt?.getTime() || 0;
-        return timeB - timeA;
+    return [...displayedRecipient.awb.notes].sort((a, b) => {
+        return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
     });
 }, [displayedRecipient]);
 
@@ -590,7 +586,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             isSendingReminder={isSendingReminder}
             handleSendReminder={handleSendReminder}
             isRegenerating={isRegenerating}
-            handleRegenerateAwbs={handleRegenerateAwbs}
+            handleRegenerateAwbs={() => setIsRegenerateDialogOpen(true)}
         />
       <DataTable table={table} />
       <Pagination table={table} />
@@ -599,15 +595,15 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm AWB Regeneration</AlertDialogTitle>
             <AlertDialogDescription>
-              One or more selected items already have a generated AWB. Regenerating will create new shipment and AWB records to preserve history. Are you sure you want to continue?
+              This will create new, cloned shipment and recipient records to preserve history before generating a new AWB. Are you sure you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-                setIsRegenerateDialogOpen(false);
-                handleRegenerateAwbs();
-            }}>Regenerate AWB</AlertDialogAction>
+            <AlertDialogAction onClick={handleRegenerateAwbs}>
+                {isRegenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Confirm & Regenerate
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -761,5 +757,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
+    
 
     

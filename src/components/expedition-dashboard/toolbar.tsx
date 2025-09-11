@@ -1,4 +1,5 @@
 
+
 import { Table } from "@tanstack/react-table";
 import { RecipientRow } from "./types";
 import { Input } from "@/components/ui/input";
@@ -97,7 +98,6 @@ export function Toolbar({
                         : `Generate AWB for ${selectedRowCount} selected`}
                 </Button>
                  <Button
-                    variant="outline"
                     onClick={handleRegenerateAwbs}
                     disabled={isRegenerating || selectedRowCount === 0}
                     >
@@ -283,4 +283,5 @@ export function Toolbar({
   );
 }
 
+    
     
