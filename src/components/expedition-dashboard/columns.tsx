@@ -3,7 +3,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { RecipientRow, awbStatuses, docShortNames, DocType } from "./types";
+import { RecipientRow, docShortNames, DocType } from "./types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -55,6 +55,7 @@ export const columns = (
     handleOpenDocument: (recipient: RecipientRow, docType: DocType) => void,
     setRowSelection: React.Dispatch<React.SetStateAction<{}>>,
     gdprMode: boolean,
+    awbStatuses: AWBStatus[],
 ): ColumnDef<RecipientRow>[] => {
     const { toast } = useToast();
     const { isReadOnly } = useAuth();

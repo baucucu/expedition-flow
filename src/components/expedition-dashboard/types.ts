@@ -12,9 +12,6 @@ export const recipientStatusVariant: { [key in RecipientStatus]: "default" | "se
 
 export const recipientStatuses: RecipientStatus[] = ['New', 'Documents Generated', 'Delivered', 'Completed', 'Returned'];
 
-export const awbStatuses: AWBStatus[] = ['New', 'Queued', 'Generated', 'AWB_CREATED', 'Failed'];
-
-
 export type RecipientRow = Recipient & { 
     expeditionId: string; 
     awb?: AWB, 

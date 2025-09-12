@@ -53,7 +53,7 @@ import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
 import { Button } from "../ui/button";
 import { ExternalLink, Loader2, Send } from "lucide-react";
-import { Note, ExpeditionStatusInfo } from "@/types";
+import { Note, ExpeditionStatusInfo, AWBStatus } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
@@ -139,9 +139,18 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
+  const awbStatuses = React.useMemo(() => {
+    const statuses = new Set<AWBStatus>();
+    initialData.forEach(row => {
+      const status = row.awb?.status ?? 'New';
+      statuses.add(status);
+    });
+    return Array.from(statuses);
+  }, [initialData]);
+
   const table = useReactTable({
     data,
-    columns: columns(handleOpenDocument, setRowSelection, gdprMode),
+    columns: columns(handleOpenDocument, setRowSelection, gdprMode, awbStatuses),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
