@@ -136,11 +136,11 @@ export default function Home() {
     // This is the correct logic as per the user's request.
     const deliveredParcelsCount = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId)).length;
     
-    // Base the completed/not completed counts on all recipients.
-    const completedCount = allRecipientsWithFullData.filter(r => !!r.pvSemnatUrl).length;
-    const notCompletedCount = allRecipientsWithFullData.filter(r => 
-        deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl
-    ).length;
+    const deliveredRecipients = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId));
+    
+    const completedCount = deliveredRecipients.filter(r => !!r.pvSemnatUrl).length;
+    
+    const notCompletedCount = deliveredRecipients.filter(r => !r.pvSemnatUrl).length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
     const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
@@ -264,7 +264,6 @@ export default function Home() {
         },
         deliveredAndCompleted: {
             kpis: [
-                { value: returnsCount, label: 'Returns' },
                 { value: deliveredCount, label: 'Delivered AWBs' },
                 { value: deliveredParcelsCount, label: 'Delivered Parcels' },
                 { value: notCompletedCount, label: 'Not Completed' },
@@ -335,7 +334,7 @@ export default function Home() {
         } else if (activeFilter === 'NotCompleted') {
             const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
             const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
-            filteredData = filteredData.filter(r => r.awbId && deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl);
+            filteredData = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl);
         } else if (activeFilter === 'Verified') {
             filteredData = filteredData.filter(r => r.verified === true);
         } else if (activeFilter === 'NotVerified') {
@@ -388,7 +387,7 @@ export default function Home() {
             const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
             filteredData = filteredData.filter(r => r.status === recipientStatus);
         } else if (activeFilter === 'Completed') {
-            filteredData = filteredData.filter(r => r.pvSemnatUrl != null);
+            filteredData = allRecipientsWithFullData.filter(r => r.pvSemnatUrl != null);
         } else {
             const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
             filteredData = filteredData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));
