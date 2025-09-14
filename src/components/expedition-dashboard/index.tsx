@@ -143,7 +143,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     const statuses = new Set<AWBStatus>();
     initialData.forEach(row => {
       const status = row.awb?.status ?? 'New';
-      statuses.add(status);
+      if (status) statuses.add(status);
     });
     return Array.from(statuses);
   }, [initialData]);
@@ -482,13 +482,13 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         return;
     }
 
-    const recipientsToProcess = selectedRecipients.filter(r => r.email && r.id && r.awbId);
+    const recipientsToProcess = selectedRecipients.filter(r => r.email && r.id && r.awbId && r.schoolName && r.awb?.mainRecipientName);
 
     if (recipientsToProcess.length === 0) {
         toast({
             variant: "destructive",
             title: "No valid recipients to process",
-            description: "Selected recipients must have an email, ID, and AWB ID.",
+            description: "Selected recipients must have an email, ID, AWB ID, location and AWB main recipient name.",
         });
         return;
     }
@@ -502,6 +502,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             awbId: r.awbId!,
             recipientName: r.name,
             recipientId: r.id,
+            location: r.schoolName!,
+            awbMainRecipientName: r.awb!.mainRecipientName,
         })),
         user: {
             id: user.uid,

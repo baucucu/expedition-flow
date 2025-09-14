@@ -13,6 +13,8 @@ const ReminderRecipientSchema = z.object({
   awbId: z.string(),
   recipientName: z.string(),
   recipientId: z.string(),
+  location: z.string(),
+  awbMainRecipientName: z.string(),
 });
 
 const sendReminderParams = z.object({
@@ -44,6 +46,8 @@ export async function sendReminder(
       recipientEmail: recipient.recipientEmail,
       recipientName: recipient.recipientName,
       recipientId: recipient.recipientId,
+      location: recipient.location,
+      awbMainRecipientName: recipient.awbMainRecipientName,
     },
   }));
   

@@ -8,6 +8,8 @@ const ReminderPayloadSchema = z.object({
   recipientEmail: z.string(),
   recipientName: z.string(),
   recipientId: z.string(),
+  location: z.string(),
+  awbMainRecipientName: z.string(),
 });
 
 const N8N_REMINDER_WEBHOOK_URL = process.env.N8N_REMINDER_WEBHOOK_URL;
