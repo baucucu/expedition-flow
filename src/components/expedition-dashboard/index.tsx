@@ -504,6 +504,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             recipientId: r.id,
             location: r.schoolName!,
             awbMainRecipientName: r.awb!.mainRecipientName,
+            isAwbOwner: r.name === r.awb!.mainRecipientName,
+            parcels: r.awb!.parcelCount || 0,
         })),
         user: {
             id: user.uid,
@@ -764,9 +766,3 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
-
-    
-
-    
-
-    

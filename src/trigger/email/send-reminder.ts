@@ -10,6 +10,8 @@ const ReminderPayloadSchema = z.object({
   recipientId: z.string(),
   location: z.string(),
   awbMainRecipientName: z.string(),
+  isAwbOwner: z.boolean(),
+  parcels: z.number(),
 });
 
 const N8N_REMINDER_WEBHOOK_URL = process.env.N8N_REMINDER_WEBHOOK_URL;
