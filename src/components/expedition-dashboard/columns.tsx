@@ -437,7 +437,6 @@ export const columns = (
                     checked={row.original.verified}
                     onCheckedChange={(value) => handleVerificationChange(row.original.id, !!value)}
                     aria-label="Toggle verification"
-                    disabled={isReadOnly}
                 />
             ),
         },
