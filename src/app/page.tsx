@@ -130,16 +130,12 @@ export default function Home() {
     const awbRegeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).length;
     
     const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
-    const deliveredCount = deliveredAwbs.length;
     const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
 
-    // This is the correct logic as per the user's request.
-    const deliveredParcelsCount = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId)).length;
-    
     const deliveredRecipients = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId));
-    
+    const deliveredParcelsCount = deliveredRecipients.length;
+
     const completedCount = deliveredRecipients.filter(r => !!r.pvSemnatUrl).length;
-    
     const notCompletedCount = deliveredRecipients.filter(r => !r.pvSemnatUrl).length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
@@ -157,53 +153,46 @@ export default function Home() {
     const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
     const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
 
-    const awbsInTransitByStatus = awbs.reduce((acc, awb) => {
-        const status = awb.expeditionStatus?.status;
-        if (status && !excludedStatuses.has(status)) {
-            if (!acc[status]) acc[status] = [];
-            acc[status].push(awb.id);
-        }
-        return acc;
-    }, {} as Record<string, string[]>);
+    const recipientsWithIssues = allRecipientsWithFullData.filter(r => r.issues);
+    const awbsWithIssues = new Set(recipientsWithIssues.map(r => r.awbId));
+
+    const awbsInTransitByStatus = allRecipientsWithFullData
+        .filter(r => !r.issues) // Exclude issues from in-transit
+        .reduce((acc, r) => {
+            const status = r.awb?.expeditionStatus?.status;
+            if (status && !excludedStatuses.has(status)) {
+                if (!acc[status]) acc[status] = 0;
+                acc[status]++;
+            }
+            return acc;
+        }, {} as Record<string, number>);
     
     const dynamicInTransitCounts = Object.entries(awbsInTransitByStatus)
-        .map(([status, awbIds]) => {
-            const recipientCount = allRecipientsWithFullData.filter(r => awbIds.includes(r.awbId)).length;
-            return {
-                label: status,
-                value: awbIds.length,
-                secondaryValue: recipientCount,
-                color: 'yellow',
-            };
-        })
+        .map(([status, recipientCount]) => ({
+            label: status,
+            value: recipientCount,
+            color: 'yellow',
+        }))
         .sort((a, b) => b.value - a.value);
 
-    const totalAwbsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
-    const totalRecipientsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + (curr.secondaryValue || 0), 0);
+    const totalRecipientsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
 
-    const awbsWithIssuesByReason = awbs.reduce((acc, awb) => {
-        const reason = awb.expeditionStatus?.reason;
-        if (reason && reason.trim() !== '') {
-            if (!acc[reason]) acc[reason] = [];
-            acc[reason].push(awb.id);
-        }
+    const issuesByAwbStatus = recipientsWithIssues.reduce((acc, r) => {
+        const status = r.awb?.expeditionStatus?.status || 'Unknown';
+        if (!acc[status]) acc[status] = 0;
+        acc[status]++;
         return acc;
-    }, {} as Record<string, string[]>);
+    }, {} as Record<string, number>);
 
-    const dynamicIssueCounts = Object.entries(awbsWithIssuesByReason)
-        .map(([reason, awbIds]) => {
-            const recipientCount = allRecipientsWithFullData.filter(r => awbIds.includes(r.awbId)).length;
-            return {
-                label: reason,
-                value: awbIds.length,
-                secondaryValue: recipientCount,
-                color: 'red',
-            };
-        })
+    const dynamicIssueCounts = Object.entries(issuesByAwbStatus)
+        .map(([status, recipientCount]) => ({
+            label: status,
+            value: recipientCount,
+            color: 'red',
+        }))
         .sort((a, b) => b.value - a.value);
 
-    const totalAwbsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
-    const totalRecipientsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + (curr.secondaryValue || 0), 0);
+    const totalRecipientsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
 
 
     const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
@@ -212,7 +201,7 @@ export default function Home() {
     const originalExpeditionIds = new Set(originalExpeditions.map(e => e.id));
     const regeneratedExpeditionIds = new Set(regeneratedExpeditions.map(e => e.id));
 
-    const originalRecipients = allRecipientsWithFullData.filter(r => originalExpeditionIds.has(r.shipmentId!));
+    const originalRecipients = allRecipientsWithFullData.filter(r => originalExpeditionIds.has(r.shipmentId));
     const regeneratedRecipients = allRecipientsWithFullData.filter(r => regeneratedExpeditionIds.has(r.shipmentId!));
     
     const originalAwbs = awbs.filter(awb => originalExpeditionIds.has(awb.shipmentId));
@@ -253,18 +242,17 @@ export default function Home() {
             ]
         },
         inTransit: {
-            value: totalAwbsInTransit,
-            secondaryValue: totalRecipientsInTransit,
+            value: totalRecipientsInTransit,
+            secondaryValue: undefined,
             kpis: dynamicInTransitCounts,
         },
         issues: {
-            value: totalAwbsWithIssues,
-            secondaryValue: totalRecipientsWithIssues,
+            value: totalRecipientsWithIssues,
+            secondaryValue: undefined,
             kpis: dynamicIssueCounts,
         },
         deliveredAndCompleted: {
             kpis: [
-                { value: deliveredCount, label: 'Delivered AWBs' },
                 { value: deliveredParcelsCount, label: 'Delivered Parcels' },
                 { value: notCompletedCount, label: 'Not Completed' },
                 { value: completedCount, label: 'Completed' },
@@ -284,31 +272,30 @@ export default function Home() {
     // Main scorecard filter
     if (activeFilter && activeFilter !== 'Total' && activeFilter !== 'Recipients' && activeFilter !== 'Shipments') {
         const filterByAwbStatus = (status: string) => {
-            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.status === status).map(awb => awb.id));
-            return filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-        };
-        
-        const filterByAwbReason = (reason: string) => {
-            const targetAwbIds = new Set(awbs.filter(awb => awb.expeditionStatus?.reason === reason).map(awb => awb.id));
-            return filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+            return filteredData.filter(r => r.awb?.expeditionStatus?.status === status);
         };
 
         const finalStatuses = ["Livrata cu succes"];
         const returnStatuses = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.expeditionStatus!.status);
         const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
-        const allInTransitStatuses = Object.keys(awbs.reduce((acc, awb) => {
-            if (awb.expeditionStatus?.status && !excludedStatuses.has(awb.expeditionStatus.status)) {
-                acc[awb.expeditionStatus.status] = true;
-            }
-            return acc;
-        }, {} as Record<string, boolean>));
+        
+        const allInTransitStatuses = Object.keys(allRecipientsWithFullData
+            .filter(r => !r.issues) // Exclude issues from in-transit
+            .reduce((acc, r) => {
+                const status = r.awb?.expeditionStatus?.status;
+                if (status && !excludedStatuses.has(status)) {
+                    acc[status] = true;
+                }
+                return acc;
+            }, {} as Record<string, boolean>));
 
-        const allIssueReasons = Object.keys(awbs.reduce((acc, awb) => {
-            if (awb.expeditionStatus?.reason && awb.expeditionStatus.reason.trim() !== '') {
-                acc[awb.expeditionStatus.reason] = true;
-            }
-            return acc;
-        }, {} as Record<string, boolean>));
+        const allIssueStatuses = Object.keys(allRecipientsWithFullData
+            .filter(r => r.issues)
+            .reduce((acc, r) => {
+                const status = r.awb?.expeditionStatus?.status || 'Unknown';
+                acc[status] = true;
+                return acc;
+            }, {} as Record<string, boolean>));
 
 
         if (activeFilter === 'OriginalRecipients') {
@@ -322,15 +309,13 @@ export default function Home() {
             const regenAwbIds = new Set(awbs.filter(awb => regeneratedExpeditionIds.has(awb.shipmentId)).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && regenAwbIds.has(r.awbId));
         } else if (activeFilter === 'InTransit') {
-            const targetAwbIds = new Set(awbs.filter(awb => allInTransitStatuses.includes(awb.expeditionStatus?.status!)).map(awb => awb.id));
-            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
+            filteredData = filteredData.filter(r => !r.issues && r.awb?.expeditionStatus?.status && allInTransitStatuses.includes(r.awb.expeditionStatus.status));
         } else if (allInTransitStatuses.includes(activeFilter)) {
-            filteredData = filterByAwbStatus(activeFilter);
+            filteredData = filteredData.filter(r => !r.issues && r.awb?.expeditionStatus?.status === activeFilter);
         } else if (activeFilter === 'Issues') {
-            const targetAwbIds = new Set(awbs.filter(awb => allIssueReasons.includes(awb.expeditionStatus?.reason!)).map(awb => awb.id));
-            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-        } else if (allIssueReasons.includes(activeFilter)) {
-            filteredData = filterByAwbReason(activeFilter);
+            filteredData = filteredData.filter(r => r.issues);
+        } else if (allIssueStatuses.includes(activeFilter)) {
+            filteredData = filteredData.filter(r => r.issues && (r.awb?.expeditionStatus?.status || 'Unknown') === activeFilter);
         } else if (activeFilter === 'NotCompleted') {
             const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
             const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
@@ -387,7 +372,9 @@ export default function Home() {
             const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
             filteredData = filteredData.filter(r => r.status === recipientStatus);
         } else if (activeFilter === 'Completed') {
-            filteredData = allRecipientsWithFullData.filter(r => r.pvSemnatUrl != null);
+            const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
+            const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
+            filteredData = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId) && !!r.pvSemnatUrl);
         } else {
             const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
             filteredData = filteredData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));

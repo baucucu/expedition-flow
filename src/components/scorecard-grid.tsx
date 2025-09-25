@@ -87,6 +87,11 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
       icon: getIconForStatus(kpi.label)
   }));
 
+  const issuesKpisWithIcons = counts.issues.kpis?.map(kpi => ({
+      ...kpi,
+      icon: getIconForStatus(kpi.label)
+  }));
+
 
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
@@ -177,7 +182,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             value={counts.issues.value}
             secondaryValue={counts.issues.secondaryValue}
             secondaryValueLabel="Recipients"
-            kpis={counts.issues.kpis}
+            kpis={issuesKpisWithIcons}
             icon={AlertCircle}
             onClick={() => setActiveFilter('Issues')}
             isActive={isFilterActive('Issues', ...(counts.issues.kpis?.map(k => k.label) || []))}
@@ -196,7 +201,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             title="Delivered & Completed"
             kpis={counts.deliveredAndCompleted.kpis}
             iconMapping={{ 
-                'Delivered AWBs': PackageCheck, 
                 'Delivered Parcels': PackageCheck,
                 'Not Completed': PackageX, 
                 'Completed': CheckCircle2, 
@@ -204,17 +208,16 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 'Verified': BadgeCheck,
             }}
             onClick={() => setActiveFilter('Total')}
-            isActive={isFilterActive('Delivered', 'NotCompleted', 'Completed', 'Verified', 'NotVerified')}
+            isActive={isFilterActive('Delivered', 'DeliveredParcels', 'NotCompleted', 'Completed', 'Verified', 'NotVerified')}
             onKpiClick={(label) => {
-                if (label === 'Delivered AWBs') setActiveFilter('Delivered');
-                if (label === 'Delivered Parcels') setActiveFilter('Delivered');
+                if (label === 'Delivered Parcels') setActiveFilter('DeliveredParcels');
                 if (label === 'Not Completed') setActiveFilter('NotCompleted');
                 if (label === 'Completed') setActiveFilter('Completed');
                 if (label === 'Verified') setActiveFilter('Verified');
                 if (label === 'Not Verified') setActiveFilter('NotVerified');
             }}
             activeKpiLabel={getActiveKpiLabel({ 
-                'Delivered': 'Delivered AWBs', 
+                'DeliveredParcels': 'Delivered Parcels', 
                 'NotCompleted': 'Not Completed', 
                 'Completed': 'Completed', 
                 'Verified': 'Verified',

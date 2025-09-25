@@ -108,7 +108,7 @@ export function Toolbar({
                     )}
                     {isRegenerating
                         ? "Regenerating..."
-                        : `Regenerate AWB for ${selectedRowCount} selected`}
+                        : `Regenerate Shipment for ${selectedRowCount} selected`}
                 </Button>
                 <Button
                     onClick={handleSendEmails}
@@ -121,7 +121,7 @@ export function Toolbar({
                     )}
                     {isSendingEmail
                         ? "Queuing..."
-                        : `Send Email for ${selectedRowCount} selected`}
+                        : `Send to Logistics for ${selectedRowCount} selected`}
                 </Button>
                 <Button
                     onClick={handleUpdateAwbStatus}

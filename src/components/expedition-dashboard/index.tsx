@@ -140,7 +140,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   }
 
   const awbStatuses = React.useMemo(() => {
-    const statuses = new Set<AWBStatus>();
+    const statuses = new Set<string>();
     initialData.forEach(row => {
       const status = row.awb?.status ?? 'New';
       if (status) statuses.add(status);

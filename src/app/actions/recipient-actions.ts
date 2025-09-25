@@ -115,3 +115,39 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
         return { success: false, error: `An unexpected error occurred: ${error.message}` };
     }
 }
+
+const updateShipmentIssuesStatusSchema = z.object({
+  shipmentId: z.string(),
+  status: z.boolean(),
+});
+
+export async function updateShipmentIssuesStatusAction(
+  input: z.infer<typeof updateShipmentIssuesStatusSchema>
+) {
+  const validation = updateShipmentIssuesStatusSchema.safeParse(input);
+  if (!validation.success) {
+    return { success: false, error: "Invalid input." };
+  }
+
+  const { shipmentId, status } = validation.data;
+
+  try {
+    const recipientsQuery = query(collection(db, "recipients"), where("shipmentId", "==", shipmentId));
+    const querySnapshot = await getDocs(recipientsQuery);
+    
+    if (querySnapshot.empty) {
+        return { success: false, error: "No recipients found for this shipment." };
+    }
+
+    const batch = writeBatch(db);
+    querySnapshot.docs.forEach(docSnap => {
+      batch.update(docSnap.ref, { issues: status });
+    });
+
+    await batch.commit();
+    return { success: true, message: `Updated issues status for ${querySnapshot.size} recipient(s).` };
+  } catch (error: any) {
+    console.error("Error updating shipment issues status:", error);
+    return { success: false, error: `An unexpected error occurred: ${error.message}` };
+  }
+}

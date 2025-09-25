@@ -42,6 +42,7 @@ export interface Recipient {
   name: string; // Nume și prenume
   status: RecipientStatus;
   verified?: boolean;
+  issues?: boolean;
   
   // Document fields
   pvStatus?: DocumentStatus;
@@ -159,5 +160,3 @@ export interface Shipment {
     status: ExpeditionStatus;
     // Add any other fields from your shipments collection that might be needed
 }
-
-    
