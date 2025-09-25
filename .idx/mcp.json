@@ -9,6 +9,10 @@
         "headers": {
           "CONTEXT7_API_KEY": "ctx7sk-9bbb97ba-b591-4d38-aa33-38e24f60c143"
         }
-      }
+      },
+      "trigger": {
+      "command": "npx",
+      "args": ["trigger.dev@latest", "mcp", "--dev-only"]
+    }
     }
   }
