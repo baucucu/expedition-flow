@@ -50,11 +50,10 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
     const notFound: any[] = [];
     
     try {
-        const batch = writeBatch(db);
         const recipientsRef = collection(db, "recipients");
 
         // Process in chunks to avoid overwhelming Firestore query limits if the file is huge
-        const chunkSize = 500;
+        const chunkSize = 25; // Firestore 'in' query supports up to 30 values
         for (let i = 0; i < data.length; i += chunkSize) {
             const chunk = data.slice(i, i + chunkSize);
             
@@ -64,6 +63,9 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
             const currentIds = chunk.map(row => String(row.current_recipient_id));
             
             if (currentIds.length === 0) continue;
+
+            // Create a new batch for each chunk
+            const batch = writeBatch(db);
 
             // Query for documents that match the current IDs in the chunk
             const q = query(recipientsRef, where("numericId", "in", currentIds));
@@ -82,6 +84,9 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
                     foundDocs.add(key);
                 }
             });
+            
+            // Commit the batch for the current chunk
+            await batch.commit();
 
             // Check for records from the file that were not found in the database
             for (const row of chunk) {
@@ -91,8 +96,6 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
                 }
             }
         }
-        
-        await batch.commit();
         
         const message = `Successfully updated ${updatedCount} recipient(s).`;
         const details = notFound.length > 0 ? ` Could not find ${notFound.length} records.` : '';
