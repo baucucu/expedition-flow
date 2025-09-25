@@ -446,17 +446,6 @@ export const columns = (
             }
         },
         {
-            id: "issues",
-            header: "Issues",
-            cell: ({ row }) => (
-                <Checkbox
-                    checked={row.original.issues}
-                    onCheckedChange={(value) => handleIssuesChange(row.original.shipmentId, !!value)}
-                    aria-label="Toggle issues status for shipment"
-                />
-            ),
-        },
-        {
             id: "verified",
             header: "Verified",
             cell: ({ row }) => (
@@ -464,6 +453,17 @@ export const columns = (
                     checked={row.original.verified}
                     onCheckedChange={(value) => handleVerificationChange(row.original.id, !!value)}
                     aria-label="Toggle verification"
+                />
+            ),
+        },
+        {
+            id: "issues",
+            header: "Issues",
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.original.issues}
+                    onCheckedChange={(value) => handleIssuesChange(row.original.shipmentId, !!value)}
+                    aria-label="Toggle issues status for shipment"
                 />
             ),
         },
