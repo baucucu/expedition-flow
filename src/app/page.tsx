@@ -135,14 +135,15 @@ export default function Home() {
     const deliveredRecipients = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId));
     const deliveredParcelsCount = deliveredRecipients.length;
 
-    const completedCount = deliveredRecipients.filter(r => !!r.pvSemnatUrl).length;
-    const notCompletedCount = deliveredRecipients.filter(r => !r.pvSemnatUrl).length;
+    const completedRecipients = deliveredRecipients.filter(r => !!r.pvSemnatUrl);
+    const completedCount = completedRecipients.length;
+    
+    const notCompletedRecipients = deliveredRecipients.filter(r => !r.pvSemnatUrl);
+    const notCompletedCount = notCompletedRecipients.length;
     
     const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
     const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
     
-    const returnsCount = awbs.filter(awb => !!awb.expeditionStatus?.inReturn).length;
-
     const readyForLogisticsCount = awbs.filter(awb => 
         !!awb.awb_data?.awbNumber && 
         awb.emailStatus !== 'Queued' && 
@@ -154,18 +155,20 @@ export default function Home() {
     const excludedStatuses = new Set([...finalStatuses, ...returnStatuses, undefined, null]);
 
     const recipientsWithIssues = allRecipientsWithFullData.filter(r => r.issues);
-    const awbsWithIssues = new Set(recipientsWithIssues.map(r => r.awbId));
+    
+    const recipientsInTransit = allRecipientsWithFullData.filter(r => {
+        const status = r.awb?.expeditionStatus?.status;
+        return !r.issues && status && !excludedStatuses.has(status);
+    });
 
-    const awbsInTransitByStatus = allRecipientsWithFullData
-        .filter(r => !r.issues) // Exclude issues from in-transit
-        .reduce((acc, r) => {
-            const status = r.awb?.expeditionStatus?.status;
-            if (status && !excludedStatuses.has(status)) {
-                if (!acc[status]) acc[status] = 0;
-                acc[status]++;
-            }
-            return acc;
-        }, {} as Record<string, number>);
+    const awbsInTransitByStatus = recipientsInTransit.reduce((acc, r) => {
+        const status = r.awb?.expeditionStatus?.status;
+        if (status) {
+            if (!acc[status]) acc[status] = 0;
+            acc[status]++;
+        }
+        return acc;
+    }, {} as Record<string, number>);
     
     const dynamicInTransitCounts = Object.entries(awbsInTransitByStatus)
         .map(([status, recipientCount]) => ({
@@ -175,7 +178,9 @@ export default function Home() {
         }))
         .sort((a, b) => b.value - a.value);
 
-    const totalRecipientsInTransit = dynamicInTransitCounts.reduce((acc, curr) => acc + curr.value, 0);
+    const totalRecipientsInTransit = recipientsInTransit.length;
+    const totalAwbsInTransit = new Set(recipientsInTransit.map(r => r.awbId)).size;
+
 
     const issuesByAwbStatus = recipientsWithIssues.reduce((acc, r) => {
         const status = r.awb?.expeditionStatus?.status || 'Unknown';
@@ -192,8 +197,8 @@ export default function Home() {
         }))
         .sort((a, b) => b.value - a.value);
 
-    const totalRecipientsWithIssues = dynamicIssueCounts.reduce((acc, curr) => acc + curr.value, 0);
-
+    const totalRecipientsWithIssues = recipientsWithIssues.length;
+    const totalAwbsWithIssues = new Set(recipientsWithIssues.map(r => r.awbId)).size;
 
     const originalExpeditions = expeditions.filter(e => !e.originalShipmentId);
     const regeneratedExpeditions = expeditions.filter(e => e.originalShipmentId);
@@ -242,13 +247,13 @@ export default function Home() {
             ]
         },
         inTransit: {
-            value: totalRecipientsInTransit,
-            secondaryValue: undefined,
+            value: totalAwbsInTransit,
+            secondaryValue: totalRecipientsInTransit,
             kpis: dynamicInTransitCounts,
         },
         issues: {
-            value: totalRecipientsWithIssues,
-            secondaryValue: undefined,
+            value: totalAwbsWithIssues,
+            secondaryValue: totalRecipientsWithIssues,
             kpis: dynamicIssueCounts,
         },
         deliveredAndCompleted: {
@@ -324,9 +329,6 @@ export default function Home() {
             filteredData = filteredData.filter(r => r.verified === true);
         } else if (activeFilter === 'NotVerified') {
             filteredData = filteredData.filter(r => r.pvStatus === 'Complet' && r.verified !== true);
-        } else if (activeFilter === 'Returns') {
-            const targetAwbIds = new Set(awbs.filter(awb => !!awb.expeditionStatus?.inReturn).map(awb => awb.id));
-            filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (activeFilter === 'PVGenerated') {
             filteredData = filteredData.filter(r => !!r.pvUrl);
         } else if (activeFilter === 'PVQueued') {

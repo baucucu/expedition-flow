@@ -138,12 +138,15 @@ export const Scorecard: React.FC<ScorecardProps> = ({
       <CardContent className="flex-grow flex flex-col justify-center">
         {showValue && (
             <div className="text-center py-4">
+              {secondaryValue !== undefined ? (
+                 <div>
+                    <span className="text-2xl font-bold">AWBs: {value}</span>
+                    <span className="mx-2 text-2xl font-light text-muted-foreground">-</span>
+                    <span className="text-2xl font-bold">Recipients: {secondaryValue}</span>
+                </div>
+              ) : (
                 <span className="text-3xl font-bold">{value}</span>
-                {secondaryValue !== undefined && (
-                    <span className="ml-2 text-base font-medium text-muted-foreground">
-                        ({secondaryValue} {secondaryValueLabel})
-                    </span>
-                )}
+              )}
             </div>
         )}
         {hasKpis && layout === 'default' && (
