@@ -15,7 +15,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { RecipientRow } from "@/components/expedition-dashboard/types";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | 'OriginalAwbs' | 'RegenAwbs' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'Delivered AWBs' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | 'OriginalAwbs' | 'RegenAwbs' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -130,6 +130,7 @@ export default function Home() {
     const awbRegeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).length;
     
     const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
+    const deliveredAwbsCount = deliveredAwbs.length;
     const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
 
     const deliveredRecipients = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId));
@@ -258,6 +259,7 @@ export default function Home() {
         },
         deliveredAndCompleted: {
             kpis: [
+                { value: deliveredAwbsCount, label: 'Delivered AWBs' },
                 { value: deliveredParcelsCount, label: 'Delivered Parcels' },
                 { value: notCompletedCount, label: 'Not Completed' },
                 { value: completedCount, label: 'Completed' },
@@ -367,7 +369,7 @@ export default function Home() {
                 awb.emailStatus !== 'Sent'
             ).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
-        } else if (activeFilter === 'Delivered' || activeFilter === 'DeliveredParcels') {
+        } else if (activeFilter === 'Delivered' || activeFilter === 'DeliveredParcels' || activeFilter === 'Delivered AWBs') {
             filteredData = filterByAwbStatus("Livrata cu succes");
         } else if (['NewRecipient', 'Returned'].includes(activeFilter)) {
             const statusMap = { 'NewRecipient': 'New', 'Returned': 'Returned' };
@@ -451,3 +453,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

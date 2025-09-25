@@ -198,7 +198,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
         <Scorecard
             title="Delivered & Completed"
             kpis={counts.deliveredAndCompleted.kpis}
-            iconMapping={{ 
+            iconMapping={{
+                'Delivered AWBs': PackageCheck,
                 'Delivered Parcels': PackageCheck,
                 'Not Completed': PackageX, 
                 'Completed': CheckCircle2, 
@@ -206,8 +207,9 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 'Verified': BadgeCheck,
             }}
             onClick={() => setActiveFilter('Total')}
-            isActive={isFilterActive('Delivered', 'DeliveredParcels', 'NotCompleted', 'Completed', 'Verified', 'NotVerified')}
+            isActive={isFilterActive('Delivered', 'DeliveredParcels', 'NotCompleted', 'Completed', 'Verified', 'NotVerified', 'Delivered AWBs')}
             onKpiClick={(label) => {
+                if (label === 'Delivered AWBs') setActiveFilter('Delivered AWBs');
                 if (label === 'Delivered Parcels') setActiveFilter('DeliveredParcels');
                 if (label === 'Not Completed') setActiveFilter('NotCompleted');
                 if (label === 'Completed') setActiveFilter('Completed');
@@ -215,6 +217,7 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 if (label === 'Not Verified') setActiveFilter('NotVerified');
             }}
             activeKpiLabel={getActiveKpiLabel({ 
+                'Delivered AWBs': 'Delivered AWBs',
                 'DeliveredParcels': 'Delivered Parcels', 
                 'NotCompleted': 'Not Completed', 
                 'Completed': 'Completed', 
@@ -226,3 +229,5 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
     </div>
   );
 };
+
+    
