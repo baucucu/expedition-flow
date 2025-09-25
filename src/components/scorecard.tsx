@@ -95,7 +95,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   )
 
   const renderBadgeKpis = () => (
-    <CardFooter className="flex-wrap justify-start gap-2 pt-4">
+    <CardFooter className="flex-wrap justify-start gap-2 pt-4 flex-grow">
         {kpis!.map(kpi => {
             const isKpiActive = isActive && activeKpiLabel === kpi.label;
             const KpiIcon = kpi.icon;
@@ -126,7 +126,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     <Card
       onClick={onClick}
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md flex flex-col h-full",
+        "cursor-pointer transition-all hover:shadow-md flex flex-col",
         isActive && `ring-2 ${ringClass} shadow-lg`,
         className,
       )}
@@ -135,11 +135,11 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {Icon && <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />}
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-center">
+      <CardContent className={cn("flex-grow flex flex-col justify-center", layout === 'badges' ? 'min-h-[80px]' : '')}>
         {showValue && (
             <div className="text-center py-4">
               {secondaryValue !== undefined ? (
-                 <div>
+                 <div className="text-center">
                     <span className="text-2xl font-bold">AWBs: {value}</span>
                     <span className="mx-2 text-2xl font-light text-muted-foreground">-</span>
                     <span className="text-2xl font-bold">Recipients: {secondaryValue}</span>

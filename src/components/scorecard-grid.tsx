@@ -163,7 +163,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             title="In Transit"
             value={counts.inTransit.value}
             secondaryValue={counts.inTransit.secondaryValue}
-            secondaryValueLabel="Recipients"
             kpis={inTransitKpisWithIcons}
             icon={Truck}
             onClick={() => setActiveFilter('InTransit')}
@@ -181,7 +180,6 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
             title="Issues"
             value={counts.issues.value}
             secondaryValue={counts.issues.secondaryValue}
-            secondaryValueLabel="Recipients"
             kpis={issuesKpisWithIcons}
             icon={AlertCircle}
             onClick={() => setActiveFilter('Issues')}
