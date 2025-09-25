@@ -1,7 +1,7 @@
 
 "use server";
 
-import { task, logger } from "@trigger.dev/sdk";
+import { task, logger, wait } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const UpdateAwbStatusPayloadSchema = z.object({
@@ -10,11 +10,13 @@ const UpdateAwbStatusPayloadSchema = z.object({
 });
 
 const N8N_UPDATE_AWB_STATUS_URL = process.env.N8N_UPDATE_AWB_STATUS_URL;
+const TRIGGER_CONCURRENCY = process.env.TRIGGER_CONCURRENCY ? parseInt(process.env.TRIGGER_CONCURRENCY, 10) : 5;
+const TRIGGER_WAIT_TIME = process.env.TRIGGER_WAIT_TIME ? parseInt(process.env.TRIGGER_WAIT_TIME, 10) : 30;
 
 export const updateAwbStatusTask = task({
   id: "update-awb-status",
   queue: {
-    concurrencyLimit: 10,
+    concurrencyLimit: TRIGGER_CONCURRENCY,
   },
   run: async (payload: z.infer<typeof UpdateAwbStatusPayloadSchema>, { ctx }) => {
     logger.info(`Starting AWB status update task for AWB: ${payload.awbNumber}`);
@@ -48,6 +50,7 @@ export const updateAwbStatusTask = task({
             response: responseBody 
         });
 
+        await wait.for({ seconds: TRIGGER_WAIT_TIME });
         return { success: true, awbNumber: payload.awbNumber, response: responseBody };
 
     } catch (error: any) {

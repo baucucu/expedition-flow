@@ -1,5 +1,5 @@
 
-import { task, logger } from "@trigger.dev/sdk";
+import { task, logger, wait } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const ReminderPayloadSchema = z.object({
@@ -15,11 +15,13 @@ const ReminderPayloadSchema = z.object({
 });
 
 const N8N_REMINDER_WEBHOOK_URL = process.env.N8N_REMINDER_WEBHOOK_URL;
+const TRIGGER_CONCURRENCY = process.env.TRIGGER_CONCURRENCY ? parseInt(process.env.TRIGGER_CONCURRENCY, 10) : 5;
+const TRIGGER_WAIT_TIME = process.env.TRIGGER_WAIT_TIME ? parseInt(process.env.TRIGGER_WAIT_TIME, 10) : 30;
 
 export const sendReminderTask = task({
   id: "send-reminder",
   queue: {
-    concurrencyLimit: 10,
+    concurrencyLimit: TRIGGER_CONCURRENCY,
   },
   run: async (payload: z.infer<typeof ReminderPayloadSchema>, { ctx }) => {
     logger.info(`Starting reminder sending task for recipient: ${payload.recipientId}`);
@@ -53,6 +55,7 @@ export const sendReminderTask = task({
             response: responseBody 
         });
 
+        await wait.for({ seconds: TRIGGER_WAIT_TIME });
         return { success: true, instructionsDocumentId: payload.instructionsDocumentId, response: responseBody };
 
     } catch (error: any) {

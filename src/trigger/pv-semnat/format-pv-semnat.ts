@@ -1,5 +1,5 @@
 
-import { task, logger } from "@trigger.dev/sdk";
+import { task, logger, wait } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const FormatPvSemnatPayloadSchema = z.object({
@@ -8,11 +8,13 @@ const FormatPvSemnatPayloadSchema = z.object({
 });
 
 const N8N_FORMAT_IMAGE_URL = process.env.N8N_FORMAT_IMAGE_URL;
+const TRIGGER_CONCURRENCY = process.env.TRIGGER_CONCURRENCY ? parseInt(process.env.TRIGGER_CONCURRENCY, 10) : 5;
+const TRIGGER_WAIT_TIME = process.env.TRIGGER_WAIT_TIME ? parseInt(process.env.TRIGGER_WAIT_TIME, 10) : 30;
 
 export const formatPvSemnatTask = task({
   id: "format-pv-semnat",
   queue: {
-    concurrencyLimit: 10,
+    concurrencyLimit: TRIGGER_CONCURRENCY,
   },
   run: async (payload: z.infer<typeof FormatPvSemnatPayloadSchema>, { ctx }) => {
     logger.info(`Starting format PV Semnat task for recipient: ${payload.recipientDocId}`);
@@ -46,6 +48,7 @@ export const formatPvSemnatTask = task({
             response: responseBody 
         });
 
+        await wait.for({ seconds: TRIGGER_WAIT_TIME });
         return { success: true, recipientDocId: payload.recipientDocId, response: responseBody };
 
     } catch (error: any) {

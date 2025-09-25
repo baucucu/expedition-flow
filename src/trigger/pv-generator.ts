@@ -1,7 +1,9 @@
 
-import { task, logger } from "@trigger.dev/sdk"; 
+import { task, logger, wait } from "@trigger.dev/sdk"; 
 
 const N8N_PV_WEBHOOK_URL = process.env.N8N_PV_WEBHOOK_URL;
+const TRIGGER_CONCURRENCY = process.env.TRIGGER_CONCURRENCY ? parseInt(process.env.TRIGGER_CONCURRENCY, 10) : 5;
+const TRIGGER_WAIT_TIME = process.env.TRIGGER_WAIT_TIME ? parseInt(process.env.TRIGGER_WAIT_TIME, 10) : 30;
 
 const callN8nWebhook = async (recipient: { id: string; name: string, shipmentId: string, numericId?: string }): Promise<{ recipientId: string; pvUrl?: string; error?: string }> => {
   console.log("received recipient in calln8nwebhook: ", recipient)
@@ -47,7 +49,7 @@ export const generateProcesVerbalTask = task({
     //   preset: "large-1x", // 4 vCPU, 8 GB RAM
     // },
     queue: {
-      concurrencyLimit: 10,
+      concurrencyLimit: TRIGGER_CONCURRENCY,
     },
     run: async (payload: {id: string, name: string, shipmentId: string, numericId?:string}, { ctx }) => {
       const { id, name, shipmentId, numericId } = payload;
@@ -59,6 +61,7 @@ export const generateProcesVerbalTask = task({
       } else {
         logger.info(`Successfully generated PV for recipient ${id}`, { url: result.pvUrl });
       }
+      await wait.for({ seconds: TRIGGER_WAIT_TIME });
       return result;
     },
     retry: {

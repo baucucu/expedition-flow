@@ -1,7 +1,7 @@
 
 "use server";
 
-import { task, logger } from "@trigger.dev/sdk";
+import { task, logger, wait } from "@trigger.dev/sdk";
 import { z } from "zod";
 
 const RecipientSchema = z.object({
@@ -27,11 +27,13 @@ const SendEmailPayloadSchema = z.object({
 });
 
 const N8N_EMAIL_WEBHOOK_URL = process.env.N8N_EMAIL_WEBHOOK_URL;
+const TRIGGER_CONCURRENCY = process.env.TRIGGER_CONCURRENCY ? parseInt(process.env.TRIGGER_CONCURRENCY, 10) : 5;
+const TRIGGER_WAIT_TIME = process.env.TRIGGER_WAIT_TIME ? parseInt(process.env.TRIGGER_WAIT_TIME, 10) : 30;
 
 export const sendEmailTask = task({
   id: "send-email",
   queue: {
-    concurrencyLimit: 10,
+    concurrencyLimit: TRIGGER_CONCURRENCY,
   },
   run: async (payload: z.infer<typeof SendEmailPayloadSchema>, { ctx }) => {
     logger.info(`Starting email sending task for shipment: ${payload.shipmentId}`);
@@ -65,6 +67,7 @@ export const sendEmailTask = task({
             response: responseBody 
         });
 
+        await wait.for({ seconds: TRIGGER_WAIT_TIME });
         return { success: true, shipmentId: payload.shipmentId, response: responseBody };
 
     } catch (error: any) {
