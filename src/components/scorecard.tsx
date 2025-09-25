@@ -95,7 +95,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   )
 
   const renderBadgeKpis = () => (
-    <CardFooter className="flex-wrap justify-start gap-2 pt-4 flex-grow">
+    <div className="flex flex-wrap justify-start gap-2 pt-4">
         {kpis!.map(kpi => {
             const isKpiActive = isActive && activeKpiLabel === kpi.label;
             const KpiIcon = kpi.icon;
@@ -119,14 +119,14 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 </Badge>
             )
         })}
-    </CardFooter>
+    </div>
   )
   
   return (
     <Card
       onClick={onClick}
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md flex flex-col",
+        "cursor-pointer transition-all hover:shadow-md",
         isActive && `ring-2 ${ringClass} shadow-lg`,
         className,
       )}
@@ -135,27 +135,27 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {Icon && <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />}
       </CardHeader>
-      <CardContent className={cn("flex-grow flex flex-col justify-center", layout === 'badges' ? 'min-h-[80px]' : '')}>
+      <CardContent>
         {showValue && (
             <div className="text-center py-4">
-              {secondaryValue !== undefined ? (
-                 <div className="text-center">
-                    <span className="text-2xl font-bold">AWBs: {value}</span>
-                    <span className="mx-2 text-2xl font-light text-muted-foreground">-</span>
-                    <span className="text-2xl font-bold">Recipients: {secondaryValue}</span>
-                </div>
-              ) : (
-                <span className="text-3xl font-bold">{value}</span>
-              )}
+                {secondaryValue !== undefined ? (
+                    <div className="text-center">
+                        <span className="text-2xl font-bold">AWBs: {value}</span>
+                        <span className="mx-2 text-2xl font-light text-muted-foreground">-</span>
+                        <span className="text-2xl font-bold">Recipients: {secondaryValue}</span>
+                    </div>
+                ) : (
+                    <span className="text-3xl font-bold">{value}</span>
+                )}
             </div>
         )}
         {hasKpis && layout === 'default' && (
             renderDefaultKpis()
         )}
-      </CardContent>
-       {(hasKpis && layout === 'badges') && (
+         {hasKpis && layout === 'badges' && (
             renderBadgeKpis()
-       )}
+        )}
+      </CardContent>
     </Card>
   );
 };
