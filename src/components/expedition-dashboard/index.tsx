@@ -62,7 +62,7 @@ import { Toolbar } from "@/components/expedition-dashboard/toolbar";
 import { Pagination } from "@/components/expedition-dashboard/pagination";
 import { DocumentPlaceholder } from "@/components/expedition-dashboard/document-placeholder";
 import { Button } from "../ui/button";
-import { ExternalLink, Loader2, Send } from "lucide-react";
+import { ExternalLink, Loader2, Send, Undo2 } from "lucide-react";
 import { Note, ExpeditionStatusInfo, AWBStatus } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { Textarea } from "../ui/textarea";
@@ -137,10 +137,18 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = React.useState(false);
   const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = React.useState(false);
   const [recipientsForEmail, setRecipientsForEmail] = React.useState<RecipientRow[]>([]);
+  
+  // State for Issue Dialog
   const [issueDialogOpen, setIssueDialogOpen] = React.useState(false);
   const [issueRecipient, setIssueRecipient] = React.useState<RecipientRow | null>(null);
   const [issueNote, setIssueNote] = React.useState("");
   const [isSavingIssue, setIsSavingIssue] = React.useState(false);
+
+  // State for Revert Issue Dialog
+  const [revertIssueDialogOpen, setRevertIssueDialogOpen] = React.useState(false);
+  const [revertIssueNote, setRevertIssueNote] = React.useState("");
+  const [isRevertingIssue, setIsRevertingIssue] = React.useState(false);
+
   const { toast } = useToast();
   const router = useRouter();
   const { user, isReadOnly } = useAuth();
@@ -536,29 +544,86 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     });
 
     // 2. Mark the shipment with issues
-    const issueStatusResult = await updateShipmentIssuesStatusAction({
-        shipmentId: shipmentId,
-        status: true,
-    });
-
-    setIsSavingIssue(false);
-
-    if (noteResult.success && issueStatusResult.success) {
-        toast({
-            title: "Issue Reported",
-            description: "The issue has been noted and the shipment is marked.",
+    if (noteResult.success) {
+        const issueStatusResult = await updateShipmentIssuesStatusAction({
+            shipmentId: shipmentId,
+            status: true,
         });
-        setIssueDialogOpen(false);
-        setIssueRecipient(null);
-        setIssueNote("");
+
+         if (issueStatusResult.success) {
+            toast({
+                title: "Issue Reported",
+                description: "The issue has been noted and the shipment is marked.",
+            });
+            setIssueDialogOpen(false);
+            setIssueRecipient(null);
+            setIssueNote("");
+        } else {
+             toast({
+                variant: "destructive",
+                title: "Failed to Mark Issue",
+                description: issueStatusResult.error || "An unknown error occurred.",
+            });
+        }
     } else {
-        toast({
+         toast({
             variant: "destructive",
-            title: "Failed to Report Issue",
-            description: noteResult.message || issueStatusResult.error || "An unknown error occurred.",
+            title: "Failed to Save Note",
+            description: noteResult.message || "An unknown error occurred.",
         });
     }
+
+    setIsSavingIssue(false);
   }
+
+    const handleRevertIssue = async () => {
+        if (!displayedRecipient || !user || !revertIssueNote.trim()) return;
+
+        setIsRevertingIssue(true);
+        const { shipmentId, id: recipientId, name, awbId } = displayedRecipient;
+
+        // 1. Add the revert note
+        const noteResult = await addNoteToAwbAction({
+            awbId: awbId,
+            noteText: `ISSUE REVERTED: ${revertIssueNote}`,
+            userId: user.uid,
+            userName: user.email || 'Unknown User',
+            recipientId: recipientId,
+            recipientName: name,
+            createdAt: new Date(),
+        });
+
+        // 2. Set issues to false for the shipment
+        if (noteResult.success) {
+            const issueStatusResult = await updateShipmentIssuesStatusAction({
+                shipmentId: shipmentId,
+                status: false,
+            });
+
+            if (issueStatusResult.success) {
+                toast({
+                    title: "Issue Reverted",
+                    description: "The shipment is no longer marked with an issue.",
+                });
+                setRevertIssueDialogOpen(false);
+                setRevertIssueNote("");
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Failed to Revert Issue Status",
+                    description: issueStatusResult.error || "An unknown error occurred.",
+                });
+            }
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Failed to Save Revert Note",
+                description: noteResult.message || "An unknown error occurred.",
+            });
+        }
+        setIsRevertingIssue(false);
+    };
+
   
   const handleSendReminder = async () => {
     const selectedRecipients = getSelectedRecipients();
@@ -751,6 +816,34 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             </DialogContent>
         </Dialog>
 
+        <Dialog open={revertIssueDialogOpen} onOpenChange={setRevertIssueDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Revert Issue Status</DialogTitle>
+                    <DialogDescription>
+                        Explain why you are reverting the issue status for shipment {displayedRecipient?.shipmentId}. This will add a note for audit purposes.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <Textarea 
+                        placeholder="Enter reason for reverting..."
+                        value={revertIssueNote}
+                        onChange={(e) => setRevertIssueNote(e.target.value)}
+                        disabled={isRevertingIssue}
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline" disabled={isRevertingIssue}>Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleRevertIssue} disabled={isRevertingIssue || !revertIssueNote.trim()}>
+                         {isRevertingIssue ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Confirm Revert
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
         <SheetContent className="sm:max-w-[80vw]">
           {displayedRecipient && (
@@ -877,10 +970,22 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                             />
                                             <Label htmlFor="mark-issue" className="text-sm font-medium">Mark as Issue</Label>
                                         </div>
-                                        <Button onClick={handleSaveNote} disabled={isSavingNote || !newNote.trim()}>
-                                            {isSavingNote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                            Save Note
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            {displayedRecipient.issues && !isReadOnly && (
+                                                <Button 
+                                                    variant="destructive"
+                                                    onClick={() => setRevertIssueDialogOpen(true)} 
+                                                    disabled={isRevertingIssue}
+                                                >
+                                                    <Undo2 className="mr-2 h-4 w-4" />
+                                                    Revert Issue
+                                                </Button>
+                                            )}
+                                            <Button onClick={handleSaveNote} disabled={isSavingNote || !newNote.trim()}>
+                                                {isSavingNote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                                Save Note
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
