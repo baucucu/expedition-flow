@@ -129,11 +129,18 @@ export default function Home() {
     const awbGeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !awb.originalShipmentId).length;
     const awbRegeneratedCount = awbs.filter(awb => !!awb.awb_data?.awbNumber && !!awb.originalShipmentId).length;
     
-    const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
-    const deliveredAwbsCount = deliveredAwbs.length;
-    const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
+    // --- Delivered & Completed Logic ---
+    const recipientsWithNoIssues = allRecipientsWithFullData.filter(r => !r.issues);
+    const awbIdsWithNoIssues = new Set(recipientsWithNoIssues.map(r => r.awbId));
 
-    const deliveredRecipients = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId));
+    const deliveredAwbsWithoutIssues = awbs.filter(awb => 
+        awb.expeditionStatus?.status === "Livrata cu succes" && 
+        awbIdsWithNoIssues.has(awb.id)
+    );
+    const deliveredAwbsCount = deliveredAwbsWithoutIssues.length;
+    const deliveredAwbIdsWithoutIssues = new Set(deliveredAwbsWithoutIssues.map(awb => awb.id));
+
+    const deliveredRecipients = recipientsWithNoIssues.filter(r => deliveredAwbIdsWithoutIssues.has(r.awbId));
     const deliveredParcelsCount = deliveredRecipients.length;
 
     const completedRecipients = deliveredRecipients.filter(r => !!r.pvSemnatUrl);
@@ -142,8 +149,11 @@ export default function Home() {
     const notCompletedRecipients = deliveredRecipients.filter(r => !r.pvSemnatUrl);
     const notCompletedCount = notCompletedRecipients.length;
     
-    const verifiedCount = allRecipientsWithFullData.filter(r => r.verified === true).length;
-    const notVerifiedCount = allRecipientsWithFullData.filter(r => r.pvStatus === 'Complet' && r.verified !== true).length;
+    // Verified/Not Verified counts should also exclude issues
+    const notVerifiedRecipients = recipientsWithNoIssues.filter(r => r.pvStatus === 'Complet' && r.verified !== true);
+    const notVerifiedCount = notVerifiedRecipients.length;
+    const verifiedCount = recipientsWithNoIssues.filter(r => r.verified === true).length;
+    // --- End Delivered & Completed ---
     
     const readyForLogisticsCount = awbs.filter(awb => 
         !!awb.awb_data?.awbNumber && 
@@ -326,11 +336,11 @@ export default function Home() {
         } else if (activeFilter === 'NotCompleted') {
             const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
             const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
-            filteredData = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl);
+            filteredData = allRecipientsWithFullData.filter(r => !r.issues && deliveredAwbIds.has(r.awbId) && !r.pvSemnatUrl);
         } else if (activeFilter === 'Verified') {
-            filteredData = filteredData.filter(r => r.verified === true);
+            filteredData = filteredData.filter(r => !r.issues && r.verified === true);
         } else if (activeFilter === 'NotVerified') {
-            filteredData = filteredData.filter(r => r.pvStatus === 'Complet' && r.verified !== true);
+            filteredData = filteredData.filter(r => !r.issues && r.pvStatus === 'Complet' && r.verified !== true);
         } else if (activeFilter === 'PVGenerated') {
             filteredData = filteredData.filter(r => !!r.pvUrl);
         } else if (activeFilter === 'PVQueued') {
@@ -370,7 +380,7 @@ export default function Home() {
             ).map(awb => awb.id));
             filteredData = filteredData.filter(r => r.awbId && targetAwbIds.has(r.awbId));
         } else if (activeFilter === 'Delivered' || activeFilter === 'DeliveredParcels' || activeFilter === 'Delivered AWBs') {
-            filteredData = filterByAwbStatus("Livrata cu succes");
+            filteredData = filterByAwbStatus("Livrata cu succes").filter(r => !r.issues);
         } else if (['NewRecipient', 'Returned'].includes(activeFilter)) {
             const statusMap = { 'NewRecipient': 'New', 'Returned': 'Returned' };
             const recipientStatus = statusMap[activeFilter as keyof typeof statusMap];
@@ -378,7 +388,7 @@ export default function Home() {
         } else if (activeFilter === 'Completed') {
             const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
             const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
-            filteredData = allRecipientsWithFullData.filter(r => deliveredAwbIds.has(r.awbId) && !!r.pvSemnatUrl);
+            filteredData = allRecipientsWithFullData.filter(r => !r.issues && deliveredAwbIds.has(r.awbId) && !!r.pvSemnatUrl);
         } else {
             const expeditionFilteredIds = expeditions.filter(e => e.status === activeFilter).map(e => e.id);
             filteredData = filteredData.filter(r => expeditionFilteredIds.includes(r.expeditionId!));

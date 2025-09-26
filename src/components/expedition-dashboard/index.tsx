@@ -103,10 +103,6 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     initialData, 
     expeditions,
     gdprMode,
-    pvFilter,
-    setPvFilter,
-    emailFilter,
-    setEmailFilter
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -115,6 +111,8 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [data, setData] = React.useState<RecipientRow[]>(initialData);
   const [selectedDocument, setSelectedDocument] = React.useState<SelectedDocument | null>(null);
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [pvFilter, setPvFilter] = React.useState<"all" | "has_pv" | "no_pv">("all");
+  const [emailFilter, setEmailFilter] = React.useState<"all" | "sent" | "not_sent">("all");
   const [isQueuingAwb, setIsQueuingAwb] = React.useState(false);
   const [isGeneratingPv, setIsGeneratingPv] = React.useState(false);
   const [isSendingEmail, setIsSendingEmail] = React.useState(false);
@@ -131,9 +129,25 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const { user, isReadOnly } = useAuth();
 
   React.useEffect(() => {
-    setData(initialData);
+    let filteredData = initialData;
+
+    if (pvFilter !== "all") {
+      filteredData = filteredData.filter(row => {
+        const hasPv = !!row.pvUrl;
+        return pvFilter === "has_pv" ? hasPv : !hasPv;
+      });
+    }
+
+    if (emailFilter !== "all") {
+      filteredData = filteredData.filter(row => {
+        const isSent = row.awb?.emailSentCount && row.awb.emailSentCount > 0;
+        return emailFilter === "sent" ? isSent : !isSent;
+      });
+    }
+
+    setData(filteredData);
     table.resetRowSelection();
-  }, [initialData]);
+  }, [initialData, pvFilter, emailFilter]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {
     setSelectedDocument({ recipient, docType });

@@ -126,7 +126,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     <Card
       onClick={onClick}
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md",
+        "cursor-pointer transition-all hover:shadow-md flex flex-col",
         isActive && `ring-2 ${ringClass} shadow-lg`,
         className,
       )}
@@ -135,7 +135,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {Icon && <Icon className={cn("h-4 w-4", variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground')} />}
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         {showValue && (
             <div className="text-center py-4">
                 {secondaryValue !== undefined ? (

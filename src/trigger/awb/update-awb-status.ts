@@ -50,7 +50,7 @@ export const updateAwbStatusTask = task({
             response: responseBody 
         });
 
-        await wait.for({ seconds: TRIGGER_WAIT_TIME });
+        // await wait.for({ seconds: TRIGGER_WAIT_TIME });
         return { success: true, awbNumber: payload.awbNumber, response: responseBody };
 
     } catch (error: any) {
