@@ -33,12 +33,22 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
   } from "@/components/ui/alert-dialog";
+  import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+  } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast";
 import { DocumentViewer } from "../document-viewer";
 import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 import { generateProcesVerbalAction } from "@/app/actions/document-actions";
 import { queueShipmentAwbGenerationAction, updateAwbStatusAction, addNoteToAwbAction, regenerateAwbAction } from "@/app/actions/awb-actions";
+import { updateShipmentIssuesStatusAction } from "@/app/actions/recipient-actions";
 import { sendReminder } from "@/app/actions/reminder-actions";
 import { 
     RecipientRow, 
@@ -59,6 +69,8 @@ import { Textarea } from "../ui/textarea";
 import { ScrollArea } from "../ui/scroll-area";
 import { format } from 'date-fns';
 import { Badge } from "../ui/badge";
+import { Label } from "../ui/label";
+import { Checkbox } from "../ui/checkbox";
 
 const toDate = (timestamp: any): Date => {
   if (timestamp instanceof Date) {
@@ -121,9 +133,14 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [isSendingReminder, setIsSendingReminder] = React.useState(false);
   const [isRegenerating, setIsRegenerating] = React.useState(false);
   const [newNote, setNewNote] = React.useState("");
+  const [markAsIssue, setMarkAsIssue] = React.useState(false);
   const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = React.useState(false);
   const [isRegenerateDialogOpen, setIsRegenerateDialogOpen] = React.useState(false);
   const [recipientsForEmail, setRecipientsForEmail] = React.useState<RecipientRow[]>([]);
+  const [issueDialogOpen, setIssueDialogOpen] = React.useState(false);
+  const [issueRecipient, setIssueRecipient] = React.useState<RecipientRow | null>(null);
+  const [issueNote, setIssueNote] = React.useState("");
+  const [isSavingIssue, setIsSavingIssue] = React.useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { user, isReadOnly } = useAuth();
@@ -153,6 +170,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setSelectedDocument({ recipient, docType });
   }
 
+  const handleOpenIssueDialog = (recipient: RecipientRow) => {
+    setIssueRecipient(recipient);
+    setIssueDialogOpen(true);
+  };
+
   const awbStatuses = React.useMemo(() => {
     const statuses = new Set<string>();
     initialData.forEach(row => {
@@ -164,7 +186,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
   const table = useReactTable({
     data,
-    columns: columns(handleOpenDocument, setRowSelection, gdprMode, awbStatuses),
+    columns: columns(handleOpenDocument, setRowSelection, gdprMode, awbStatuses, handleOpenIssueDialog),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -463,6 +485,7 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
 
     setIsSavingNote(true);
     
+    // Create the note first
     const noteData = {
         awbId: selectedDocument.recipient.awbId,
         noteText: newNote,
@@ -472,15 +495,68 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
         recipientName: selectedDocument.recipient.name,
         createdAt: new Date(),
     };
+    const noteResult = await addNoteToAwbAction(noteData);
 
-    const result = await addNoteToAwbAction(noteData);
+    // If note is saved and user checked the box, update issue status
+    if (noteResult.success && markAsIssue) {
+        await updateShipmentIssuesStatusAction({ 
+            shipmentId: selectedDocument.recipient.shipmentId, 
+            status: true 
+        });
+    }
+    
     setIsSavingNote(false);
 
-    if (result.success) {
-        toast({ title: 'Note Saved', description: result.message });
+    if (noteResult.success) {
+        toast({ title: 'Note Saved', description: "The note was added successfully." });
         setNewNote("");
+        setMarkAsIssue(false); // Reset checkbox
+        // No need to close the sheet, user might want to add more notes
     } else {
-        toast({ variant: 'destructive', title: 'Failed to Save Note', description: result.message });
+        toast({ variant: 'destructive', title: 'Failed to Save Note', description: noteResult.message });
+    }
+  }
+
+  const handleSaveIssue = async () => {
+    if (!issueRecipient || !user || !issueNote.trim()) return;
+
+    setIsSavingIssue(true);
+
+    const { shipmentId, id: recipientId, name, awbId } = issueRecipient;
+
+    // 1. Add the note
+    const noteResult = await addNoteToAwbAction({
+        awbId: awbId,
+        noteText: `ISSUE: ${issueNote}`,
+        userId: user.uid,
+        userName: user.email || 'Unknown User',
+        recipientId: recipientId,
+        recipientName: name,
+        createdAt: new Date(),
+    });
+
+    // 2. Mark the shipment with issues
+    const issueStatusResult = await updateShipmentIssuesStatusAction({
+        shipmentId: shipmentId,
+        status: true,
+    });
+
+    setIsSavingIssue(false);
+
+    if (noteResult.success && issueStatusResult.success) {
+        toast({
+            title: "Issue Reported",
+            description: "The issue has been noted and the shipment is marked.",
+        });
+        setIssueDialogOpen(false);
+        setIssueRecipient(null);
+        setIssueNote("");
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Failed to Report Issue",
+            description: noteResult.message || issueStatusResult.error || "An unknown error occurred.",
+        });
     }
   }
   
@@ -647,6 +723,34 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             </AlertDialogContent>
         </AlertDialog>
 
+        <Dialog open={issueDialogOpen} onOpenChange={setIssueDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Report an Issue</DialogTitle>
+                    <DialogDescription>
+                        Describe the issue for shipment {issueRecipient?.shipmentId}. This will add a note and mark the entire shipment as having an issue.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <Textarea 
+                        placeholder="Enter issue details..."
+                        value={issueNote}
+                        onChange={(e) => setIssueNote(e.target.value)}
+                        disabled={isSavingIssue}
+                    />
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline" disabled={isSavingIssue}>Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSaveIssue} disabled={isSavingIssue || !issueNote.trim()}>
+                         {isSavingIssue ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Save Issue
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
       <Sheet open={!!selectedDocument} onOpenChange={(isOpen) => !isOpen && setSelectedDocument(null)}>
         <SheetContent className="sm:max-w-[80vw]">
           {displayedRecipient && (
@@ -764,10 +868,20 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                                         onChange={(e) => setNewNote(e.target.value)}
                                         disabled={isSavingNote}
                                     />
-                                    <Button onClick={handleSaveNote} disabled={isSavingNote || !newNote.trim()} className="w-full">
-                                        {isSavingNote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                                        Save Note
-                                    </Button>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox 
+                                                id="mark-issue" 
+                                                checked={markAsIssue} 
+                                                onCheckedChange={(checked) => setMarkAsIssue(Boolean(checked))}
+                                            />
+                                            <Label htmlFor="mark-issue" className="text-sm font-medium">Mark as Issue</Label>
+                                        </div>
+                                        <Button onClick={handleSaveNote} disabled={isSavingNote || !newNote.trim()}>
+                                            {isSavingNote ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                                            Save Note
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -7,13 +7,13 @@ import { RecipientRow, docShortNames, DocType } from "./types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Mail, Phone, User, AlertTriangle } from "lucide-react";
+import { ChevronDown, Mail, Phone, User, AlertCircle, MessageSquarePlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
 import React from "react";
 import { updateShipmentDetails } from "@/app/actions/expedition-actions";
-import { updateRecipientVerificationAction, updateShipmentIssuesStatusAction } from "@/app/actions/recipient-actions";
+import { updateRecipientVerificationAction } from "@/app/actions/recipient-actions";
 import { useToast } from "@/hooks/use-toast";
 import { ContactCell } from "./contact-cell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
@@ -56,6 +56,7 @@ export const columns = (
     setRowSelection: React.Dispatch<React.SetStateAction<{}>>,
     gdprMode: boolean,
     awbStatuses: string[],
+    onOpenIssueDialog: (recipient: RecipientRow) => void,
 ): ColumnDef<RecipientRow>[] => {
     const { toast } = useToast();
     const { isReadOnly } = useAuth();
@@ -87,22 +88,6 @@ export const columns = (
         } else {
              toast({
                 title: "Verification Update Failed",
-                description: result.error,
-                variant: 'destructive',
-            });
-        }
-    }
-
-    const handleIssuesChange = async (shipmentId: string, status: boolean) => {
-        const result = await updateShipmentIssuesStatusAction({ shipmentId, status });
-        if (result.success) {
-            toast({
-                title: `Shipment marked as ${status ? 'having issues' : 'resolved'}.`,
-                description: result.message
-            });
-        } else {
-             toast({
-                title: "Failed to Update Issues",
                 description: result.error,
                 variant: 'destructive',
             });
@@ -459,13 +444,22 @@ export const columns = (
         {
             id: "issues",
             header: "Issues",
-            cell: ({ row }) => (
-                <Checkbox
-                    checked={row.original.issues}
-                    onCheckedChange={(value) => handleIssuesChange(row.original.shipmentId, !!value)}
-                    aria-label="Toggle issues status for shipment"
-                />
-            ),
+            cell: ({ row }) => {
+                const hasIssue = row.original.issues;
+                return hasIssue ? (
+                    <Badge variant="destructive">Issue</Badge>
+                ) : (
+                    <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onOpenIssueDialog(row.original)}
+                        disabled={isReadOnly}
+                    >
+                        <MessageSquarePlus className="mr-2 h-4 w-4" />
+                        Add Issue
+                    </Button>
+                )
+            },
         },
     ];
 }
