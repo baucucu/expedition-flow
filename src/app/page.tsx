@@ -150,7 +150,7 @@ export default function Home() {
     const notCompletedCount = notCompletedRecipients.length;
     
     // Verified/Not Verified counts should also exclude issues
-    const notVerifiedRecipients = recipientsWithNoIssues.filter(r => r.pvStatus === 'Complet' && r.verified !== true);
+    const notVerifiedRecipients = completedRecipients.filter(r => r.verified !== true);
     const notVerifiedCount = notVerifiedRecipients.length;
     const verifiedCount = recipientsWithNoIssues.filter(r => r.verified === true).length;
     // --- End Delivered & Completed ---
@@ -340,7 +340,10 @@ export default function Home() {
         } else if (activeFilter === 'Verified') {
             filteredData = filteredData.filter(r => !r.issues && r.verified === true);
         } else if (activeFilter === 'NotVerified') {
-            filteredData = filteredData.filter(r => !r.issues && r.pvStatus === 'Complet' && r.verified !== true);
+            const deliveredAwbs = awbs.filter(awb => awb.expeditionStatus?.status === "Livrata cu succes");
+            const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
+            const completedRecipients = allRecipientsWithFullData.filter(r => !r.issues && deliveredAwbIds.has(r.awbId) && !!r.pvSemnatUrl);
+            filteredData = completedRecipients.filter(r => r.verified !== true);
         } else if (activeFilter === 'PVGenerated') {
             filteredData = filteredData.filter(r => !!r.pvUrl);
         } else if (activeFilter === 'PVQueued') {
@@ -463,5 +466,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

@@ -1,3 +1,4 @@
+
 // src/hooks/use-auth.tsx
 "use client";
 
@@ -23,6 +24,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      // A user is read-only if their UID is in the READ_ONLY_USER_IDS list.
+      // This is now used as the "auditor" role. They can see everything but only edit the "verified" status.
       setIsReadOnly(user ? READ_ONLY_USER_IDS.includes(user.uid) : false);
       setLoading(false);
     });

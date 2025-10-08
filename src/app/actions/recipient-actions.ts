@@ -49,25 +49,21 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
     let updatedCount = 0;
     const notFound: any[] = [];
     
-    try {
-        const recipientsRef = collection(db, "recipients");
+    // Process in chunks to avoid overwhelming Firestore query limits if the file is huge
+    const chunkSize = 25; 
 
-        // Process in chunks to avoid overwhelming Firestore query limits if the file is huge
-        const chunkSize = 25; // Firestore 'in' query supports up to 30 values
+    try {
         for (let i = 0; i < data.length; i += chunkSize) {
             const chunk = data.slice(i, i + chunkSize);
             
-            // Create a map to quickly find the new ID for a given currentId+shipmentId
             const updateMap = new Map(chunk.map(row => [`${String(row.current_recipient_id)}-${String(row.shipment_id)}`, String(row.new_recipient_id)]));
             
-            const currentIds = chunk.map(row => String(row.current_recipient_id));
+            const currentIds = chunk.map(row => String(row.current_recipient_id)).filter(id => id);
             
             if (currentIds.length === 0) continue;
 
-            // Create a new batch for each chunk
             const batch = writeBatch(db);
-
-            // Query for documents that match the current IDs in the chunk
+            const recipientsRef = collection(db, "recipients");
             const q = query(recipientsRef, where("numericId", "in", currentIds));
             const querySnapshot = await getDocs(q);
 
@@ -85,10 +81,8 @@ export async function overwriteRecipientIdsAction(input: z.infer<typeof overwrit
                 }
             });
             
-            // Commit the batch for the current chunk
             await batch.commit();
 
-            // Check for records from the file that were not found in the database
             for (const row of chunk) {
                 const key = `${String(row.current_recipient_id)}-${String(row.shipment_id)}`;
                 if (!foundDocs.has(key)) {

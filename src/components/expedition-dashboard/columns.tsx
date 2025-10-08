@@ -431,6 +431,28 @@ export const columns = (
             }
         },
         {
+            id: "issues",
+            header: "Issues",
+            cell: ({ row }) => {
+                const hasIssue = row.original.issues;
+                if (isReadOnly) {
+                    return hasIssue ? <Badge variant="destructive">Issue</Badge> : null;
+                }
+                return hasIssue ? (
+                    <Badge variant="destructive">Issue</Badge>
+                ) : (
+                    <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onOpenIssueDialog(row.original)}
+                    >
+                        <MessageSquarePlus className="mr-2 h-4 w-4" />
+                        Add Issue
+                    </Button>
+                )
+            },
+        },
+        {
             id: "verified",
             header: "Verified",
             cell: ({ row }) => (
@@ -440,26 +462,6 @@ export const columns = (
                     aria-label="Toggle verification"
                 />
             ),
-        },
-        {
-            id: "issues",
-            header: "Issues",
-            cell: ({ row }) => {
-                const hasIssue = row.original.issues;
-                return hasIssue ? (
-                    <Badge variant="destructive">Issue</Badge>
-                ) : (
-                    <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onOpenIssueDialog(row.original)}
-                        disabled={isReadOnly}
-                    >
-                        <MessageSquarePlus className="mr-2 h-4 w-4" />
-                        Add Issue
-                    </Button>
-                )
-            },
         },
     ];
 }
