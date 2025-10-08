@@ -48,7 +48,7 @@ import { DocumentViewer } from "../document-viewer";
 import { sendEmailToLogisticsAction } from "@/app/actions/email-actions";
 import { generateProcesVerbalAction } from "@/app/actions/document-actions";
 import { queueShipmentAwbGenerationAction, updateAwbStatusAction, addNoteToAwbAction, regenerateAwbAction } from "@/app/actions/awb-actions";
-import { updateShipmentIssuesStatusAction } from "@/app/actions/recipient-actions";
+import { updateShipmentIssuesStatusAction, updateRecipientAuditStatusAction } from "@/app/actions/recipient-actions";
 import { sendReminder } from "@/app/actions/reminder-actions";
 import { 
     RecipientRow, 
@@ -149,9 +149,11 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
   const [revertIssueNote, setRevertIssueNote] = React.useState("");
   const [isRevertingIssue, setIsRevertingIssue] = React.useState(false);
 
+  const [activeTab, setActiveTab] = React.useState<DocType | undefined>(selectedDocument?.docType);
+
   const { toast } = useToast();
   const router = useRouter();
-  const { user, isReadOnly } = useAuth();
+  const { user, isReadOnly, isAuditor } = useAuth();
 
   React.useEffect(() => {
     let filteredData = initialData;
@@ -173,6 +175,12 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     setData(filteredData);
     table.resetRowSelection();
   }, [initialData, pvFilter, emailFilter]);
+
+   React.useEffect(() => {
+    if (selectedDocument) {
+      setActiveTab(selectedDocument.docType);
+    }
+  }, [selectedDocument]);
   
   const handleOpenDocument = (recipient: RecipientRow, docType: DocType) => {
     setSelectedDocument({ recipient, docType });
@@ -683,7 +691,30 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
             description: result.message,
         });
     }
-};
+  };
+
+  const handleAuditConfirm = async () => {
+    if (!displayedRecipient) return;
+
+    const result = await updateRecipientAuditStatusAction({ 
+      recipientId: displayedRecipient.id, 
+      audited: true 
+    });
+
+    if (result.success) {
+      toast({
+        title: "Audit Confirmed",
+        description: "Recipient has been marked as audited.",
+      });
+      setSelectedDocument(null); // Close the sheet
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Audit Failed",
+        description: result.error,
+      });
+    }
+  };
 
   
   const displayedRecipient = React.useMemo(() => {
@@ -854,17 +885,22 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
                         Part of shipment {displayedRecipient.expeditionId} with AWB: {displayedRecipient.awb?.mainRecipientName || 'N/A'}.
                     </SheetDescription>
                 </SheetHeader>
-                <Tabs defaultValue={selectedDocument?.docType} className="py-4">
-                    <TabsList>
-                        <TabsTrigger value="PV" disabled={!displayedRecipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
-                        <TabsTrigger value="PV Semnat" disabled={!displayedRecipient.pvSemnatUrl}>PV Semnat</TabsTrigger>
-                        <TabsTrigger value="Instructions" disabled={displayedRecipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
-                        <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
-                        <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
-                        <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
-                        <TabsTrigger value="History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>History</TabsTrigger>
-                        <TabsTrigger value="Notes">Notes</TabsTrigger>
-                    </TabsList>
+                <Tabs defaultValue={selectedDocument?.docType} onValueChange={(value) => setActiveTab(value as DocType)} className="py-4">
+                    <div className="flex justify-between items-center mb-2">
+                        <TabsList>
+                            <TabsTrigger value="PV" disabled={!displayedRecipient.pvUrl}>Proces Verbal (PV)</TabsTrigger>
+                            <TabsTrigger value="PV Semnat" disabled={!displayedRecipient.pvSemnatUrl}>PV Semnat</TabsTrigger>
+                            <TabsTrigger value="Instructions" disabled={displayedRecipient.instructionsStatus !== 'Generated'}>Instructions</TabsTrigger>
+                            <TabsTrigger value="Inventory" disabled={displayedRecipient.inventoryStatus !== 'Generated'}>Inventory</TabsTrigger>
+                            <TabsTrigger value="AWB" disabled={!displayedRecipient.awbUrl}>AWB</TabsTrigger>
+                            <TabsTrigger value="Email" disabled={!displayedRecipient.emailId}>Email</TabsTrigger>
+                            <TabsTrigger value="History" disabled={!awbStatusHistory || awbStatusHistory.length === 0}>History</TabsTrigger>
+                            <TabsTrigger value="Notes">Notes</TabsTrigger>
+                        </TabsList>
+                        {isAuditor && activeTab === 'PV Semnat' && !displayedRecipient.audited && (
+                           <Button onClick={handleAuditConfirm}>Audit OK</Button>
+                        )}
+                    </div>
                     <TabsContent value="PV">
                          {displayedRecipient.pvUrl ? (
                             <DocumentViewer url={displayedRecipient.pvUrl} docType="pdf" />
@@ -999,3 +1035,4 @@ export const ExpeditionDashboard: React.FC<ExpeditionDashboardProps> = ({
     </div>
   );
 };
+
