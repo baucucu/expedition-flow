@@ -17,7 +17,7 @@ interface AppHeaderProps {
 
 export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
     const router = useRouter();
-    const { isReadOnly } = useAuth();
+    const { isReadOnly, isAuditor } = useAuth();
 
     const handleSignOut = async () => {
         await auth.signOut();
@@ -42,7 +42,7 @@ export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
                         />
                     </div>
                 )}
-                 {!isReadOnly && (
+                 {!isReadOnly && !isAuditor && (
                     <>
                         <Button variant="outline" size="sm" onClick={() => router.push('/documents')}>
                             <File className="mr-2 h-4 w-4" />
