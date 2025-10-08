@@ -42,6 +42,7 @@ export interface Recipient {
   name: string; // Nume și prenume
   status: RecipientStatus;
   verified?: boolean;
+  audited?: boolean;
   issues?: boolean;
   
   // Document fields

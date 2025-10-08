@@ -30,6 +30,31 @@ export async function updateRecipientVerificationAction(
   }
 }
 
+const updateRecipientAuditStatusSchema = z.object({
+  recipientId: z.string(),
+  audited: z.boolean(),
+});
+
+export async function updateRecipientAuditStatusAction(
+  input: z.infer<typeof updateRecipientAuditStatusSchema>
+) {
+  const validation = updateRecipientAuditStatusSchema.safeParse(input);
+  if (!validation.success) {
+    return { success: false, error: "Invalid input." };
+  }
+
+  const { recipientId, audited } = validation.data;
+
+  try {
+    const recipientRef = doc(db, "recipients", recipientId);
+    await updateDoc(recipientRef, { audited });
+    return { success: true, message: "Audit status updated." };
+  } catch (error: any) {
+    console.error("Error updating recipient audit status:", error);
+    return { success: false, error: `An unexpected error occurred: ${error.message}` };
+  }
+}
+
 
 const overwriteRecipientIdsActionSchema = z.object({
     data: z.array(z.object({

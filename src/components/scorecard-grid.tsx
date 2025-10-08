@@ -23,6 +23,8 @@ import {
   CheckCircle2,
   BadgeCheck,
   File,
+  ShieldCheck,
+  FileX,
 } from 'lucide-react';
 import { Scorecard, type Kpi } from './scorecard';
 import type { FilterStatus } from '@/app/page';
@@ -205,9 +207,11 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 'Completed': CheckCircle2, 
                 'Not Verified': AlertCircle,
                 'Verified': BadgeCheck,
+                'Not Audited': FileX,
+                'Audit Passed': ShieldCheck,
             }}
             onClick={() => setActiveFilter('Total')}
-            isActive={isFilterActive('Delivered', 'DeliveredParcels', 'NotCompleted', 'Completed', 'Verified', 'NotVerified', 'Delivered AWBs')}
+            isActive={isFilterActive('Delivered', 'DeliveredParcels', 'NotCompleted', 'Completed', 'Verified', 'NotVerified', 'Delivered AWBs', 'NotAudited', 'AuditPassed')}
             onKpiClick={(label) => {
                 if (label === 'Delivered AWBs') setActiveFilter('Delivered AWBs');
                 if (label === 'Delivered Parcels') setActiveFilter('DeliveredParcels');
@@ -215,6 +219,8 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 if (label === 'Completed') setActiveFilter('Completed');
                 if (label === 'Verified') setActiveFilter('Verified');
                 if (label === 'Not Verified') setActiveFilter('NotVerified');
+                if (label === 'Not Audited') setActiveFilter('NotAudited');
+                if (label === 'Audit Passed') setActiveFilter('AuditPassed');
             }}
             activeKpiLabel={getActiveKpiLabel({ 
                 'Delivered AWBs': 'Delivered AWBs',
@@ -222,7 +228,9 @@ export const ScorecardGrid: React.FC<ScorecardGridProps> = ({ counts, activeFilt
                 'NotCompleted': 'Not Completed', 
                 'Completed': 'Completed', 
                 'Verified': 'Verified',
-                'NotVerified': 'Not Verified' 
+                'NotVerified': 'Not Verified',
+                'NotAudited': 'Not Audited',
+                'AuditPassed': 'Audit Passed'
             })}
         />
        </div>

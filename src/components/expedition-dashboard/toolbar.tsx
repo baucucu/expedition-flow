@@ -71,7 +71,7 @@ export function Toolbar({
   handleRegenerateAwbs,
 }: ToolbarProps) {
   const selectedRowCount = Object.keys(table.getState().rowSelection).length;
-  const { isReadOnly } = useAuth();
+  const { isReadOnly, isAuditor } = useAuth();
   
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
@@ -97,7 +97,7 @@ export function Toolbar({
                 onChange={(event) => table.setGlobalFilter(event.target.value)}
                 className="max-w-sm"
             />
-            {!isReadOnly && (
+            {!isReadOnly && !isAuditor && (
                 <>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>

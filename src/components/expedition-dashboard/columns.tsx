@@ -13,7 +13,7 @@ import { DataTableColumnFilter } from "./column-filter";
 import { AWBStatus } from "@/types";
 import React from "react";
 import { updateShipmentDetails } from "@/app/actions/expedition-actions";
-import { updateRecipientVerificationAction } from "@/app/actions/recipient-actions";
+import { updateRecipientVerificationAction, updateRecipientAuditStatusAction } from "@/app/actions/recipient-actions";
 import { useToast } from "@/hooks/use-toast";
 import { ContactCell } from "./contact-cell";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
@@ -59,7 +59,7 @@ export const columns = (
     onOpenIssueDialog: (recipient: RecipientRow) => void,
 ): ColumnDef<RecipientRow>[] => {
     const { toast } = useToast();
-    const { isReadOnly } = useAuth();
+    const { isReadOnly, isAuditor } = useAuth();
 
     const onSave = async (rowIndex: number, field: string, value: string, shipmentId: string) => {
         const res = await updateShipmentDetails(shipmentId, { [field]: value });
@@ -93,6 +93,22 @@ export const columns = (
             });
         }
     }
+    
+    const handleAuditChange = async (recipientId: string, audited: boolean) => {
+        const result = await updateRecipientAuditStatusAction({ recipientId, audited });
+        if (result.success) {
+            toast({
+                title: `Recipient ${audited ? 'Audit Passed' : 'Audit Reverted'}`,
+                description: result.message
+            });
+        } else {
+             toast({
+                title: "Audit Update Failed",
+                description: result.error,
+                variant: 'destructive',
+            });
+        }
+    }
 
     return [
         {
@@ -110,10 +126,11 @@ export const columns = (
                             }}
                             aria-label="Select all on page"
                             data-state={isSomeFilteredSelected && !isAllFilteredSelected ? "indeterminate" : (isAllFilteredSelected ? "checked" : "unchecked")}
+                            disabled={isAuditor}
                         />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isAuditor}>
                                     <ChevronDown className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -146,6 +163,7 @@ export const columns = (
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
                     aria-label="Select row"
+                    disabled={isAuditor}
                 />
             ),
             enableSorting: false,
@@ -435,7 +453,7 @@ export const columns = (
             header: "Issues",
             cell: ({ row }) => {
                 const hasIssue = row.original.issues;
-                if (isReadOnly) {
+                if (isReadOnly || isAuditor) {
                     return hasIssue ? <Badge variant="destructive">Issue</Badge> : null;
                 }
                 return hasIssue ? (
@@ -460,6 +478,19 @@ export const columns = (
                     checked={row.original.verified}
                     onCheckedChange={(value) => handleVerificationChange(row.original.id, !!value)}
                     aria-label="Toggle verification"
+                    disabled={isAuditor}
+                />
+            ),
+        },
+        {
+            id: "audited",
+            header: "Audited",
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.original.audited}
+                    onCheckedChange={(value) => handleAuditChange(row.original.id, !!value)}
+                    aria-label="Toggle audit status"
+                    disabled={!isAuditor}
                 />
             ),
         },

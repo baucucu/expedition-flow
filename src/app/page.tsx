@@ -15,7 +15,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { RecipientRow } from "@/components/expedition-dashboard/types";
 
-export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'Delivered AWBs' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | 'OriginalAwbs' | 'RegenAwbs' | null;
+export type FilterStatus = ExpeditionStatus | 'Total' | 'Issues' | 'Completed' | 'Delivered' | 'DeliveredParcels' | 'Delivered AWBs' | 'PVGenerated' | 'PVQueued' | 'PVNew' | 'Inventory' | 'Instructions' | 'DocsFailed' | 'AwbFailed' | 'EmailFailed' | 'NewRecipient' | 'Returned' | 'Sent' | 'EmailQueued' | 'LogisticsNotReady' | 'LogisticsReady' | 'AwbNew' | 'AwbQueued' | 'AwbGenerated' | 'AwbRegenerated' | 'AwbNeedsUpdate' | 'Recipients' | 'Shipments' | 'Avizat' | 'Ridicare ulterioara' | 'AwbEmis' | 'AlocataRidicare' | 'RidicataClient' | 'IntrareSorter' | 'IesireHub' | 'IntrareInHUB' | 'IntrareAgentie' | 'IesireAgentie' | 'InLivrare' | 'RedirectionareHome' | 'RedirectOOH' | 'IncarcatInOOH' | 'Depozitare' | 'NotDelivered' | 'IntrareHub' | 'NotCompleted' | 'IntrareSorterAgentie' | 'Verified' | 'NotVerified' | 'Returns' | 'InTransit' | 'OriginalRecipients' | 'RegenRecipients' | 'OriginalShipments' | 'RegenShipments' | 'OriginalAwbs' | 'RegenAwbs' | 'NotAudited' | 'AuditPassed' | null;
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -149,10 +149,14 @@ export default function Home() {
     const notCompletedRecipients = deliveredRecipients.filter(r => !r.pvSemnatUrl);
     const notCompletedCount = notCompletedRecipients.length;
     
-    // Verified/Not Verified counts should also exclude issues
     const notVerifiedRecipients = completedRecipients.filter(r => r.verified !== true);
     const notVerifiedCount = notVerifiedRecipients.length;
     const verifiedCount = recipientsWithNoIssues.filter(r => r.verified === true).length;
+    
+    // Audit KPIs
+    const auditPassedCount = recipientsWithNoIssues.filter(r => r.audited === true).length;
+    const notAuditedRecipients = recipientsWithNoIssues.filter(r => r.verified === true && r.audited !== true);
+    const notAuditedCount = notAuditedRecipients.length;
     // --- End Delivered & Completed ---
     
     const readyForLogisticsCount = awbs.filter(awb => 
@@ -275,6 +279,8 @@ export default function Home() {
                 { value: completedCount, label: 'Completed' },
                 { value: notVerifiedCount, label: 'Not Verified'},
                 { value: verifiedCount, label: 'Verified' },
+                { value: notAuditedCount, label: 'Not Audited' },
+                { value: auditPassedCount, label: 'Audit Passed' },
             ],
         },
     }
@@ -344,6 +350,10 @@ export default function Home() {
             const deliveredAwbIds = new Set(deliveredAwbs.map(awb => awb.id));
             const completedRecipients = allRecipientsWithFullData.filter(r => !r.issues && deliveredAwbIds.has(r.awbId) && !!r.pvSemnatUrl);
             filteredData = completedRecipients.filter(r => r.verified !== true);
+        } else if (activeFilter === 'AuditPassed') {
+            filteredData = filteredData.filter(r => !r.issues && r.audited === true);
+        } else if (activeFilter === 'NotAudited') {
+            filteredData = filteredData.filter(r => !r.issues && r.verified === true && r.audited !== true);
         } else if (activeFilter === 'PVGenerated') {
             filteredData = filteredData.filter(r => !!r.pvUrl);
         } else if (activeFilter === 'PVQueued') {
