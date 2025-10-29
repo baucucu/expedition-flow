@@ -27,93 +27,109 @@ const sanitizeFilename = (name: string): string => {
 };
 
 
+const processSingleFile = task({
+    id: "process-single-pv-semnat-file",
+    queue: {
+      concurrencyLimit: 10, // Allow up to 10 files to be processed in parallel
+    },
+    run: async (payload: { docId: string }, { ctx }) => {
+        const { docId } = payload;
+        const recipientRef = adminDb.collection("recipients").doc(docId);
+        const docSnap = await recipientRef.get();
+
+        if (!docSnap.exists) {
+            logger.warn("Recipient document not found, skipping.", { docId });
+            return { success: false, message: `Recipient ${docId} not found.`};
+        }
+
+        const recipient = docSnap.data() as Recipient;
+
+        if (!recipient.pvSemnatUrl) {
+            logger.info("Recipient has no pvSemnatUrl, skipping.", { docId });
+            return { success: true, message: "No URL to process."};
+        }
+        
+        const oldPath = getPathFromUrl(recipient.pvSemnatUrl);
+
+        if (!oldPath) {
+            logger.warn("Could not determine old file path for recipient.", { docId });
+            return { success: false, message: `Invalid pvSemnatUrl for ${docId}` };
+        }
+
+        const oldFile = bucket.file(oldPath);
+        const [exists] = await oldFile.exists();
+
+        if (!exists) {
+            logger.warn("File does not exist in storage, skipping.", { docId, path: oldPath });
+            return { success: true, message: `File ${oldPath} not found in storage.`};
+        }
+
+        try {
+            const metadata = await oldFile.getMetadata();
+            const contentType = metadata[0].contentType || 'image/jpeg';
+            let extension = contentType.split('/')[1] || 'jpg';
+            
+            // Construct the new filename
+            const recipientName = sanitizeFilename(recipient.name || 'unknown');
+            const groupName = sanitizeFilename(recipient.group || 'nogroup');
+            const newFilename = `${recipientName}_${groupName}_${recipient.id}_${recipient.shipmentId}.${extension}`;
+            const newPath = `pv_semnate/${newFilename}`;
+
+            // Check if file has already been renamed
+            if (oldPath === newPath) {
+                 logger.info("File already appears to be renamed, skipping.", { docId, path: oldPath });
+                 return { success: true, message: "File already renamed." };
+            }
+
+            logger.info(`Processing recipient ${docId}: Renaming ${oldPath} to ${newPath}`);
+
+            await oldFile.move(newPath);
+
+            const newFile = bucket.file(newPath);
+            const [newUrl] = await newFile.getSignedUrl({
+                action: 'read',
+                expires: '03-09-2491'
+            });
+            
+            await recipientRef.update({
+              pvSemnatUrl: newUrl
+            });
+
+            logger.info(`Successfully renamed and updated for recipient ${docId}`);
+            return { success: true, docId };
+
+        } catch (error: any) {
+            logger.error("Failed to process recipient", { docId, error: error.message });
+            return { success: false, message: `Failed for ${docId}: ${error.message}`};
+        }
+    }
+});
+
+
 export const renamePvSemnatFiles = task({
   id: "rename-pv-semnat-files",
-  queue: {
-    concurrencyLimit: 1, // Run one at a time to be safe
-  },
   run: async (payload: any, { ctx }) => {
-    logger.info("Starting task to rename all PV Semnat files.");
+    logger.info("Starting task to queue renaming for all PV Semnat files.");
 
     const recipientsRef = adminDb.collection("recipients");
     const snapshot = await recipientsRef.where("pvSemnatUrl", ">", "").get();
 
     if (snapshot.empty) {
       logger.info("No recipients with pvSemnatUrl found. Nothing to do.");
-      return { success: true, message: "No files to rename." };
+      return { success: true, message: "No files to rename.", queued: 0 };
     }
 
-    let successCount = 0;
-    let errorCount = 0;
-    const errors: string[] = [];
+    const events = snapshot.docs.map(doc => ({
+        name: processSingleFile.id,
+        payload: { docId: doc.id }
+    }));
 
-    logger.info(`Found ${snapshot.docs.length} recipients to process.`);
+    logger.info(`Found ${events.length} recipients to process. Batching worker jobs...`);
 
-    for (const doc of snapshot.docs) {
-      const recipient = doc.data() as Recipient;
-      const docId = doc.id;
+    const runs = await processSingleFile.batchTrigger(events);
 
-      if (!recipient.pvSemnatUrl) {
-        continue;
-      }
-      
-      const oldPath = getPathFromUrl(recipient.pvSemnatUrl);
-
-      if (!oldPath) {
-        logger.warn("Could not determine old file path for recipient.", { docId });
-        errorCount++;
-        errors.push(`Recipient ${docId}: Invalid pvSemnatUrl.`);
-        continue;
-      }
-
-      const oldFile = bucket.file(oldPath);
-      const [exists] = await oldFile.exists();
-
-      if (!exists) {
-        logger.warn("File does not exist in storage, skipping.", { docId, path: oldPath });
-        // We don't count this as an error, it's just a data inconsistency.
-        continue;
-      }
-
-      try {
-        const metadata = await oldFile.getMetadata();
-        const contentType = metadata[0].contentType || 'image/jpeg';
-        let extension = contentType.split('/')[1] || 'jpg';
-        
-        // Construct the new filename
-        const recipientName = sanitizeFilename(recipient.name || 'unknown');
-        const groupName = sanitizeFilename(recipient.group || 'nogroup');
-        const newFilename = `${recipientName}_${groupName}_${recipient.id}_${recipient.shipmentId}.${extension}`;
-        const newPath = `pv_semnate/${newFilename}`;
-
-        logger.info(`Processing recipient ${docId}: Renaming ${oldPath} to ${newPath}`);
-
-        // Rename (move) the file in storage
-        await oldFile.move(newPath);
-
-        const newFile = bucket.file(newPath);
-        const [newUrl] = await newFile.getSignedUrl({
-            action: 'read',
-            expires: '03-09-2491' // A very long time in the future
-        });
-        
-        // Update the Firestore document with the new URL
-        await adminDb.collection("recipients").doc(docId).update({
-          pvSemnatUrl: newUrl
-        });
-
-        logger.info(`Successfully renamed and updated for recipient ${docId}`);
-        successCount++;
-
-      } catch (error: any) {
-        logger.error("Failed to process recipient", { docId, error: error.message });
-        errorCount++;
-        errors.push(`Recipient ${docId}: ${error.message}`);
-      }
-    }
-
-    const summary = `Process complete. Success: ${successCount}, Failed: ${errorCount}.`;
-    logger.info(summary, { errors });
-    return { success: errorCount === 0, message: summary, errors: errors };
+    const summary = `Successfully queued ${runs.length} file renaming jobs.`;
+    logger.info(summary);
+    return { success: true, message: summary, queued: runs.length };
   },
 });
