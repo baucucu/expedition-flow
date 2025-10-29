@@ -1,12 +1,22 @@
 
 import { task, logger } from "@trigger.dev/sdk";
-import { adminDb } from "@/lib/firebase-admin";
+import * as admin from 'firebase-admin';
 import { getStorage } from "firebase-admin/storage";
 import type { Recipient } from "@/types";
+import serviceAccount from '../../..//expeditionflow-firebase-adminsdk-fbsvc-1406ca54d0.json';
 
-// Initialize Firebase Admin Storage
+// Initialize Firebase Admin SDK if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccountCredential),
+    storageBucket: `${serviceAccount.project_id}.appspot.com`
+  });
+}
+
+const adminDb = admin.firestore();
 const storage = getStorage();
-const bucket = storage.bucket(process.env.BUCKET_NAME);
+const bucket = storage.bucket();
+
 
 // This helper function extracts the file path from the full GCS URL.
 const getPathFromUrl = (url: string): string | null => {
@@ -22,8 +32,9 @@ const getPathFromUrl = (url: string): string | null => {
     }
 };
 
-const sanitizeFilename = (name: string): string => {
-    return name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+const sanitizeFilename = (name?: string): string => {
+  if (typeof name !== "string") return "unknown";
+  return name.replace(/[^a-zA-Z0-9_.-]/g, '_');
 };
 
 
@@ -70,8 +81,8 @@ const processSingleFile = task({
             let extension = contentType.split('/')[1] || 'jpg';
             
             // Construct the new filename
-            const recipientName = sanitizeFilename(recipient.name || 'unknown');
-            const groupName = sanitizeFilename(recipient.group || 'nogroup');
+            const recipientName = sanitizeFilename(recipient?.name ?? 'unknown');
+            const groupName = sanitizeFilename(recipient?.group ?? 'nogroup');
             const newFilename = `${recipientName}_${groupName}_${recipient.id}_${recipient.shipmentId}.${extension}`;
             const newPath = `pv_semnate/${newFilename}`;
 
