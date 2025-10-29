@@ -3,12 +3,12 @@ import { task, logger } from "@trigger.dev/sdk";
 import * as admin from 'firebase-admin';
 import { getStorage } from "firebase-admin/storage";
 import type { Recipient } from "@/types";
-import serviceAccount from '../../..//expeditionflow-firebase-adminsdk-fbsvc-1406ca54d0.json';
+import serviceAccount from '../../../expeditionflow-firebase-adminsdk-fbsvc-1406ca54d0.json';
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount as admin.ServiceAccountCredential),
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
     storageBucket: `${serviceAccount.project_id}.appspot.com`
   });
 }
