@@ -128,8 +128,8 @@ export const renamePvSemnatFiles = task({
 
     const runs = await processSingleFile.batchTrigger(events);
 
-    const summary = `Successfully queued ${runs.length} file renaming jobs.`;
+    const summary = `Successfully queued ${events.length} file renaming jobs.`;
     logger.info(summary);
-    return { success: true, message: summary, queued: runs.length };
+    return { success: true, message: summary, queued: events.length };
   },
 });
