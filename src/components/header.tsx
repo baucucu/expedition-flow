@@ -66,11 +66,16 @@ export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
                         </Button>
                     </>
                  )}
-                  {isAuditor && (
-                     <Button variant="destructive" size="sm" onClick={() => router.push('/admin/rename-files')}>
-                            <HardDriveUpload className="mr-2 h-4 w-4" />
-                            Rename Files
-                        </Button>
+                  {isAuditor && onGdprModeChange && (
+                     <div className="flex items-center space-x-2">
+                        <ShieldCheck className="h-5 w-5" />
+                        <Label htmlFor="gdpr-mode" className="text-sm font-medium">GDPR Mode</Label>
+                        <Switch
+                            id="gdpr-mode"
+                            checked={gdprMode}
+                            onCheckedChange={onGdprModeChange}
+                        />
+                    </div>
                   )}
                 <Button variant="ghost" size="icon" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4" />

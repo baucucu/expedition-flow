@@ -14,7 +14,7 @@ const getPathFromUrl = (url: string): string | null => {
         const urlObject = new URL(url);
         // The path is usually after '/v0/b/bucket-name/o/' and before the '?alt=media' token.
         // The path is URL-encoded, so we need to decode it.
-        const path = decodeURIComponent(urlObject.pathname.split('/o/')[1]);
+        const path = decodeURIComponent(urlObject.pathname.split('/o/')[1].split('?')[0]);
         return path;
     } catch (e) {
         logger.error("Could not parse URL to get file path", { url, error: e });
