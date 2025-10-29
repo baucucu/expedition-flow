@@ -6,7 +6,7 @@ import type { Recipient } from "@/types";
 
 // Initialize Firebase Admin Storage
 const storage = getStorage();
-const bucket = storage.bucket(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+const bucket = storage.bucket(process.env.BUCKET_NAME);
 
 // This helper function extracts the file path from the full GCS URL.
 const getPathFromUrl = (url: string): string | null => {
@@ -120,7 +120,6 @@ export const renamePvSemnatFiles = task({
     }
 
     const events = snapshot.docs.map(doc => ({
-        name: processSingleFile.id,
         payload: { docId: doc.id }
     }));
 
