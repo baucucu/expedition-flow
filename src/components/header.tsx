@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { LogOut, Box, Plus, File, ListChecks, ShieldCheck, DatabaseZap } from "lucide-react";
+import { LogOut, Box, Plus, File, ListChecks, ShieldCheck, DatabaseZap, HardDriveUpload } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useRouter } from 'next/navigation';
 import { Label } from './ui/label';
@@ -56,12 +56,22 @@ export const AppHeader = ({ gdprMode, onGdprModeChange }: AppHeaderProps) => {
                             <DatabaseZap className="mr-2 h-4 w-4" />
                             Overwrite IDs
                         </Button>
+                         <Button variant="destructive" size="sm" onClick={() => router.push('/admin/rename-files')}>
+                            <HardDriveUpload className="mr-2 h-4 w-4" />
+                            Rename Files
+                        </Button>
                         <Button onClick={() => router.push('/expeditions/new')}>
                             <Plus className="mr-2 h-4 w-4" />
                             New Expedition
                         </Button>
                     </>
                  )}
+                  {isAuditor && (
+                     <Button variant="destructive" size="sm" onClick={() => router.push('/admin/rename-files')}>
+                            <HardDriveUpload className="mr-2 h-4 w-4" />
+                            Rename Files
+                        </Button>
+                  )}
                 <Button variant="ghost" size="icon" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4" />
                     <span className="sr-only">Sign Out</span>

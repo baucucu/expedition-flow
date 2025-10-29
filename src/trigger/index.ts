@@ -10,6 +10,7 @@ import "./email/send-email";
 // import "./email/update-db";
 import "./awb/update-awb-status"
 import "./pv-semnat/format-pv-semnat";
+import "./admin/rename-pv-semnat-files";
 
 
 export * from "./example";
@@ -18,3 +19,4 @@ export * from "./pv-generator";
 export * from "./email/send-email";
 export * from "./awb/update-awb-status"
 export * from "./pv-semnat/format-pv-semnat";
+export * from "./admin/rename-pv-semnat-files";
